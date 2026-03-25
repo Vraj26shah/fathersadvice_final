@@ -118,6 +118,32 @@ export function setupSocket(httpServer) {
       socket.to(`chat-${connectionId}`).emit('whiteboard_text', { x, y, text, color, size });
     });
 
+    // ── WebRTC signalling ─────────────────────────────────
+    // First peer to join waits; second peer's arrival triggers offer creation
+    socket.on('webrtc_join', ({ connectionId }) => {
+      const room = `webrtc-${connectionId}`;
+      socket.join(room);
+      // Tell the existing peer (if any) that someone new arrived → they create the offer
+      socket.to(room).emit('webrtc_peer_joined');
+    });
+
+    socket.on('webrtc_offer', ({ connectionId, offer }) => {
+      socket.to(`webrtc-${connectionId}`).emit('webrtc_offer', { offer });
+    });
+
+    socket.on('webrtc_answer', ({ connectionId, answer }) => {
+      socket.to(`webrtc-${connectionId}`).emit('webrtc_answer', { answer });
+    });
+
+    socket.on('webrtc_ice', ({ connectionId, candidate }) => {
+      socket.to(`webrtc-${connectionId}`).emit('webrtc_ice', { candidate });
+    });
+
+    socket.on('webrtc_leave', ({ connectionId }) => {
+      socket.to(`webrtc-${connectionId}`).emit('webrtc_peer_left');
+      socket.leave(`webrtc-${connectionId}`);
+    });
+
     socket.on('disconnect', () => {
       onlineUsers.delete(uid);
       console.log(`  ↓ Socket: ${socket.userName || uid} offline`);
