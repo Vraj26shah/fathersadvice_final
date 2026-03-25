@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find a Mentee — Father's Advice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --black:       #0a0a08;
+      --white:       #ffffff;
+      --muted:       #6b6b65;
+      --gold:        #c8a84b;
+      --gold-deep:   #a8882b;
+      --gold-border: rgba(200,168,75,0.35);
+      --gold-glow:   rgba(200,168,75,0.15);
+      --card-bg:     #141412;
+      --border:      rgba(255,255,255,0.08);
+      --green:       #4ade80;
+      --blue:        #38bdf8;
+      --serif:       'Playfair Display', Georgia, serif;
+      --sans:        'Inter', system-ui, sans-serif;
+      --radius:      12px;
+      --sidebar-w:   240px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body { font-family: var(--sans); background: var(--black); color: var(--white); min-height: 100vh; display: flex; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+    .sidebar-logo { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-mark { width: 36px; height: 36px; background: var(--white); border: 1.5px solid var(--gold-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-mark-text { font-family: var(--serif); font-size: 11px; font-weight: 700; color: var(--black); letter-spacing: -1px; }
+    .logo-mark-text .bar { color: var(--gold-deep); font-style: normal; }
+    .logo-name { font-family: var(--serif); font-size: 14px; color: var(--white); line-height: 1.2; }
+    .logo-name span { display: block; font-size: 10px; font-family: var(--sans); color: var(--muted); font-weight: 400; margin-top: 1px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-section-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 16px 24px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; color: rgba(255,255,255,0.55); cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; border-left: 2px solid transparent; text-decoration: none; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+    .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: var(--gold-glow); }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid var(--border); }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold-deep)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--black); flex-shrink: 0; }
+    .user-meta { flex: 1; min-width: 0; }
+    .user-meta .name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-meta .role { font-size: 11px; color: var(--gold); font-weight: 500; }
+    .logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; }
+    .logout-btn:hover { color: var(--white); }
+
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; background: rgba(10,10,8,0.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 50; }
+    .topbar-title { font-size: 18px; font-weight: 600; }
+    .badge-gold { background: var(--gold-glow); border: 1px solid var(--gold-border); color: var(--gold); font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+
+    /* ── Page body ── */
+    .page-body { padding: 32px; }
+
+    /* ── Hero ── */
+    .hero { background: linear-gradient(135deg, rgba(200,168,75,0.08), rgba(200,168,75,0.03)); border: 1px solid var(--gold-border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 28px; }
+    .hero h2 { font-family: var(--serif); font-size: 22px; margin-bottom: 6px; }
+    .hero p { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+    .hero-stats { display: flex; gap: 28px; margin-top: 16px; flex-wrap: wrap; }
+    .hero-stat { font-size: 13px; color: rgba(255,255,255,0.6); }
+    .hero-stat strong { color: var(--gold); }
+
+    /* ── Filter bar ── */
+    .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: rgba(255,255,255,0.6); padding: 7px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+    .filter-btn:hover, .filter-btn.active { background: var(--gold-glow); border-color: var(--gold-border); color: var(--gold); }
+    .results-label { font-size: 13px; color: var(--muted); margin-left: auto; }
+
+    /* ── Mentee cards ── */
+    .mentee-grid { display: flex; flex-direction: column; gap: 14px; }
+
+    .mentee-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; display: flex; align-items: center; gap: 20px; transition: border-color 0.2s; }
+    .mentee-card:hover { border-color: var(--gold-border); }
+    .mentee-card.connected { border-color: rgba(74,222,128,0.3); }
+    .mentee-card.has-request { border-color: var(--gold-border); }
+
+    .mentee-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: var(--black); flex-shrink: 0; }
+    .mentee-info { flex: 1; min-width: 0; }
+    .mentee-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .mentee-meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .mentee-bio { font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 480px; }
+    .mentee-topics { display: flex; flex-wrap: wrap; gap: 5px; }
+    .topic-chip { background: rgba(200,168,75,0.1); border: 1px solid rgba(200,168,75,0.2); color: var(--gold); font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+
+    /* ── Score section ── */
+    .mentee-score-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; min-width: 110px; }
+    .score-ring { position: relative; width: 64px; height: 64px; }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-ring .track { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 5; }
+    .score-ring .fill  { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+    .score-ring .label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .score-ring .pct { font-size: 14px; font-weight: 700; line-height: 1; }
+    .score-ring .score-text { font-size: 9px; color: var(--muted); margin-top: 1px; }
+    .score-breakdown { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.4; }
+
+    /* ── Request panel ── */
+    .request-panel { background: rgba(200,168,75,0.06); border: 1px solid var(--gold-border); border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.7); font-style: italic; }
+    .request-label { font-size: 11px; font-weight: 600; color: var(--gold); margin-bottom: 3px; font-style: normal; }
+
+    /* ── Action buttons ── */
+    .btn-accept { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid rgba(74,222,128,0.3); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+    .btn-accept:hover { background: rgba(74,222,128,0.22); }
+    .btn-message { background: rgba(56,189,248,0.12); color: var(--blue); border: 1px solid rgba(56,189,248,0.3); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: background 0.15s; white-space: nowrap; }
+    .btn-message:hover { background: rgba(56,189,248,0.22); }
+    .btn-awaiting { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: default; white-space: nowrap; }
+
+    .lang-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+    .lang-chip { font-size: 10px; color: var(--gold); background: rgba(200,168,75,0.08); border: 1px solid rgba(200,168,75,0.2); padding: 1px 7px; border-radius: 8px; }
+
+    .spinner { width: 28px; height: 28px; border: 3px solid rgba(200,168,75,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 60px auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .big { font-size: 36px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    @media (max-width: 900px) {
+      .mentee-card { flex-wrap: wrap; }
+      .mentee-bio { max-width: 100%; }
+    }
+    @media (max-width: 700px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .page-body { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ Sidebar ═══════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><span class="logo-mark-text">F<i class="bar">|</i>A</span></div>
+      <div class="logo-name">Father's Advice<span id="portal-label">Mentor Portal</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="dashboard-mentor.html">
+        <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="find-mentee.html">
+        <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        Find a Mentee
+      </a>
+      <a class="nav-item" href="dashboard-mentor.html#requests">
+        <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        Mentee Requests
+      </a>
+      <a class="nav-item" href="calendar.html">
+        <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+        My Sessions
+      </a>
+      <a class="nav-item" href="chat.html">
+        <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        Messages
+      </a>
+      <a class="nav-item" href="progress.html">
+        <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        My Progress
+      </a>
+      <div class="nav-section-label" style="margin-top:8px;">Settings</div>
+      <a class="nav-item" href="profile.html">
+        <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        My Profile
+      </a>
+      <a class="nav-item" href="profile.html">
+        <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>
+        Availability
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar">JD</div>
+        <div class="user-meta">
+          <div class="name" id="sidebar-name">John Doe</div>
+          <div class="role">Mentor</div>
+        </div>
+        <button class="logout-btn" title="Sign out" onclick="signOut()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ Main ═══════════════════════════════════════════════ -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title">Find a Mentee</div>
+      <span class="badge-gold">Mentor</span>
+    </header>
+
+    <div class="page-body">
+      <div class="hero">
+        <h2>Your Best Mentee Matches</h2>
+        <p>Ranked by how well each mentee's learning goals align with your expertise, availability, and teaching languages. Accept pending requests or message connected mentees directly.</p>
+        <div class="hero-stats">
+          <div class="hero-stat">Total matched: <strong id="total-count">—</strong></div>
+          <div class="hero-stat">Pending requests: <strong id="pending-count">—</strong></div>
+          <div class="hero-stat">Active connections: <strong id="active-count">—</strong></div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('all', this)">All Mentees</button>
+        <button class="filter-btn" onclick="setFilter('pending', this)">Pending Requests</button>
+        <button class="filter-btn" onclick="setFilter('accepted', this)">Connected</button>
+        <span class="results-label" id="results-label"></span>
+      </div>
+
+      <div class="mentee-grid" id="mentee-grid">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const token = localStorage.getItem('fa_token');
+    const role  = localStorage.getItem('fa_role');
+    if (!token) window.location.href = '/login.html';
+    else if (role && role !== 'mentor') window.location.href = '/dashboard-mentee.html';
+
+    const storedName = localStorage.getItem('fa_name') || 'Mentor';
+    document.getElementById('sidebar-name').textContent   = storedName;
+    document.getElementById('sidebar-avatar').textContent =
+      storedName.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+
+    function signOut() { localStorage.clear(); window.location.href = '/login.html'; }
+
+    const GRADIENTS = [
+      'linear-gradient(135deg,#818cf8,#6366f1)',
+      'linear-gradient(135deg,#34d399,#059669)',
+      'linear-gradient(135deg,#fb923c,#ea580c)',
+      'linear-gradient(135deg,#f472b6,#db2777)',
+      'linear-gradient(135deg,#38bdf8,#0284c7)',
+      'linear-gradient(135deg,#c8a84b,#a8882b)',
+    ];
+
+    let _allMentees = [];
+    let _filter     = 'all';
+
+    /* ── Fetch mentees ── */
+    async function loadMentees() {
+      document.getElementById('mentee-grid').innerHTML = '<div class="spinner"></div>';
+      try {
+        const res  = await fetch('/api/connect/mentees', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        _allMentees = data.mentees || [];
+        updateCounters();
+        renderMentees();
+      } catch (err) {
+        document.getElementById('mentee-grid').innerHTML =
+          `<div class="empty-state"><div class="big">⚠</div><p>${err.message}</p></div>`;
+      }
+    }
+
+    function updateCounters() {
+      document.getElementById('total-count').textContent   = _allMentees.length;
+      document.getElementById('pending-count').textContent = _allMentees.filter(m => m.requestStatus === 'pending').length;
+      document.getElementById('active-count').textContent  = _allMentees.filter(m => m.requestStatus === 'accepted').length;
+    }
+
+    function setFilter(f, btn) {
+      _filter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderMentees();
+    }
+
+    /* ── Render cards ── */
+    function renderMentees() {
+      const list = _filter === 'all'      ? _allMentees
+                 : _filter === 'pending'  ? _allMentees.filter(m => m.requestStatus === 'pending')
+                 :                         _allMentees.filter(m => m.requestStatus === 'accepted');
+
+      document.getElementById('results-label').textContent = `${list.length} mentee${list.length !== 1 ? 's' : ''}`;
+
+      if (!list.length) {
+        document.getElementById('mentee-grid').innerHTML =
+          `<div class="empty-state"><div class="big">🎓</div><p>${
+            _filter === 'pending'  ? 'No pending requests yet. Mentees will appear here when they reach out.' :
+            _filter === 'accepted' ? 'No active connections yet. Accept pending requests to get started.' :
+            'No mentee profiles found yet.'
+          }</p></div>`;
+        return;
+      }
+
+      document.getElementById('mentee-grid').innerHTML = list.map((m, i) => {
+        const av   = m.fullName.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+        const grad = GRADIENTS[i % GRADIENTS.length];
+
+        // Score ring SVG
+        const r = 27, circ = 2 * Math.PI * r;
+        const scoreColor = m.matchScore >= 75 ? '#4ade80' : m.matchScore >= 50 ? '#c8a84b' : '#6b6b65';
+        const dash = circ - (m.matchScore / 100) * circ;
+        const scoreRing = `
+          <div class="score-ring">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle class="track" cx="32" cy="32" r="${r}"/>
+              <circle class="fill" cx="32" cy="32" r="${r}"
+                stroke="${scoreColor}"
+                stroke-dasharray="${circ}"
+                stroke-dashoffset="${dash}"/>
+            </svg>
+            <div class="label">
+              <span class="pct" style="color:${scoreColor};">${m.matchScore}%</span>
+              <span class="score-text">Match</span>
+            </div>
+          </div>`;
+
+        // Meta line
+        const metaParts = [m.roleStatus, m.expLevel, m.domain].filter(Boolean);
+
+        // Topics
+        const topicChips = (m.topics || []).slice(0, 4).map(t =>
+          `<span class="topic-chip">${t}</span>`).join('');
+
+        // Language chips
+        const langChips = (m.languages || []).map(l =>
+          `<span class="lang-chip">🌐 ${l}</span>`).join('');
+
+        // Request panel
+        const reqPanel = m.doubt
+          ? `<div class="request-panel"><div class="request-label">Their Question</div>"${m.doubt}"</div>` : '';
+
+        // Action button
+        let actionBtn;
+        if (m.requestStatus === 'accepted') {
+          actionBtn = `<a class="btn-message" href="chat.html">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Message
+          </a>`;
+        } else if (m.requestStatus === 'pending') {
+          actionBtn = `<button class="btn-accept" onclick="acceptRequest('${m.requestId}', '${m.menteeId}', this)">
+            ✓ Accept
+          </button>`;
+        } else {
+          actionBtn = `<button class="btn-awaiting" disabled>Awaiting Request</button>`;
+        }
+
+        const cardClass = m.requestStatus === 'accepted' ? 'mentee-card connected'
+                        : m.requestStatus === 'pending'  ? 'mentee-card has-request'
+                        : 'mentee-card';
+
+        return `
+          <div class="${cardClass}" id="card-${m.menteeId}">
+            <div class="mentee-avatar" style="background:${grad};">${av}</div>
+            <div class="mentee-info">
+              <div class="mentee-name">${m.fullName}</div>
+              ${metaParts.length ? `<div class="mentee-meta">${metaParts.join(' · ')}</div>` : ''}
+              ${m.bio ? `<div class="mentee-bio">${m.bio}</div>` : ''}
+              <div class="mentee-topics">${topicChips}</div>
+              ${m.languages?.length ? `<div class="lang-chips">${langChips}</div>` : ''}
+              ${reqPanel}
+            </div>
+            <div class="mentee-score-wrap">
+              ${scoreRing}
+              <div class="score-breakdown">
+                Expertise ${m.expertiseScore}%<br>
+                Avail. ${m.availabilityScore}%
+              </div>
+              ${actionBtn}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Accept request inline ── */
+    async function acceptRequest(requestId, menteeId, btn) {
+      btn.textContent = 'Accepting…';
+      btn.disabled    = true;
+      try {
+        const res  = await fetch(`/api/connect/accept/${requestId}`, {
+          method:  'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        // Update local state and re-render
+        const idx = _allMentees.findIndex(m => m.menteeId.toString() === menteeId.toString());
+        if (idx >= 0) _allMentees[idx].requestStatus = 'accepted';
+        updateCounters();
+        renderMentees();
+        showToast(`Connected! Head to Messages to start chatting.`);
+      } catch (err) {
+        btn.textContent = '✓ Accept';
+        btn.disabled    = false;
+        showToast(err.message);
+      }
+    }
+
+    /* ── Toast ── */
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.textContent = msg;
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '28px', right: '28px',
+        background: 'var(--gold)', color: 'var(--black)',
+        fontWeight: '600', fontSize: '14px',
+        padding: '12px 20px', borderRadius: '10px',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.4)',
+        zIndex: '9999', opacity: '0',
+        transition: 'opacity 0.3s, transform 0.3s',
+        transform: 'translateY(10px)',
+      });
+      document.body.appendChild(t);
+      requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
+      setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; setTimeout(() => t.remove(), 300); }, 4000);
+    }
+
+    /* ── Socket.io — refresh on new request ── */
+    (function initSocket() {
+      if (typeof io === 'undefined') return;
+      const socket = io({ auth: { token } });
+      socket.on('new_request', () => loadMentees());
+    })();
+
+    loadMentees();
+  </script>
+</body>
+</html>

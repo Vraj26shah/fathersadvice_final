@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get Started — Father's Advice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --black:       #0a0a08;
+      --white:       #ffffff;
+      --text:        #1a1a18;
+      --muted:       #6b6b65;
+      --gold:        #c8a84b;
+      --gold-deep:   #a8882b;
+      --gold-border: rgba(200,168,75,0.35);
+      --gold-glow:   rgba(200,168,75,0.15);
+      --indigo:      #5e6ad2;
+      --indigo-deep: #4a54b8;
+      --indigo-border: rgba(94,106,210,0.35);
+      --indigo-glow:   rgba(94,106,210,0.12);
+      --card-bg:     #141412;
+      --border:      rgba(255,255,255,0.08);
+      --serif:       'Playfair Display', Georgia, serif;
+      --sans:        'Inter', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse, rgba(200,168,75,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Nav bar */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,8,0.85);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark {
+      width: 34px; height: 34px;
+      background: var(--white);
+      border: 1.5px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark-text { font-family: var(--serif); font-size: 11px; font-weight: 700; color: var(--black); letter-spacing: -1px; }
+    .logo-mark-text .bar { color: var(--gold-deep); font-style: normal; }
+    .nav-name { font-family: var(--serif); font-size: 15px; color: var(--white); }
+    .nav-signin { font-size: 14px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .nav-signin:hover { color: var(--white); }
+
+    /* Page content */
+    .page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 700px;
+      padding-top: 40px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(28px, 5vw, 42px);
+      text-align: center;
+      line-height: 1.2;
+      color: var(--white);
+    }
+    h1 em { color: var(--gold); font-style: italic; }
+
+    .subtitle {
+      font-size: 16px;
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      line-height: 1.6;
+      max-width: 480px;
+      margin-bottom: 16px;
+    }
+
+    /* Role cards */
+    .role-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .role-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .role-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+    }
+    .role-card:hover { transform: translateY(-4px); }
+
+    /* Mentor card — gold */
+    .role-card.mentor { border-color: rgba(200,168,75,0.15); }
+    .role-card.mentor::before { background: radial-gradient(ellipse at top, rgba(200,168,75,0.06), transparent 70%); }
+    .role-card.mentor:hover { border-color: var(--gold-border); box-shadow: 0 8px 40px rgba(200,168,75,0.12); }
+    .role-card.mentor:hover::before { opacity: 1; }
+
+    /* Mentee card — indigo */
+    .role-card.mentee { border-color: rgba(94,106,210,0.15); }
+    .role-card.mentee::before { background: radial-gradient(ellipse at top, rgba(94,106,210,0.08), transparent 70%); }
+    .role-card.mentee:hover { border-color: var(--indigo-border); box-shadow: 0 8px 40px rgba(94,106,210,0.14); }
+    .role-card.mentee:hover::before { opacity: 1; }
+
+    .role-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .role-card.mentor .role-icon { background: var(--gold-glow); border: 1px solid var(--gold-border); }
+    .role-card.mentee .role-icon { background: var(--indigo-glow); border: 1px solid var(--indigo-border); }
+
+    .role-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .role-card.mentor .role-label { color: var(--gold); }
+    .role-card.mentee .role-label { color: var(--indigo); }
+
+    .role-title {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--white);
+    }
+
+    .role-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .role-perks {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .role-perks li {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .role-perks li::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .role-card.mentor .role-perks li::before { background: var(--gold); }
+    .role-card.mentee .role-perks li::before { background: var(--indigo); }
+
+    .role-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+      font-weight: 600;
+      transition: gap 0.2s;
+    }
+    .role-card.mentor .role-cta { color: var(--gold); }
+    .role-card.mentee .role-cta { color: var(--indigo); }
+    .role-card:hover .role-cta { gap: 12px; }
+
+    .already {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+    .already a { color: var(--white); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .already a:hover { border-color: var(--white); }
+
+    @media (max-width: 600px) {
+      .role-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <a class="nav-logo" href="index.html">
+      <div class="logo-mark">
+        <span class="logo-mark-text">F<i class="bar">|</i>A</span>
+      </div>
+      <span class="nav-name">Father's Advice</span>
+    </a>
+    <a class="nav-signin" href="login.html">Already have an account? Sign in →</a>
+  </nav>
+
+  <!-- Content -->
+  <div class="page">
+    <div class="eyebrow">Get started</div>
+    <h1>I am here to <em>mentor</em><br/>or to <em>learn</em>.</h1>
+    <p class="subtitle">Tell us your role so we can build the right experience for you.</p>
+
+    <div class="role-cards">
+
+      <!-- Mentor card -->
+      <a class="role-card mentor" href="signup-mentor.html">
+        <div class="role-icon">
+          <svg width="22" height="22" fill="none" stroke="#c8a84b" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="role-label">I'm a mentor</div>
+        <div class="role-title">Share expertise.<br/>Earn doing it.</div>
+        <p class="role-desc">Turn your professional knowledge into real impact — and real income. Guide others the way a father would: with patience and depth.</p>
+        <ul class="role-perks">
+          <li>Set your own availability and rate</li>
+          <li>Matched to relevant mentees only</li>
+          <li>All session tools built in</li>
+          <li>Track every mentee's progress</li>
+        </ul>
+        <div class="role-cta">
+          Apply as a mentor
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </a>
+
+      <!-- Mentee card -->
+      <a class="role-card mentee" href="signup-mentee.html">
+        <div class="role-icon">
+          <svg width="22" height="22" fill="none" stroke="#5e6ad2" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </div>
+        <div class="role-label">I'm a mentee</div>
+        <div class="role-title">Get unstuck, fast.<br/>Grow with confidence.</div>
+        <p class="role-desc">Stop spending hours on forums with no answers. Get a real expert who understands your exact problem — matched in minutes.</p>
+        <ul class="role-perks">
+          <li>Matched to an expert in under 3 min</li>
+          <li>1-on-1 sessions — never group classes</li>
+          <li>Session notes &amp; history you keep</li>
+          <li>Build a lasting relationship</li>
+        </ul>
+        <div class="role-cta">
+          Find my mentor
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </a>
+
+    </div>
+
+    <p class="already">Already have an account? <a href="login.html">Sign in</a></p>
+  </div>
+
+  <script>
+    (function() {
+      const t = localStorage.getItem('fa_token');
+      const r = localStorage.getItem('fa_role');
+      if (t && r === 'mentor')  window.location.replace('dashboard-mentor.html');
+      else if (t && r === 'mentee') window.location.replace('dashboard-mentee.html');
+    })();
+  </script>
+
+</body>
+</html>

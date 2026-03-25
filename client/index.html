@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Father's Advice — Expert 1-on-1 Mentorship</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ============================================================
+       RESET & VARIABLES
+    ============================================================ */
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:        #0a0a08;
+      --black-2:      #131310;
+      --black-3:      #1c1c18;
+      --black-4:      #252520;
+      --cream:        #f7f4ef;
+      --cream-2:      #ede9e0;
+      --cream-3:      #e4dfd6;
+      --text-dark:    #f0ede6;        /* cream text on dark bg */
+      --text-muted:   rgba(240,237,230,0.52);
+      --text:         #0a0a08;
+      --text-2:       #3d3b35;
+      --muted:        #7a7770;
+      --muted-2:      #b0ada6;
+      --gold:         #c8a84b;        /* brighter on dark */
+      --gold-deep:    #b8952a;        /* for light bg */
+      --gold-light:   #e0be6a;
+      --gold-dim:     rgba(200,168,75,0.10);
+      --gold-border:  rgba(200,168,75,0.28);
+      --border-dark:  rgba(255,255,255,0.08);
+      --border-dark2: rgba(255,255,255,0.14);
+      --border-light: rgba(0,0,0,0.09);
+      --border-light2:rgba(0,0,0,0.16);
+      --serif:  'Playfair Display', Georgia, serif;
+      --sans:   'Inter', system-ui, sans-serif;
+      --shadow: 0 4px 32px rgba(0,0,0,0.12);
+      --shadow2: 0 12px 60px rgba(0,0,0,0.18);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--text-dark);
+      font-family: var(--sans);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+
+    /* ============================================================
+       SCROLL ANIMATIONS
+    ============================================================ */
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+    .fade-up.delay-1 { transition-delay: 0.12s; }
+    .fade-up.delay-2 { transition-delay: 0.22s; }
+    .fade-up.delay-3 { transition-delay: 0.32s; }
+    .fade-up.delay-4 { transition-delay: 0.42s; }
+
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
+
+    .btn-primary {
+      background: var(--gold);
+      border: 1px solid var(--gold);
+      color: var(--black);
+      padding: 14px 32px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary:hover {
+      background: var(--gold-light);
+      border-color: var(--gold-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(200,168,75,0.32);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border-dark2);
+      color: var(--text-dark);
+      padding: 14px 32px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .btn-ghost:hover {
+      background: var(--border-dark);
+      border-color: var(--border-dark2);
+    }
+
+    .btn-dark {
+      background: var(--black);
+      border: 1px solid var(--black);
+      color: var(--cream);
+      padding: 12px 28px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .btn-dark:hover { background: var(--black-2); }
+
+    .btn-outline-dark {
+      background: transparent;
+      border: 1px solid var(--border-light2);
+      color: var(--text-2);
+      padding: 12px 28px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .btn-outline-dark:hover { background: var(--cream-2); }
+
+
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
+
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 64px;
+      height: 66px;
+      background: rgba(10,10,8,0.88);
+      backdrop-filter: blur(24px) saturate(1.4);
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      text-decoration: none;
+    }
+
+    .nav-logo-mark {
+      width: 38px;
+      height: 38px;
+      background: #fff;
+      border: 1.5px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s;
+      flex-shrink: 0;
+    }
+    .nav-logo-mark-text {
+      font-family: var(--serif);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .nav-logo-mark-text .bar { color: var(--gold-deep); font-style: normal; }
+    .nav-logo:hover .nav-logo-mark { border-color: var(--gold); }
+
+    .nav-logo-name {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-dark);
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text-dark); }
+
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+
+    .btn-nav-plain {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: color 0.2s;
+      padding: 8px 12px;
+    }
+    .btn-nav-plain:hover { color: var(--text-dark); }
+
+    .btn-nav-primary {
+      background: var(--gold);
+      border: 1px solid var(--gold);
+      color: var(--black);
+      padding: 9px 22px;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-nav-primary:hover { background: var(--gold-light); }
+
+
+    /* ============================================================
+       HERO  — dark, dramatic, full viewport
+    ============================================================ */
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 148px 64px 100px;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    /* Ambient gold glow behind headline */
+    .hero-glow {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1000px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(200,168,75,0.10) 0%, transparent 68%);
+      pointer-events: none;
+    }
+
+    /* Watermark logo */
+    .hero-watermark {
+      position: absolute;
+      inset: 0;
+      background-image: url('/logo.png');
+      background-repeat: no-repeat;
+      background-position: center 44%;
+      background-size: 560px auto;
+      opacity: 0.035;
+      filter: invert(1);
+      pointer-events: none;
+    }
+
+    /* Status badge */
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--gold-border);
+      background: var(--gold-dim);
+      color: var(--gold);
+      padding: 7px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 36px;
+      position: relative;
+    }
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: badge-pulse 2s ease-in-out infinite;
+    }
+    @keyframes badge-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(200,168,75,0.5); }
+      50%       { opacity: 0.6; box-shadow: 0 0 0 5px rgba(200,168,75,0); }
+    }
+
+    .hero-headline {
+      font-family: var(--serif);
+      font-size: clamp(46px, 6.5vw, 92px);
+      font-weight: 900;
+      line-height: 1.02;
+      letter-spacing: -3px;
+      color: var(--text-dark);
+      margin-bottom: 28px;
+      max-width: 920px;
+      position: relative;
+    }
+    .hero-headline em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: var(--text-muted);
+      line-height: 1.8;
+      max-width: 500px;
+      font-weight: 300;
+      margin-bottom: 44px;
+      position: relative;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 56px;
+      position: relative;
+    }
+
+    .hero-stats {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      position: relative;
+    }
+    .hero-stat-number {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-dark);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .hero-stat-label { font-size: 12px; color: var(--text-muted); letter-spacing: 0.3px; }
+    .hero-stat-divider { width: 1px; height: 28px; background: var(--border-dark2); }
+
+
+    /* ============================================================
+       MENTOR CARDS  (shown in hero, 3 across)
+    ============================================================ */
+
+    .mentor-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      max-width: 880px;
+      margin: 64px auto 0;
+      text-align: left;
+      position: relative;
+    }
+
+    .mentor-card {
+      background: var(--black-3);
+      border: 1px solid var(--border-dark);
+      padding: 22px;
+      transition: all 0.3s ease;
+      cursor: default;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Gold shimmer on top edge on hover */
+    .mentor-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+    .mentor-card:hover {
+      border-color: var(--border-dark2);
+      box-shadow: 0 12px 48px rgba(0,0,0,0.4);
+      transform: translateY(-5px);
+    }
+    .mentor-card:hover::before { transform: scaleX(1); }
+
+    .mentor-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .mentor-avatar {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .mentor-name  { font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 2px; }
+    .mentor-meta  { font-size: 12px; color: var(--text-muted); }
+    .match-score  {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold);
+      border: 1px solid var(--gold-border);
+      background: var(--gold-dim);
+      padding: 2px 9px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .skill-tags   { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .skill-tag    {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--black-4);
+      border: 1px solid var(--border-dark);
+      padding: 3px 10px;
+      letter-spacing: 0.3px;
+    }
+    .status-line  {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--gold);
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    .status-dot   {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      flex-shrink: 0;
+      animation: dot-pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes dot-pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.25; }
+    }
+
+
+    /* ============================================================
+       MARQUEE
+    ============================================================ */
+
+    .marquee-strip {
+      background: var(--black-2);
+      border-top: 1px solid var(--border-dark);
+      border-bottom: 1px solid var(--border-dark);
+      padding: 16px 0;
+      overflow: hidden;
+    }
+    .marquee-track {
+      display: flex;
+      gap: 64px;
+      width: max-content;
+      animation: marquee 34s linear infinite;
+    }
+    @keyframes marquee { to { transform: translateX(-50%); } }
+    .marquee-item {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 13px;
+      color: rgba(240,237,230,0.35);
+      white-space: nowrap;
+    }
+    .marquee-item strong {
+      font-style: normal;
+      font-weight: 400;
+      color: rgba(240,237,230,0.65);
+    }
+
+
+    /* ============================================================
+       STATS BAND  — cream section (first light section)
+    ============================================================ */
+
+    .stats-band {
+      background: var(--cream);
+      color: var(--text);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .stat-cell {
+      padding: 52px 48px;
+      border-right: 1px solid var(--border-light);
+      transition: background 0.2s;
+    }
+    .stat-cell:last-child { border-right: none; }
+    .stat-cell:hover { background: #fff; }
+
+    .stat-number {
+      font-family: var(--serif);
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -3px;
+      line-height: 1;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .stat-number span { color: var(--gold-deep); }
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+
+    /* ============================================================
+       SECTION WRAPPER  (shared layout container)
+    ============================================================ */
+
+    .section {
+      padding: 112px 64px;
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    /* Section header — used in all content sections */
+    .section-eyebrow {
+      font-size: 10px;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-eyebrow::before {
+      content: '';
+      width: 20px;
+      height: 1px;
+    }
+    /* On dark backgrounds */
+    .on-dark .section-eyebrow        { color: var(--text-muted); }
+    .on-dark .section-eyebrow::before { background: var(--gold); }
+    /* On cream backgrounds */
+    .on-cream .section-eyebrow        { color: var(--muted-2); }
+    .on-cream .section-eyebrow::before { background: var(--gold-deep); }
+
+    .section-heading {
+      font-family: var(--serif);
+      font-size: clamp(30px, 3.8vw, 54px);
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      line-height: 1.08;
+      margin-bottom: 16px;
+    }
+    .on-dark  .section-heading { color: var(--text-dark); }
+    .on-cream .section-heading { color: var(--text); }
+
+    .section-sub {
+      font-size: 15px;
+      line-height: 1.8;
+      max-width: 460px;
+      font-weight: 300;
+    }
+    .on-dark  .section-sub { color: var(--text-muted); }
+    .on-cream .section-sub { color: var(--muted); }
+
+
+    /* ============================================================
+       HOW IT WORKS  — cream background
+    ============================================================ */
+
+    .how-it-works-wrap { background: var(--cream); color: var(--text); }
+
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--border-light);
+      margin-top: 60px;
+    }
+    .process-step {
+      padding: 40px 28px;
+      border-right: 1px solid var(--border-light);
+      background: var(--cream);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.25s;
+    }
+    .process-step:last-child { border-right: none; }
+    .process-step:hover { background: #fff; }
+    .process-step::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold-deep);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+    .process-step:hover::after { transform: scaleX(1); }
+
+    .process-number {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold-deep);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      display: block;
+    }
+    .process-title {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+    .process-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+
+    /* ============================================================
+       FEATURES  — dark background
+    ============================================================ */
+
+    .features-wrap {
+      background: var(--black-2);
+      border-top: 1px solid var(--border-dark);
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border-dark);
+      border: 1px solid var(--border-dark);
+      margin-top: 60px;
+    }
+    .feature-card {
+      background: var(--black-2);
+      padding: 36px 32px;
+      transition: background 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card:hover { background: var(--black-3); }
+    /* Gold underline on hover */
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+    .feature-card:hover::after { transform: scaleX(1); }
+
+    /* CSS line icon — one design, used 6 times */
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .feature-icon-inner {
+      width: 14px;
+      height: 2px;
+      background: var(--gold);
+      position: relative;
+    }
+    .feature-icon-inner::before,
+    .feature-icon-inner::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 2px;
+      background: var(--gold);
+    }
+    .feature-icon-inner::before { top: -5px; }
+    .feature-icon-inner::after  { top:  5px; width: 9px; }
+
+    .feature-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 9px;
+      letter-spacing: -0.2px;
+    }
+    .feature-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+
+    /* ============================================================
+       TESTIMONIALS  — cream background, editorial style
+    ============================================================ */
+
+    .testimonials-wrap { background: var(--cream); color: var(--text); }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 60px;
+    }
+    .testimonial {
+      background: #fff;
+      border: 1px solid var(--border-light);
+      padding: 36px 32px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .testimonial:hover {
+      box-shadow: var(--shadow2);
+      transform: translateY(-4px);
+    }
+
+    /* Large decorative quote mark */
+    .testimonial-quote-mark {
+      font-family: var(--serif);
+      font-size: 80px;
+      color: var(--gold-deep);
+      line-height: 0.7;
+      margin-bottom: 20px;
+      display: block;
+      opacity: 0.6;
+    }
+
+    /* CSS stars — no emoji */
+    .testimonial-stars {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 18px;
+    }
+    .star {
+      width: 12px;
+      height: 12px;
+      background: var(--gold-deep);
+      clip-path: polygon(
+        50% 0%, 61% 35%, 98% 35%, 68% 57%,
+        79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
+      );
+    }
+
+    .testimonial-text {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-style: italic;
+      color: var(--text-2);
+      line-height: 1.82;
+      margin-bottom: 28px;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-light);
+    }
+    .author-avatar {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .author-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .author-role { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+
+    /* ============================================================
+       JOIN  — dark background, two-panel split
+    ============================================================ */
+
+    .join-wrap {
+      background: var(--black);
+      border-top: 1px solid var(--border-dark);
+    }
+
+    .role-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border-dark);
+      border: 1px solid var(--border-dark);
+      margin-top: 60px;
+    }
+    .role-panel {
+      background: var(--black-2);
+      padding: 56px 48px;
+      transition: background 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .role-panel:hover { background: var(--black-3); }
+
+    /* Subtle corner accent */
+    .role-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 60px;
+      height: 1px;
+      background: var(--gold);
+      transition: width 0.4s ease;
+    }
+    .role-panel:hover::before { width: 100%; }
+
+    .role-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--gold);
+    }
+    .role-label.mentee { color: rgba(240,237,230,0.55); }
+
+    .role-heading {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.12;
+      color: var(--text-dark);
+      margin-bottom: 14px;
+    }
+    .role-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.85;
+      font-weight: 300;
+      margin-bottom: 28px;
+    }
+    .role-benefits {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      margin-bottom: 36px;
+    }
+    .role-benefits li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13px;
+      color: rgba(240,237,230,0.65);
+      line-height: 1.6;
+    }
+    .role-benefits li::before {
+      content: '—';
+      color: var(--gold);
+      font-family: var(--serif);
+      flex-shrink: 0;
+    }
+
+
+    /* ============================================================
+       CALL TO ACTION  — full dark with logo watermark
+    ============================================================ */
+
+    .cta-section {
+      background: var(--black);
+      padding: 130px 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-top: 1px solid var(--border-dark);
+    }
+    .cta-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1000px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(200,168,75,0.08) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cta-watermark {
+      position: absolute;
+      inset: 0;
+      background-image: url('/logo.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 560px auto;
+      opacity: 0.025;
+      filter: invert(1);
+      pointer-events: none;
+    }
+    .cta-heading {
+      font-family: var(--serif);
+      font-size: clamp(36px, 5.5vw, 76px);
+      font-weight: 900;
+      letter-spacing: -2.5px;
+      line-height: 1.04;
+      color: var(--text-dark);
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .cta-heading em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--gold);
+    }
+    .cta-sub {
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 300;
+      margin-bottom: 48px;
+      position: relative;
+    }
+    .cta-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .btn-cta-primary {
+      background: var(--gold);
+      border: 1px solid var(--gold);
+      color: var(--black);
+      padding: 16px 48px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .btn-cta-primary:hover {
+      background: var(--gold-light);
+      border-color: var(--gold-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(200,168,75,0.28);
+    }
+    .btn-cta-ghost {
+      background: transparent;
+      border: 1px solid var(--border-dark2);
+      color: rgba(240,237,230,0.6);
+      padding: 16px 48px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .btn-cta-ghost:hover {
+      background: var(--border-dark);
+      color: var(--text-dark);
+    }
+
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+
+    footer {
+      background: var(--black-2);
+      border-top: 1px solid var(--border-dark);
+      padding: 40px 64px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 24px;
+    }
+    .footer-brand {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: rgba(240,237,230,0.32);
+      letter-spacing: 0.5px;
+    }
+    .footer-links { display: flex; gap: 28px; }
+    .footer-links a {
+      font-size: 12px;
+      color: rgba(240,237,230,0.28);
+      text-decoration: none;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: rgba(240,237,230,0.6); }
+    .footer-copy {
+      font-size: 11px;
+      color: rgba(240,237,230,0.2);
+      text-align: right;
+      letter-spacing: 0.3px;
+    }
+
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+
+    @media (max-width: 900px) {
+      .nav              { padding: 0 20px; }
+      .nav-links        { display: none; }
+      .hero             { padding: 110px 24px 72px; }
+      .hero-stats       { gap: 20px; flex-wrap: wrap; justify-content: center; }
+      .mentor-cards     { grid-template-columns: 1fr; }
+      .stats-band       { grid-template-columns: 1fr 1fr; }
+      .stat-cell        { padding: 32px 24px; }
+      .section          { padding: 72px 24px; }
+      .process-grid     { grid-template-columns: 1fr 1fr; }
+      .features-grid    { grid-template-columns: 1fr; }
+      .testimonials-grid{ grid-template-columns: 1fr; }
+      .role-split       { grid-template-columns: 1fr; }
+      .cta-section      { padding: 80px 24px; }
+      footer            { grid-template-columns: 1fr; text-align: center; padding: 32px 24px; }
+      .footer-copy      { text-align: center; }
+    }
+
+  </style>
+</head>
+<body>
+
+
+  <!-- ============================================================
+       NAVIGATION
+  ============================================================ -->
+  <nav class="nav">
+
+    <a class="nav-logo" href="#">
+      <div class="nav-logo-mark">
+        <span class="nav-logo-mark-text">F<i class="bar">|</i>A</span>
+      </div>
+      <span class="nav-logo-name">Father's Advice</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+      <li><a href="#join">Join</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="login.html"><button class="btn-nav-plain">Sign in</button></a>
+      <a href="signup.html"><button class="btn-nav-primary">Get started</button></a>
+    </div>
+
+  </nav>
+
+
+  <!-- ============================================================
+       HERO
+  ============================================================ -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-watermark"></div>
+
+    <div class="hero-badge fade-up">
+      <span class="badge-dot"></span>
+      4,800 expert mentors available right now
+    </div>
+
+    <h1 class="hero-headline fade-up delay-1">
+      Wisdom that shapes<br/>
+      <em>careers.</em> One session<br/>
+      at a time.
+    </h1>
+
+    <p class="hero-sub fade-up delay-2">
+      Father's Advice connects you with experienced engineers and industry
+      professionals who have solved your exact problem — matched to you
+      in under three minutes.
+    </p>
+
+    <div class="hero-cta fade-up delay-3">
+      <button class="btn-primary" onclick="window.location.href='signup-mentee.html'">Find my mentor &nbsp;→</button>
+      <button class="btn-ghost" onclick="window.location.href='signup-mentor.html'">Become a mentor</button>
+    </div>
+
+    <div class="hero-stats fade-up delay-4">
+      <div>
+        <span class="hero-stat-number">4,800+</span>
+        <span class="hero-stat-label">Verified mentors</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div>
+        <span class="hero-stat-number">98%</span>
+        <span class="hero-stat-label">Doubts resolved</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div>
+        <span class="hero-stat-number">32k+</span>
+        <span class="hero-stat-label">Sessions completed</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div>
+        <span class="hero-stat-number">&lt;3 min</span>
+        <span class="hero-stat-label">Average match time</span>
+      </div>
+    </div>
+
+    <div class="mentor-cards fade-up delay-4">
+
+      <div class="mentor-card">
+        <div class="mentor-card-header">
+          <div class="mentor-avatar" style="background: linear-gradient(135deg, #2d1f4f, #5a3f8a);">AR</div>
+          <div>
+            <div class="mentor-name">Arjun Rao</div>
+            <div class="mentor-meta">8 yrs · Ex-Amazon · System Design</div>
+          </div>
+          <div class="match-score">98% match</div>
+        </div>
+        <div class="skill-tags">
+          <span class="skill-tag">Microservices</span>
+          <span class="skill-tag">AWS</span>
+          <span class="skill-tag">Docker</span>
+        </div>
+        <div class="status-line">
+          <span class="status-dot"></span>
+          Available now &nbsp;·&nbsp; 2 slots today
+        </div>
+      </div>
+
+      <div class="mentor-card">
+        <div class="mentor-card-header">
+          <div class="mentor-avatar" style="background: linear-gradient(135deg, #3a2800, #7a5500);">SM</div>
+          <div>
+            <div class="mentor-name">Sneha Menon</div>
+            <div class="mentor-meta">6 yrs · Ex-Google · Backend</div>
+          </div>
+          <div class="match-score">91% match</div>
+        </div>
+        <div class="skill-tags">
+          <span class="skill-tag">Node.js</span>
+          <span class="skill-tag">Kafka</span>
+          <span class="skill-tag">Postgres</span>
+        </div>
+        <div class="status-line">
+          <span class="status-dot"></span>
+          Available now &nbsp;·&nbsp; 1 slot today
+        </div>
+      </div>
+
+      <div class="mentor-card">
+        <div class="mentor-card-header">
+          <div class="mentor-avatar" style="background: linear-gradient(135deg, #0d2e1a, #1a5c34);">KP</div>
+          <div>
+            <div class="mentor-name">Karthik Pillai</div>
+            <div class="mentor-meta">5 yrs · Startup CTO · DevOps</div>
+          </div>
+          <div class="match-score">87% match</div>
+        </div>
+        <div class="skill-tags">
+          <span class="skill-tag">Kubernetes</span>
+          <span class="skill-tag">CI/CD</span>
+          <span class="skill-tag">Linux</span>
+        </div>
+        <div class="status-line" style="color: rgba(240,237,230,0.35);">
+          In session &nbsp;·&nbsp; next slot in 40 min
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       MARQUEE  — scrolling success stories
+  ============================================================ -->
+  <div class="marquee-strip">
+    <div class="marquee-track">
+      <div class="marquee-item">— <strong>Rahul S.</strong> matched with a DSA mentor in 2 minutes</div>
+      <div class="marquee-item">— <strong>Priya M.</strong> landed her first dev role after 6 sessions</div>
+      <div class="marquee-item">— <strong>Aryan K.</strong> cleared GATE with structured guidance</div>
+      <div class="marquee-item">— <strong>Shreya T.</strong> shipped her first SaaS with a mentor's help</div>
+      <div class="marquee-item">— <strong>Vikram R.</strong> solved a system design doubt in 20 minutes</div>
+      <div class="marquee-item">— <strong>Nisha B.</strong> cracked her senior engineer interview</div>
+      <!-- duplicate for seamless loop -->
+      <div class="marquee-item">— <strong>Rahul S.</strong> matched with a DSA mentor in 2 minutes</div>
+      <div class="marquee-item">— <strong>Priya M.</strong> landed her first dev role after 6 sessions</div>
+      <div class="marquee-item">— <strong>Aryan K.</strong> cleared GATE with structured guidance</div>
+      <div class="marquee-item">— <strong>Shreya T.</strong> shipped her first SaaS with a mentor's help</div>
+      <div class="marquee-item">— <strong>Vikram R.</strong> solved a system design doubt in 20 minutes</div>
+      <div class="marquee-item">— <strong>Nisha B.</strong> cracked her senior engineer interview</div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       STATS BAND  — cream section, bold numbers
+  ============================================================ -->
+  <div class="stats-band">
+    <div class="stat-cell fade-up">
+      <div class="stat-number">4,8<span>00+</span></div>
+      <div class="stat-label">Active mentors</div>
+    </div>
+    <div class="stat-cell fade-up delay-1">
+      <div class="stat-number">32<span>k+</span></div>
+      <div class="stat-label">Sessions completed</div>
+    </div>
+    <div class="stat-cell fade-up delay-2">
+      <div class="stat-number">98<span>%</span></div>
+      <div class="stat-label">Doubt resolution rate</div>
+    </div>
+    <div class="stat-cell fade-up delay-3">
+      <div class="stat-number">&lt;3<span>m</span></div>
+      <div class="stat-label">Average match time</div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       HOW IT WORKS  — cream section
+  ============================================================ -->
+  <div class="how-it-works-wrap">
+    <div class="section on-cream" id="how-it-works">
+
+      <div class="section-eyebrow fade-up">How it works</div>
+      <h2 class="section-heading fade-up delay-1">From stuck to solved<br/>in four steps.</h2>
+      <p class="section-sub fade-up delay-2">
+        No waitlists. No cold emails. Describe your problem and
+        we will find the right expert, instantly.
+      </p>
+
+      <div class="process-grid">
+
+        <div class="process-step fade-up">
+          <span class="process-number">Step 01</span>
+          <div class="process-title">Describe your doubt</div>
+          <p class="process-desc">
+            Tell us your domain, skill level, and what you are stuck on.
+            Takes sixty seconds.
+          </p>
+        </div>
+
+        <div class="process-step fade-up delay-1">
+          <span class="process-number">Step 02</span>
+          <div class="process-title">Get matched instantly</div>
+          <p class="process-desc">
+            Our algorithm scores available mentors against your profile
+            and surfaces the top three matches.
+          </p>
+        </div>
+
+        <div class="process-step fade-up delay-2">
+          <span class="process-number">Step 03</span>
+          <div class="process-title">Go live, solve it</div>
+          <p class="process-desc">
+            Join a private 1-on-1 session with video, whiteboard and
+            chat — all inside one window.
+          </p>
+        </div>
+
+        <div class="process-step fade-up delay-3">
+          <span class="process-number">Step 04</span>
+          <div class="process-title">Track your growth</div>
+          <p class="process-desc">
+            Every session is logged. Every doubt solved. Your progress
+            builds into a visible, shareable record.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       FEATURES  — dark section
+  ============================================================ -->
+  <div class="features-wrap">
+    <div class="section on-dark" id="features">
+
+      <div class="section-eyebrow fade-up">Platform features</div>
+      <h2 class="section-heading fade-up delay-1">Everything you need.<br/>Nothing else to open.</h2>
+
+      <div class="features-grid">
+
+        <div class="feature-card fade-up">
+          <div class="feature-icon"><div class="feature-icon-inner"></div></div>
+          <div class="feature-title">Shared whiteboard</div>
+          <p class="feature-desc">
+            Draw diagrams, annotate code, explain flows. Both sides collaborate
+            in real time — no third-party tools required.
+          </p>
+        </div>
+
+        <div class="feature-card fade-up delay-1">
+          <div class="feature-icon"><div class="feature-icon-inner"></div></div>
+          <div class="feature-title">Smart matching</div>
+          <p class="feature-desc">
+            Skills, domain, and ratings are weighted and scored — not just keyword
+            matched. Gets more accurate after every session.
+          </p>
+        </div>
+
+        <div class="feature-card fade-up delay-2">
+          <div class="feature-icon"><div class="feature-icon-inner"></div></div>
+          <div class="feature-title">Easy scheduling</div>
+          <p class="feature-desc">
+            Mentors set their own slots. Mentees book in seconds.
+            No emails, no back-and-forth, no confusion.
+          </p>
+        </div>
+
+        <div class="feature-card fade-up">
+          <div class="feature-icon"><div class="feature-icon-inner"></div></div>
+          <div class="feature-title">Session history</div>
+          <p class="feature-desc">
+            Every session is logged with notes. Go back, review, and track
+            exactly what you have solved over time.
+          </p>
+        </div>
+
+        <div class="feature-card fade-up delay-1">
+          <div class="feature-icon"><div class="feature-icon-inner"></div></div>
+          <div class="feature-title">Growth tracking</div>
+          <p class="feature-desc">
+            Mentees track their progress. Mentors see their impact scores.
+            Motivation built in, not bolted on.
+          </p>
+        </div>
+
+        <div class="feature-card fade-up delay-2">
+          <div class="feature-icon"><div class="feature-icon-inner"></div></div>
+          <div class="feature-title">Verified mentors only</div>
+          <p class="feature-desc">
+            Every mentor is vetted for real, relevant experience.
+            No unqualified profiles. No wasted sessions.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       TESTIMONIALS  — cream section
+  ============================================================ -->
+  <div class="testimonials-wrap">
+    <div class="section on-cream" id="reviews">
+
+      <div class="section-eyebrow fade-up">Testimonials</div>
+      <h2 class="section-heading fade-up delay-1">Sessions that actually<br/>change something.</h2>
+
+      <div class="testimonials-grid">
+
+        <div class="testimonial fade-up">
+          <span class="testimonial-quote-mark">"</span>
+          <div class="testimonial-stars">
+            <div class="star"></div><div class="star"></div><div class="star"></div>
+            <div class="star"></div><div class="star"></div>
+          </div>
+          <p class="testimonial-text">
+            I was stuck on system design for three weeks. One session with Arjun
+            and it clicked completely. This is what Stack Overflow can never give you.
+          </p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg,#2d1f4f,#5a3f8a);">V</div>
+            <div>
+              <div class="author-name">Vraj S.</div>
+              <div class="author-role">CS Student, VIT Bhopal</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial fade-up delay-1">
+          <span class="testimonial-quote-mark">"</span>
+          <div class="testimonial-stars">
+            <div class="star"></div><div class="star"></div><div class="star"></div>
+            <div class="star"></div><div class="star"></div>
+          </div>
+          <p class="testimonial-text">
+            As a mentor I only get matched to students who genuinely need what I know.
+            No wasted sessions. I have referred three colleagues to join as mentors.
+          </p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg,#3a2800,#7a5500);">R</div>
+            <div>
+              <div class="author-name">Rohan M.</div>
+              <div class="author-role">Senior Engineer, Bangalore</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial fade-up delay-2">
+          <span class="testimonial-quote-mark">"</span>
+          <div class="testimonial-stars">
+            <div class="star"></div><div class="star"></div><div class="star"></div>
+            <div class="star"></div><div class="star"></div>
+          </div>
+          <p class="testimonial-text">
+            The whiteboard made all the difference. My mentor drew the entire schema
+            while explaining — I finally understood normalisation after two years.
+          </p>
+          <div class="testimonial-author">
+            <div class="author-avatar" style="background: linear-gradient(135deg,#0d2e1a,#1a5c34);">P</div>
+            <div>
+              <div class="author-name">Priya K.</div>
+              <div class="author-role">Working Professional, Pune</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       JOIN  — dark section, two paths
+  ============================================================ -->
+  <div class="join-wrap">
+    <div class="section on-dark" id="join">
+
+      <div class="section-eyebrow fade-up">Pick your path</div>
+      <h2 class="section-heading fade-up delay-1">Two roles.<br/>One platform.</h2>
+      <p class="section-sub fade-up delay-2">
+        Whether you are here to grow or to give back,
+        there is a place for you.
+      </p>
+
+      <div class="role-split">
+
+        <div class="role-panel fade-up">
+          <div class="role-label">For mentors</div>
+          <div class="role-heading">Share what you know.<br/>Earn doing it.</div>
+          <p class="role-desc">
+            Turn your expertise into real impact — and real income.
+            Guide the way a father would: with patience, depth and care.
+          </p>
+          <ul class="role-benefits">
+            <li>Set your own availability and hourly rate</li>
+            <li>Matched to relevant mentees only</li>
+            <li>All session tools built in — nothing to install</li>
+            <li>Earn while building your professional reputation</li>
+            <li>Track every mentee's progress over time</li>
+          </ul>
+          <button class="btn-primary" onclick="window.location.href='signup-mentor.html'">Apply as a mentor &nbsp;→</button>
+        </div>
+
+        <div class="role-panel fade-up delay-2">
+          <div class="role-label mentee">For mentees</div>
+          <div class="role-heading">Get unstuck, fast.<br/>Grow with confidence.</div>
+          <p class="role-desc">
+            Stop spending hours on forums with no answers. Get a real expert
+            who understands your exact problem — matched in minutes.
+          </p>
+          <ul class="role-benefits">
+            <li>Matched to an expert in under three minutes</li>
+            <li>1-on-1 sessions — never group classes</li>
+            <li>Domain-specific expertise every single time</li>
+            <li>Session notes and history you keep forever</li>
+            <li>Build a lasting relationship with your mentor</li>
+          </ul>
+          <button class="btn-ghost" onclick="window.location.href='signup-mentee.html'">Find my mentor &nbsp;→</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       CALL TO ACTION
+  ============================================================ -->
+  <div class="cta-section">
+    <div class="cta-glow"></div>
+    <div class="cta-watermark"></div>
+
+    <h2 class="cta-heading fade-up">
+      Your mentor is waiting.<br/>
+      <em>Don't stay stuck.</em>
+    </h2>
+    <p class="cta-sub fade-up delay-1">
+      Join thousands of developers who stopped Googling and started growing.
+    </p>
+    <div class="cta-btns fade-up delay-2">
+      <button class="btn-cta-primary" onclick="window.location.href='signup-mentee.html'">Get matched free &nbsp;→</button>
+      <button class="btn-cta-ghost" onclick="window.location.href='signup-mentor.html'">Become a mentor</button>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer>
+    <div class="footer-brand">F | A &nbsp;·&nbsp; Father's Advice</div>
+    <div class="footer-links">
+      <a href="#">About</a>
+      <a href="#">Pricing</a>
+      <a href="#">Blog</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-copy">© 2025 Father's Advice. All rights reserved.</div>
+  </footer>
+
+
+  <!-- ============================================================
+       SCROLL ANIMATION  — triggers .visible class on elements
+       as they enter the viewport
+  ============================================================ -->
+  <script>
+    /* ── Auto-redirect if already logged in ───────────────── */
+    (function() {
+      const t = localStorage.getItem('fa_token');
+      const r = localStorage.getItem('fa_role');
+      if (t && r === 'mentor')  window.location.replace('dashboard-mentor.html');
+      else if (t && r === 'mentee') window.location.replace('dashboard-mentee.html');
+    })();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);   // animate once only
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+
+    // Observe all elements with .fade-up class
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Hero elements animate immediately on load
+    document.querySelectorAll('.hero .fade-up').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), 100 + i * 120);
+    });
+  </script>
+
+
+</body>
+</html>

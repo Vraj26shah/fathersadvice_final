@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentee Dashboard — Father's Advice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── CSS Variables ─────────────────────────────────────── */
+    :root {
+      --black:       #0a0a08;
+      --cream:       #f5f2eb;
+      --white:       #ffffff;
+      --text:        #1a1a18;
+      --muted:       #6b6b65;
+      --accent:      #5e6ad2;       /* Indigo accent for mentee */
+      --accent-deep: #4a54b8;
+      --accent-border: rgba(94,106,210,0.35);
+      --accent-glow:   rgba(94,106,210,0.12);
+      --gold:        #c8a84b;
+      --gold-deep:   #a8882b;
+      --gold-border: rgba(200,168,75,0.35);
+      --card-bg:     #141412;
+      --border:      rgba(255,255,255,0.08);
+      --serif:       'Playfair Display', Georgia, serif;
+      --sans:        'Inter', system-ui, sans-serif;
+      --radius:      12px;
+      --sidebar-w:   240px;
+    }
+
+    /* ─── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--sans);
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ─── Sidebar ────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--card-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 28px 24px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--white);
+      border: 1.5px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark-text {
+      font-family: var(--serif);
+      font-size: 11px; font-weight: 700;
+      color: var(--black); letter-spacing: -1px;
+    }
+    .logo-mark-text .bar { color: var(--gold-deep); font-style: normal; }
+    .logo-name {
+      font-family: var(--serif);
+      font-size: 14px; color: var(--white); line-height: 1.2;
+    }
+    .logo-name span { display: block; font-size: 10px; font-family: var(--sans); color: var(--muted); font-weight: 400; margin-top: 1px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-section-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--muted); padding: 16px 24px 8px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 24px;
+      color: rgba(255,255,255,0.55); cursor: pointer; transition: all 0.2s;
+      font-size: 14px; font-weight: 500;
+      border-left: 2px solid transparent; text-decoration: none;
+    }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+    .nav-item.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .nav-item .icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid var(--border); }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--white); flex-shrink: 0;
+    }
+    .user-meta { flex: 1; min-width: 0; }
+    .user-meta .name { font-size: 13px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-meta .role { font-size: 11px; color: var(--accent); font-weight: 500; }
+    .logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; font-size: 14px; transition: color 0.2s; }
+    .logout-btn:hover { color: var(--white); }
+
+    /* ─── Main ───────────────────────────────────────────────── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+    .topbar {
+      height: 64px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(10,10,8,0.8); backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-size: 18px; font-weight: 600; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .badge-accent {
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+      font-size: 12px; font-weight: 600;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .btn-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--muted); transition: all 0.2s; position: relative;
+    }
+    .btn-icon:hover { color: var(--white); background: rgba(255,255,255,0.1); }
+    .notif-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: var(--accent); border-radius: 50%; border: 2px solid var(--black); }
+
+    .page-body { padding: 32px; display: flex; flex-direction: column; gap: 28px; }
+
+    /* ─── Stats Row ──────────────────────────────────────────── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 8px; transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--accent-border); }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--white); font-family: var(--serif); line-height: 1; }
+    .stat-change { font-size: 12px; color: #4ade80; font-weight: 500; }
+    .stat-change.neutral { color: var(--muted); }
+
+    /* ─── Two-column ─────────────────────────────────────────── */
+    .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+
+    .card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px; border-bottom: 1px solid var(--border);
+    }
+    .card-title { font-size: 15px; font-weight: 600; }
+    .card-action { font-size: 13px; color: var(--accent); cursor: pointer; font-weight: 500; text-decoration: none; }
+    .card-action:hover { text-decoration: underline; }
+    .card-body { padding: 0; }
+
+    /* ─── Mentor match cards ─────────────────────────────────── */
+    .mentor-match {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 18px 24px; border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .mentor-match:last-child { border-bottom: none; }
+    .mentor-match:hover { background: rgba(255,255,255,0.02); }
+    .mentor-pic {
+      width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; color: var(--white);
+    }
+    .mentor-details { flex: 1; min-width: 0; }
+    .mentor-name { font-size: 15px; font-weight: 700; }
+    .mentor-title { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .mentor-skills { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .skill-chip {
+      font-size: 11px; font-weight: 500;
+      padding: 2px 8px; border-radius: 20px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+    }
+    .mentor-score-wrap { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .match-score { font-size: 22px; font-weight: 700; font-family: var(--serif); color: var(--accent); line-height: 1; }
+    .match-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .score-breakdown { font-size: 10px; color: var(--muted); display: flex; flex-direction: column; gap: 1px; text-align: right; }
+    .score-breakdown span { white-space: nowrap; }
+    .btn-request {
+      margin-top: 4px; padding: 6px 14px;
+      background: var(--accent); color: var(--white);
+      border: none; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-request:hover { background: var(--accent-deep); }
+    .btn-request:disabled { background: rgba(94,106,210,0.3); cursor: default; }
+    .btn-connected { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.35); border-radius: 6px; font-size: 12px; font-weight: 600; padding: 6px 14px; margin-top: 4px; cursor: default; }
+
+    /* ─── Goals progress ─────────────────────────────────────── */
+    .goal-item {
+      padding: 14px 24px; border-bottom: 1px solid var(--border);
+    }
+    .goal-item:last-child { border-bottom: none; }
+    .goal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .goal-name { font-size: 13px; font-weight: 600; }
+    .goal-pct  { font-size: 12px; color: var(--accent); font-weight: 700; }
+    .goal-bar-wrap { background: rgba(255,255,255,0.08); border-radius: 99px; height: 5px; overflow: hidden; }
+    .goal-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent-deep), var(--accent)); transition: width 0.5s; }
+    .goal-note { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+    /* ─── Schedule ───────────────────────────────────────────── */
+    .schedule-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; border-bottom: 1px solid var(--border); }
+    .schedule-item:last-child { border-bottom: none; }
+    .schedule-date { width: 44px; text-align: center; flex-shrink: 0; }
+    .schedule-date .day { font-size: 20px; font-weight: 700; color: var(--accent); font-family: var(--serif); line-height: 1; }
+    .schedule-date .mon { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+    .schedule-info { flex: 1; }
+    .schedule-name { font-size: 13px; font-weight: 600; }
+    .schedule-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .schedule-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .badge-confirmed { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+    .badge-pending   { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent-border); }
+
+    /* ─── Activity feed ──────────────────────────────────────── */
+    .activity-item { display: flex; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex-shrink: 0; }
+    .activity-dot.green { background: #4ade80; }
+    .activity-dot.gold  { background: var(--gold); }
+    .activity-text { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+    .activity-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* ─── Welcome card (first-time) ──────────────────────────── */
+    .welcome-card {
+      background: linear-gradient(135deg, rgba(94,106,210,0.15), rgba(94,106,210,0.04));
+      border: 1px solid var(--accent-border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      display: flex; align-items: center; gap: 24px;
+    }
+    .welcome-text h2 { font-family: var(--serif); font-size: 22px; line-height: 1.3; }
+    .welcome-text h2 em { color: var(--accent); font-style: normal; }
+    .welcome-text p { font-size: 14px; color: rgba(255,255,255,0.65); margin-top: 8px; line-height: 1.6; }
+    .welcome-cta {
+      flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .btn-primary {
+      background: var(--accent); color: var(--white);
+      border: none; padding: 10px 22px; border-radius: 8px;
+      font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--accent-deep); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.07); color: var(--white);
+      border: 1px solid var(--border); padding: 10px 22px; border-radius: 8px;
+      font-weight: 500; font-size: 14px; cursor: pointer; text-align: center;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+    /* ─── Modal ──────────────────────────────────────────────── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a18; border: 1px solid var(--border); border-radius: 16px; width: 480px; max-width: 95vw; padding: 32px; }
+    .modal h3 { font-family: var(--serif); font-size: 20px; margin-bottom: 16px; }
+    .modal p  { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+    /* ─── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 1100px) { .two-col { grid-template-columns: 1fr; } }
+    @media (max-width: 900px)  { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px)  {
+      :root { --sidebar-w: 0px; }
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .page-body { padding: 20px 16px; }
+      .welcome-card { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ Sidebar ═══════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <span class="logo-mark-text">F<i class="bar">|</i>A</span>
+      </div>
+      <div class="logo-name">
+        Father's Advice
+        <span>Mentee Portal</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+
+      <a class="nav-item active" href="dashboard-mentee.html">
+        <span class="icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </span>
+        Dashboard
+      </a>
+
+      <a class="nav-item" href="find-mentor.html">
+        <span class="icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        Find a Mentor
+      </a>
+
+      <a class="nav-item" href="calendar.html">
+        <span class="icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </span>
+        My Sessions
+      </a>
+
+      <a class="nav-item" href="chat.html">
+        <span class="icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </span>
+        Messages
+      </a>
+
+      <a class="nav-item" href="progress.html">
+        <span class="icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </span>
+        My Progress
+      </a>
+
+      <div class="nav-section-label" style="margin-top:8px;">Account</div>
+
+      <a class="nav-item" href="profile.html">
+        <span class="icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        My Profile
+      </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar">JD</div>
+        <div class="user-meta">
+          <div class="name" id="sidebar-name">Jane Doe</div>
+          <div class="role">Mentee</div>
+        </div>
+        <button class="logout-btn" title="Sign out" onclick="signOut()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ Main ═══════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title">Welcome, <span id="topbar-name">Mentee</span></div>
+      <div class="topbar-actions">
+        <span class="badge-accent">Mentee</span>
+        <div class="btn-icon" title="Notifications">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-dot"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page body -->
+    <div class="page-body">
+
+      <!-- Welcome banner -->
+      <div class="welcome-card">
+        <div class="welcome-text">
+          <h2>You have <em id="match-count-text">mentor matches</em> waiting.</h2>
+          <p>Our algorithm ranked mentors by expertise alignment, availability overlap, and feedback score. Review their profiles and send a request to get started.</p>
+        </div>
+        <div class="welcome-cta">
+          <button class="btn-primary" onclick="scrollToMatches()">View Matches</button>
+          <a class="btn-secondary" href="find-mentor.html">Browse All</a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Sessions Done</div>
+          <div class="stat-value" id="stat-sessions">—</div>
+          <div class="stat-change" id="stat-sessions-sub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Upcoming Sessions</div>
+          <div class="stat-value" id="stat-upcoming">—</div>
+          <div class="stat-change" id="stat-upcoming-sub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hours Learned</div>
+          <div class="stat-value" id="stat-hours">—</div>
+          <div class="stat-change" id="stat-hours-sub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Mentors</div>
+          <div class="stat-value" id="stat-mentors">—</div>
+          <div class="stat-change" id="stat-mentors-sub"></div>
+        </div>
+      </div>
+
+      <!-- Two-column -->
+      <div class="two-col">
+
+        <!-- Left -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Mentor Matches -->
+          <div class="card" id="matches-section">
+            <div class="card-header">
+              <div class="card-title">Available Mentors</div>
+            </div>
+            <div class="card-body" id="mentors-list">
+              <div style="color:var(--muted);font-size:14px;padding:12px 0;">Loading mentors…</div>
+            </div>
+          </div>
+
+          <!-- Upcoming Sessions -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Upcoming Sessions</div>
+              <a class="card-action" href="calendar.html">See calendar</a>
+            </div>
+            <div class="card-body" id="upcoming-sessions-list">
+              <div style="color:var(--muted);font-size:14px;padding:12px 0;">Loading sessions…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Activity feed -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Recent Activity</div>
+            </div>
+            <div class="card-body" id="activity-feed">
+              <div style="color:var(--muted);font-size:14px;padding:12px 0;">Loading activity…</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /page-body -->
+  </main>
+
+  <!-- ═══ Modal: Connect with doubt ══════════════════════ -->
+  <div class="modal-overlay" id="connect-modal">
+    <div class="modal">
+      <h3>Connect with <span id="modal-mentor-name"></span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Describe your doubt or what you'd like help with. The mentor will see this when reviewing your request.</p>
+      <textarea
+        id="doubt-input"
+        placeholder="e.g. I want to transition from engineering to product management and need guidance on where to start…"
+        style="width:100%;min-height:110px;resize:vertical;background:#1c1c18;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:12px;font-family:var(--sans);font-size:14px;border-radius:8px;outline:none;margin-bottom:6px;"
+      ></textarea>
+      <div id="doubt-error" style="font-size:12px;color:#e05c5c;display:none;margin-bottom:10px;">Please describe your doubt before sending.</div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeConnectModal()">Cancel</button>
+        <button class="btn-primary" id="send-request-btn" onclick="sendRequest()">Send Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Real-time notification banner ══════════════════ -->
+  <div id="rt-banner" style="
+    display:none; position:fixed; top:0; left:0; right:0; z-index:9999;
+    background:linear-gradient(90deg,#4a54b8,#5e6ad2);
+    padding:14px 24px; display:none; align-items:center; justify-content:space-between;
+    gap:16px; box-shadow:0 4px 24px rgba(0,0,0,0.5);">
+    <div style="display:flex;align-items:center;gap:12px;flex:1;">
+      <div style="width:10px;height:10px;border-radius:50%;background:#4ade80;animation:pulse 1s infinite;flex-shrink:0;"></div>
+      <span id="rt-banner-text" style="font-size:14px;font-weight:600;color:#fff;"></span>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <a id="rt-banner-join" href="#"
+         style="background:#fff;color:#4a54b8;padding:7px 16px;border-radius:7px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">
+        Join Session Now →
+      </a>
+      <button onclick="dismissBanner()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;padding:7px 12px;border-radius:7px;font-size:13px;cursor:pointer;">✕</button>
+    </div>
+  </div>
+
+  <!-- ═══ Session schedule notification modal ═════════════ -->
+  <div class="modal-overlay" id="sched-notify-modal">
+    <div class="modal">
+      <h3>📅 Session Scheduled!</h3>
+      <p style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:12px;">Your mentor has proposed a session with you.</p>
+      <div id="sched-notify-body" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;margin-bottom:16px;font-size:14px;line-height:1.7;"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeSchedModal()">Later</button>
+        <button class="btn-primary" id="confirm-sched-btn" onclick="confirmSession()">✓ Confirm Session</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- ═══ Scripts ════════════════════════════════════════════ -->
+  <script>
+    /* ── Auth guard ─────────────────────────────────────── */
+    const token = localStorage.getItem('fa_token');
+    const role  = localStorage.getItem('fa_role');
+    if (!token) {
+      window.location.href = '/login.html';
+    } else if (role && role !== 'mentee') {
+      window.location.href = '/dashboard-mentor.html';
+    }
+
+    /* ── Populate user name ─────────────────────────────── */
+    const storedName = localStorage.getItem('fa_name') || 'Mentee';
+    const initials   = storedName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('topbar-name').textContent    = storedName.split(' ')[0];
+    document.getElementById('sidebar-name').textContent   = storedName;
+    document.getElementById('sidebar-avatar').textContent = initials;
+
+    /* ── Gradient colours for avatars ───────────────────── */
+    const GRADIENTS = [
+      'linear-gradient(135deg,#c8a84b,#a8882b)',
+      'linear-gradient(135deg,#818cf8,#6366f1)',
+      'linear-gradient(135deg,#34d399,#059669)',
+      'linear-gradient(135deg,#fb923c,#ea580c)',
+      'linear-gradient(135deg,#f472b6,#db2777)',
+      'linear-gradient(135deg,#38bdf8,#0284c7)',
+    ];
+
+    /* ── Load real mentors from API ─────────────────────── */
+    async function loadMentors() {
+      try {
+        const res = await fetch('/api/connect/mentors', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        renderMentors(data.mentors);
+      } catch (err) {
+        document.getElementById('mentors-list').innerHTML =
+          `<div style="color:#e05c5c;font-size:14px;">Could not load mentors: ${err.message}</div>`;
+      }
+    }
+
+    function renderMentors(mentors) {
+      const container = document.getElementById('mentors-list');
+      if (!mentors.length) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:14px;">No mentors available yet.</div>';
+        return;
+      }
+
+      // Update welcome banner count
+      const el = document.getElementById('match-count-text');
+      if (el) el.textContent = `${mentors.length} mentor match${mentors.length !== 1 ? 'es' : ''}`;
+
+      container.innerHTML = mentors.map((m, i) => {
+        const initials = m.fullName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+        const grad = GRADIENTS[i % GRADIENTS.length];
+        const topSkills = (m.skills || []).slice(0, 3).map(s => `<span class="skill-chip">${s.name || s}</span>`).join('');
+        const statusAttr = m.requestStatus ? `data-status="${m.requestStatus}"` : '';
+
+        const scoreHtml = `
+          <div class="match-score">${m.matchScore ?? '—'}%</div>
+          <div class="match-label">Match</div>
+          <div class="score-breakdown">
+            <span>Skills ${m.expertiseScore ?? '—'}%</span>
+            <span>Avail ${m.availabilityScore ?? '—'}%</span>
+          </div>`;
+
+        let btnHtml;
+        if (m.requestStatus === 'accepted') {
+          btnHtml = `
+            <span class="btn-connected">Connected ✓</span>
+            ${m.requestId ? `<a href="session.html?requestId=${m.requestId}" style="display:block;margin-top:6px;text-align:center;font-size:11px;font-weight:600;color:#4ade80;text-decoration:none;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:6px;padding:4px 10px;">Join Session →</a>` : ''}`;
+        } else if (m.requestStatus === 'pending') {
+          btnHtml = `<button class="btn-request" disabled style="opacity:0.6;">Requested</button>`;
+        } else {
+          btnHtml = `<button class="btn-request" onclick="openConnectModal('${m.mentorId}','${m.fullName.replace(/'/g,"\\'")}',this)">Connect</button>`;
+        }
+
+        return `
+          <div class="mentor-match" data-mentor-id="${m.mentorId}" ${statusAttr}>
+            <div class="mentor-pic" style="background:${grad};">${initials}</div>
+            <div class="mentor-details">
+              <div class="mentor-name">${m.fullName}</div>
+              <div class="mentor-title">${[m.jobTitle, m.organisation].filter(Boolean).join(' — ')}${m.yearsExperience ? ` · ${m.yearsExperience} yrs exp` : ''}</div>
+              <div class="mentor-skills">${topSkills}</div>
+            </div>
+            <div class="mentor-score-wrap">${scoreHtml}${btnHtml}</div>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Connect modal ──────────────────────────────────── */
+    let pendingMentorId   = null;
+    let pendingMentorName = null;
+    let pendingBtn        = null;
+
+    function openConnectModal(mentorId, name, btn) {
+      pendingMentorId   = mentorId;
+      pendingMentorName = name;
+      pendingBtn        = btn;
+      document.getElementById('modal-mentor-name').textContent = name;
+      document.getElementById('doubt-input').value = '';
+      document.getElementById('doubt-error').style.display = 'none';
+      document.getElementById('connect-modal').classList.add('open');
+    }
+
+    function closeConnectModal() {
+      document.getElementById('connect-modal').classList.remove('open');
+      pendingMentorId = pendingMentorName = pendingBtn = null;
+    }
+
+    document.getElementById('connect-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeConnectModal();
+    });
+
+    async function sendRequest() {
+      const doubt = document.getElementById('doubt-input').value.trim();
+      if (!doubt) {
+        document.getElementById('doubt-error').style.display = 'block';
+        return;
+      }
+      document.getElementById('doubt-error').style.display = 'none';
+      const sendBtn = document.getElementById('send-request-btn');
+      sendBtn.textContent = 'Sending…';
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/connect/request', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body:    JSON.stringify({ mentorId: pendingMentorId, doubt }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        if (pendingBtn) {
+          pendingBtn.textContent = 'Requested';
+          pendingBtn.disabled    = true;
+          pendingBtn.style.opacity = '0.6';
+        }
+        closeConnectModal();
+        showToast(`Request sent to ${pendingMentorName}!`);
+      } catch (err) {
+        document.getElementById('doubt-error').textContent = err.message;
+        document.getElementById('doubt-error').style.display = 'block';
+      } finally {
+        sendBtn.textContent = 'Send Request';
+        sendBtn.disabled    = false;
+      }
+    }
+
+    /* ── Scroll to matches ──────────────────────────────── */
+    function scrollToMatches() {
+      document.getElementById('matches-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* ── Toast ──────────────────────────────────────────── */
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.textContent = msg;
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '28px', right: '28px',
+        background: 'var(--accent)', color: 'var(--white)',
+        fontWeight: '600', fontSize: '14px',
+        padding: '12px 20px', borderRadius: '10px',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.4)',
+        zIndex: '9999', opacity: '0',
+        transition: 'opacity 0.3s, transform 0.3s',
+        transform: 'translateY(10px)'
+      });
+      document.body.appendChild(t);
+      requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(10px)';
+        setTimeout(() => t.remove(), 300);
+      }, 3500);
+    }
+
+    /* ── Sign out ───────────────────────────────────────── */
+    function signOut() {
+      localStorage.removeItem('fa_token');
+      localStorage.removeItem('fa_role');
+      localStorage.removeItem('fa_name');
+      window.location.href = '/login.html';
+    }
+
+    /* ── Real-time banner ───────────────────────────────── */
+    let pendingSessionId = null;
+
+    function showBanner(text, href) {
+      const banner = document.getElementById('rt-banner');
+      document.getElementById('rt-banner-text').textContent = text;
+      document.getElementById('rt-banner-join').href = href;
+      banner.style.display = 'flex';
+      // Push page body down
+      document.querySelector('.main').style.marginTop = '52px';
+    }
+    function dismissBanner() {
+      document.getElementById('rt-banner').style.display = 'none';
+      document.querySelector('.main').style.marginTop = '';
+    }
+
+    /* ── Schedule notification modal ────────────────────── */
+    function showSchedModal(data) {
+      pendingSessionId = data.sessionId;
+      document.getElementById('sched-notify-body').innerHTML = `
+        <strong>${data.proposerName}</strong> (your mentor) proposed:<br>
+        🗓 <strong>${data.scheduledTime}</strong><br>
+        ⏱ ${data.durationMins} minutes
+        ${data.notes ? `<br>📝 ${data.notes}` : ''}`;
+      document.getElementById('sched-notify-modal').classList.add('open');
+    }
+    function closeSchedModal() {
+      document.getElementById('sched-notify-modal').classList.remove('open');
+      pendingSessionId = null;
+    }
+    async function confirmSession() {
+      if (!pendingSessionId) return;
+      const btn = document.getElementById('confirm-sched-btn');
+      btn.textContent = 'Confirming…'; btn.disabled = true;
+      try {
+        const res = await fetch(`/api/sessions/confirm/${pendingSessionId}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        closeSchedModal();
+        showToast('Session confirmed! You\'ll both receive an email.');
+      } catch (err) {
+        showToast(err.message);
+      } finally {
+        btn.textContent = '✓ Confirm Session'; btn.disabled = false;
+      }
+    }
+
+    /* ── timeAgo helper ────────────────────────────────── */
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      return `${Math.floor(hrs / 24)}d ago`;
+    }
+
+    /* ── Load sessions ──────────────────────────────────── */
+    let _allSessions = [];
+
+    async function loadSessions() {
+      try {
+        const res  = await fetch('/api/sessions/mine', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) return;
+        _allSessions = data.sessions || [];
+        renderSessions(_allSessions);
+        updateStats();
+        renderActivity();
+      } catch (_) {}
+    }
+
+    const _MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function renderSessions(sessions) {
+      const container = document.getElementById('upcoming-sessions-list');
+      if (!container) return;
+      const upcoming = sessions
+        .filter(s => new Date(s.scheduledTime) > Date.now())
+        .sort((a,b) => new Date(a.scheduledTime) - new Date(b.scheduledTime))
+        .slice(0,3);
+      if (!upcoming.length) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">No upcoming sessions yet.</div>';
+        return;
+      }
+      container.innerHTML = upcoming.map(s => {
+        const d     = new Date(s.scheduledTime);
+        const other = s.mentor?.fullName || 'Mentor';
+        const badgeClass = s.status === 'confirmed' ? 'badge-confirmed' : 'badge-pending';
+        const badgeText  = s.status === 'confirmed' ? 'Confirmed' : 'Pending';
+        return `
+          <div class="schedule-item">
+            <div class="schedule-date">
+              <div class="day">${d.getDate()}</div>
+              <div class="mon">${_MONTHS[d.getMonth()]}</div>
+            </div>
+            <div class="schedule-info">
+              <div class="schedule-name">1:1 with ${other}</div>
+              <div class="schedule-time">${d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} · ${s.durationMins || 60} min</div>
+            </div>
+            <span class="schedule-badge ${badgeClass}">${badgeText}</span>
+          </div>`;
+      }).join('');
+    }
+
+    function updateStats() {
+      const sessions = _allSessions;
+      const done     = sessions.filter(s => s.status === 'completed');
+      const upcoming = sessions.filter(s => new Date(s.scheduledTime) > Date.now() && s.status !== 'completed');
+      const hours    = done.reduce((acc, s) => acc + (s.durationMins || 60), 0) / 60;
+
+      document.getElementById('stat-sessions').textContent  = done.length;
+      document.getElementById('stat-sessions-sub').textContent = done.length ? `${done.length} completed` : 'No sessions yet';
+      document.getElementById('stat-upcoming').textContent  = upcoming.length;
+      document.getElementById('stat-upcoming-sub').textContent = upcoming.length ? 'scheduled' : 'None scheduled yet';
+      document.getElementById('stat-hours').textContent     = hours % 1 === 0 ? hours : hours.toFixed(1);
+      document.getElementById('stat-hours-sub').textContent = hours ? `across ${done.length} sessions` : 'Start learning today';
+    }
+
+    function renderActivity() {
+      const container = document.getElementById('activity-feed');
+      if (!container) return;
+      const events = [];
+      _allSessions.forEach(s => {
+        const other = s.mentor?.fullName || 'Your mentor';
+        if (s.status === 'confirmed') {
+          events.push({ text: `Session with <strong>${other}</strong> confirmed`, time: new Date(s.updatedAt || s.scheduledTime), dot: 'green' });
+        } else if (s.status === 'completed') {
+          events.push({ text: `Session with <strong>${other}</strong> completed`, time: new Date(s.updatedAt || s.scheduledTime), dot: 'green' });
+        } else if (s.status === 'proposed') {
+          events.push({ text: `<strong>${other}</strong> scheduled a session with you`, time: new Date(s.createdAt || s.scheduledTime), dot: 'blue' });
+        }
+      });
+      events.sort((a,b) => b.time - a.time);
+      if (!events.length) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">No recent activity yet.</div>';
+        return;
+      }
+      container.innerHTML = events.slice(0,5).map(e => `
+        <div class="activity-item">
+          <div class="activity-dot ${e.dot || ''}"></div>
+          <div>
+            <div class="activity-text">${e.text}</div>
+            <div class="activity-time">${timeAgo(e.time.toISOString())}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    /* ── Load active mentors count (mentees use /mentors endpoint) ── */
+    async function loadAcceptedMentors() {
+      try {
+        const res  = await fetch('/api/connect/mentors', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) return;
+        const count = (data.mentors || []).filter(m => m.requestStatus === 'accepted').length;
+        document.getElementById('stat-mentors').textContent = count;
+        document.getElementById('stat-mentors-sub').textContent = count
+          ? `${count} active mentor${count !== 1 ? 's' : ''}`
+          : 'Find a mentor to start';
+      } catch (_) {}
+    }
+
+    /* ── Socket.io — real-time events ───────────────────── */
+    (function initSocket() {
+      if (typeof io === 'undefined') return;
+      const socket = io({ auth: { token } });
+
+      // Mentor accepted request while mentee is online
+      socket.on('request_accepted', (data) => {
+        showBanner(
+          `${data.mentorName} accepted your request! Connect now.`,
+          data.sessionUrl || `session.html?requestId=${data.requestId}`
+        );
+        loadMentors();  // refresh button states
+      });
+
+      // Mentor scheduled a session
+      socket.on('session_scheduled', (data) => {
+        showSchedModal(data);
+        showToast(`${data.proposerName} scheduled a session for ${data.scheduledTime}`);
+        loadSessions();
+      });
+
+      // Session confirmed
+      socket.on('session_confirmed', () => {
+        loadSessions();
+      });
+    })();
+
+    /* ── Init ───────────────────────────────────────────── */
+    loadMentors();
+    loadSessions();
+    loadAcceptedMentors();
+  </script>
+</body>
+</html>

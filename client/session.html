@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Session — Father's Advice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --black:         #0a0a08;
+      --white:         #ffffff;
+      --muted:         #6b6b65;
+      --accent:        #5e6ad2;
+      --accent-deep:   #4a54b8;
+      --accent-border: rgba(94,106,210,0.35);
+      --accent-glow:   rgba(94,106,210,0.12);
+      --gold-border:   rgba(200,168,75,0.35);
+      --card-bg:       #141412;
+      --card-bg2:      #1a1a17;
+      --border:        rgba(255,255,255,0.08);
+      --green:         #4ade80;
+      --green-bg:      rgba(74,222,128,0.12);
+      --green-border:  rgba(74,222,128,0.3);
+      --serif:         'Playfair Display', Georgia, serif;
+      --sans:          'Inter', system-ui, sans-serif;
+      --radius:        10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: var(--sans); background: var(--black); color: var(--white); overflow: hidden; }
+    body { display: flex; flex-direction: column; }
+
+    /* ── Top bar ─────────────────────────────────────────── */
+    .topbar {
+      height: 54px; background: var(--card-bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+      flex-shrink: 0; z-index: 20;
+    }
+    .topbar-left  { display: flex; align-items: center; gap: 14px; }
+    .logo         { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .logo-mark    { width: 28px; height: 28px; background: var(--white); border: 1px solid var(--gold-border); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 9px; font-weight: 700; color: var(--black); flex-shrink: 0; }
+    .logo-name    { font-family: var(--serif); font-size: 13px; color: var(--white); }
+    .divider      { width: 1px; height: 20px; background: var(--border); }
+    .session-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.75); max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .live-badge   { display: flex; align-items: center; gap: 6px; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; letter-spacing: 0.5px; }
+    .live-dot     { width: 6px; height: 6px; border-radius: 50%; background: #ef4444; animation: blink 1s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .btn-end  { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); padding: 5px 15px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .btn-end:hover { background: rgba(239,68,68,0.28); }
+    .btn-back { background: rgba(255,255,255,0.07); color: var(--white); border: 1px solid var(--border); padding: 5px 15px; border-radius: 7px; font-size: 12px; font-weight: 500; cursor: pointer; text-decoration: none; }
+    .btn-back:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── Main layout ─────────────────────────────────────── */
+    .content { flex: 1; display: flex; overflow: hidden; }
+
+    /* ── Video column ────────────────────────────────────── */
+    .video-col { flex: 0 0 60%; position: relative; border-right: 1px solid var(--border); }
+    #jitsi-container { width: 100%; height: 100%; }
+
+    .loading-screen {
+      position: absolute; inset: 0; background: #0e0e0c;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 5;
+    }
+    .spinner { width: 36px; height: 36px; border: 3px solid rgba(94,106,210,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: var(--muted); }
+
+    .error-screen {
+      position: absolute; inset: 0; background: var(--black);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 40px; text-align: center; z-index: 5;
+    }
+    .error-screen h3  { font-family: var(--serif); font-size: 20px; }
+    .error-screen p   { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 380px; }
+    .error-screen .open-btn { background: var(--accent); color: var(--white); border: none; padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+
+    /* ── Right panel ─────────────────────────────────────── */
+    .right-panel { flex: 0 0 40%; display: flex; flex-direction: column; min-width: 0; }
+
+    /* Tabs */
+    .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: var(--card-bg); flex-shrink: 0; }
+    .tab-btn {
+      flex: 1; padding: 13px 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+      text-align: center; cursor: pointer; color: var(--muted); border: none; background: none;
+      border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; position: relative;
+    }
+    .tab-btn.active { color: var(--white); border-bottom-color: var(--accent); }
+    .tab-btn:hover:not(.active) { color: rgba(255,255,255,0.6); }
+    .tab-badge {
+      position: absolute; top: 8px; right: calc(50% - 18px);
+      background: #ef4444; color: #fff; font-size: 9px; font-weight: 700;
+      padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center;
+      display: none;
+    }
+
+    /* Tab panels */
+    .tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .tab-panel.active { display: flex; }
+
+    /* ── Chat panel ──────────────────────────────────────── */
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+    .msg-row { display: flex; gap: 8px; max-width: 88%; }
+    .msg-row.mine { align-self: flex-end; flex-direction: row-reverse; }
+    .msg-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; align-self: flex-end; }
+    .msg-body { display: flex; flex-direction: column; gap: 3px; }
+    .msg-name  { font-size: 10px; color: var(--muted); }
+    .msg-row.mine .msg-name { text-align: right; }
+    .msg-bubble {
+      background: var(--card-bg2); border: 1px solid var(--border); border-radius: 12px 12px 12px 3px;
+      padding: 8px 12px; font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.88); word-break: break-word;
+    }
+    .msg-row.mine .msg-bubble { background: var(--accent-glow); border-color: var(--accent-border); border-radius: 12px 12px 3px 12px; }
+    .msg-time { font-size: 10px; color: var(--muted); }
+    .msg-row.mine .msg-time { text-align: right; }
+
+    .typing-indicator { padding: 0 16px 8px; font-size: 12px; color: var(--muted); min-height: 24px; }
+
+    .chat-input-bar { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--border); background: var(--card-bg); flex-shrink: 0; }
+    .chat-input {
+      flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white);
+      border-radius: 8px; padding: 8px 12px; font-size: 13px; font-family: var(--sans); resize: none;
+      outline: none; height: 38px; max-height: 100px; overflow-y: hidden; transition: border-color 0.15s;
+    }
+    .chat-input:focus { border-color: var(--accent-border); }
+    .chat-input::placeholder { color: var(--muted); }
+    .send-btn {
+      background: var(--accent); color: var(--white); border: none; border-radius: 8px;
+      width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer; flex-shrink: 0; transition: background 0.15s;
+    }
+    .send-btn:hover { background: var(--accent-deep); }
+
+    /* ── Whiteboard panel ────────────────────────────────── */
+    .wb-toolbar {
+      display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+      border-bottom: 1px solid var(--border); background: var(--card-bg); flex-shrink: 0; flex-wrap: wrap;
+    }
+    .wb-tool-btn {
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+    }
+    .wb-tool-btn:hover  { background: rgba(255,255,255,0.12); color: var(--white); }
+    .wb-tool-btn.active { background: var(--accent-glow); border-color: var(--accent-border); color: var(--accent); }
+    .wb-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+    .wb-color-swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.1s; }
+    .wb-color-swatch:hover   { transform: scale(1.15); }
+    .wb-color-swatch.active  { border-color: var(--white); }
+    .color-custom { position: relative; }
+    .color-custom input[type="color"] { opacity: 0; position: absolute; inset: 0; cursor: pointer; width: 100%; height: 100%; border: none; padding: 0; }
+    .wb-size-select {
+      background: rgba(255,255,255,0.06); color: var(--white); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; outline: none;
+    }
+    .wb-size-select option { background: #1a1a17; }
+    .wb-canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+    #wb-canvas { display: block; cursor: crosshair; touch-action: none; }
+    .wb-hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 11px; color: rgba(255,255,255,0.2); pointer-events: none; white-space: nowrap; }
+
+    /* ── Info panel ──────────────────────────────────────── */
+    .info-panel { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .info-card { background: var(--card-bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .info-card-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .participant { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .participant:last-child { margin-bottom: 0; }
+    .p-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .p-name   { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .p-role   { font-size: 11px; color: var(--muted); }
+    .p-you    { font-size: 10px; font-weight: 600; background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent-border); padding: 1px 6px; border-radius: 10px; }
+    .doubt-box { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 13px; color: rgba(255,255,255,0.72); line-height: 1.6; font-style: italic; }
+    .room-link-row { display: flex; align-items: center; gap: 8px; }
+    .room-url-text { flex: 1; font-size: 11px; color: var(--muted); word-break: break-all; line-height: 1.5; }
+    .copy-btn { background: rgba(255,255,255,0.07); color: var(--white); border: 1px solid var(--border); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .copy-btn:hover { background: rgba(255,255,255,0.13); }
+    .tip-item { display: flex; gap: 10px; margin-bottom: 9px; font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+    .tip-item:last-child { margin-bottom: 0; }
+
+    /* ── Session ended fallback ──────────────────────────── */
+    .fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; padding: 40px; text-align: center; }
+    .fallback h2 { font-family: var(--serif); font-size: 22px; }
+    .fallback p  { font-size: 13px; color: var(--muted); max-width: 380px; line-height: 1.6; }
+    .open-link { display: inline-block; background: var(--accent); color: var(--white); padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; margin-top: 4px; }
+    .open-link:hover { background: var(--accent-deep); }
+
+    @media (max-width: 900px) {
+      .video-col  { flex: 0 0 55%; }
+      .right-panel{ flex: 0 0 45%; }
+    }
+    @media (max-width: 600px) {
+      .video-col  { flex: 0 0 100%; position: fixed; top: 54px; left: 0; right: 0; bottom: 280px; }
+      .right-panel{ flex: 0 0 100%; position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: 280px; border-top: 1px solid var(--border); }
+      .content    { position: relative; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ Top bar ══════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <a class="logo" href="#" id="logo-link">
+      <div class="logo-mark">F|A</div>
+      <span class="logo-name">Father's Advice</span>
+    </a>
+    <div class="divider"></div>
+    <span class="session-title" id="session-title">Connecting to session…</span>
+  </div>
+  <div class="topbar-right">
+    <div class="live-badge" id="live-badge" style="display:none;">
+      <div class="live-dot"></div> LIVE
+    </div>
+    <button class="btn-end" id="end-btn" onclick="endSession()" style="display:none;">End Session</button>
+    <a class="btn-back" id="back-btn" href="#">← Back</a>
+  </div>
+</header>
+
+<!-- ═══ Main content ═════════════════════════════════════════ -->
+<div class="content">
+
+  <!-- Video column (60%) -->
+  <div class="video-col">
+    <div class="loading-screen" id="loading-screen">
+      <div class="spinner"></div>
+      <div class="loading-text">Connecting to your session…</div>
+    </div>
+    <div class="error-screen" id="error-screen">
+      <h3>Could not embed meeting</h3>
+      <p id="error-msg">Your browser may be blocking the meeting. Click below to open it in a new tab.</p>
+      <button class="open-btn" id="open-tab-btn">Open Meeting in New Tab →</button>
+    </div>
+    <div id="jitsi-container"></div>
+  </div>
+
+  <!-- Right panel (40%) -->
+  <div class="right-panel">
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="chat" onclick="switchTab('chat')">
+        💬 Chat
+        <span class="tab-badge" id="chat-badge"></span>
+      </button>
+      <button class="tab-btn" data-tab="whiteboard" onclick="switchTab('whiteboard')">
+        🎨 Whiteboard
+      </button>
+      <button class="tab-btn" data-tab="info" onclick="switchTab('info')">
+        ℹ️ Info
+      </button>
+    </div>
+
+    <!-- ─ Chat tab ─ -->
+    <div class="tab-panel active" id="tab-chat">
+      <div class="chat-messages" id="chat-messages">
+        <!-- messages injected here -->
+      </div>
+      <div class="typing-indicator" id="typing-indicator"></div>
+      <div class="chat-input-bar">
+        <textarea
+          class="chat-input"
+          id="chat-input"
+          placeholder="Type a message…"
+          rows="1"
+          onkeydown="onChatKey(event)"
+          oninput="onTyping(this)"
+        ></textarea>
+        <button class="send-btn" onclick="sendMessage()" title="Send">➤</button>
+      </div>
+    </div>
+
+    <!-- ─ Whiteboard tab ─ -->
+    <div class="tab-panel" id="tab-whiteboard">
+      <div class="wb-toolbar">
+        <button class="wb-tool-btn active" id="tool-pen"   onclick="setTool('pen')">✏️ Pen</button>
+        <button class="wb-tool-btn"        id="tool-erase" onclick="setTool('erase')">⬜ Erase</button>
+        <button class="wb-tool-btn"        id="tool-text"  onclick="setTool('text')">T Text</button>
+        <div class="wb-sep"></div>
+        <!-- Colour swatches -->
+        <div class="wb-color-swatch active" id="swatch-white"  style="background:#ffffff;" title="White"  onclick="setColor('#ffffff', this)"></div>
+        <div class="wb-color-swatch"        id="swatch-yellow" style="background:#facc15;" title="Yellow" onclick="setColor('#facc15', this)"></div>
+        <div class="wb-color-swatch"        id="swatch-green"  style="background:#4ade80;" title="Green"  onclick="setColor('#4ade80', this)"></div>
+        <div class="wb-color-swatch"        id="swatch-red"    style="background:#f87171;" title="Red"    onclick="setColor('#f87171', this)"></div>
+        <div class="wb-color-swatch"        id="swatch-blue"   style="background:#60a5fa;" title="Blue"   onclick="setColor('#60a5fa', this)"></div>
+        <div class="wb-color-swatch color-custom" title="Custom colour" id="swatch-custom" style="background: conic-gradient(red,yellow,lime,cyan,blue,magenta,red);">
+          <input type="color" id="color-picker" oninput="setCustomColor(this.value)" />
+        </div>
+        <div class="wb-sep"></div>
+        <select class="wb-size-select" id="size-select" onchange="setBrushSize(this.value)">
+          <option value="2">Fine</option>
+          <option value="4" selected>Normal</option>
+          <option value="8">Thick</option>
+          <option value="16">Bold</option>
+        </select>
+        <div class="wb-sep"></div>
+        <button class="wb-tool-btn" onclick="clearWhiteboard(true)">🗑 Clear</button>
+      </div>
+      <div class="wb-canvas-wrap" id="wb-canvas-wrap">
+        <canvas id="wb-canvas"></canvas>
+        <div class="wb-hint">Draw freely — syncs in real-time with your partner</div>
+      </div>
+    </div>
+
+    <!-- ─ Info tab ─ -->
+    <div class="tab-panel" id="tab-info">
+      <div class="info-panel">
+        <div class="info-card">
+          <div class="info-card-label">Participants</div>
+          <div id="participants-list"></div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Session Topic / Doubt</div>
+          <div class="doubt-box" id="doubt-display">Loading…</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Meeting Room</div>
+          <div class="room-link-row">
+            <span class="room-url-text" id="room-url-text">—</span>
+            <button class="copy-btn" onclick="copyRoom()">Copy</button>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Quick Tips</div>
+          <div class="tip-item">🎙️ Mute when not speaking to reduce background noise.</div>
+          <div class="tip-item">🖥 Share your screen from the video toolbar to show code or slides.</div>
+          <div class="tip-item">🎨 Use the Whiteboard tab to sketch diagrams together.</div>
+          <div class="tip-item">💬 Chat persists after the session for reference.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end right-panel -->
+</div><!-- end content -->
+
+<!-- Socket.io client -->
+<script src="/socket.io/socket.io.js"></script>
+<!-- Jitsi IFrame API -->
+<script src="https://meet.jit.si/external_api.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   Bootstrap
+══════════════════════════════════════════════════════════════ */
+const token = localStorage.getItem('fa_token');
+if (!token) location.href = '/login.html';
+
+const role   = localStorage.getItem('fa_role')   || 'mentee';
+const myName = localStorage.getItem('fa_name')   || 'User';
+const myId   = localStorage.getItem('fa_id') || '';
+
+const params      = new URLSearchParams(location.search);
+const requestId   = params.get('requestId');
+const connectionId = params.get('connectionId') || requestId; // fallback
+
+// Role-aware back / logo links
+const dashLink = role === 'mentor' ? 'dashboard-mentor.html' : 'dashboard-mentee.html';
+document.getElementById('logo-link').href = dashLink;
+document.getElementById('back-btn').href  = dashLink;
+
+let jitsiApi   = null;
+let roomUrl    = '';
+let socket     = null;
+let typingTimer = null;
+let isTyping   = false;
+let chatUnread = 0;
+let activeTab  = 'chat';
+
+/* ═══════════════════════════════════════════════════════════
+   Init
+══════════════════════════════════════════════════════════════ */
+if (!requestId) {
+  showError('No session ID provided. Please go back and try again.', null);
+} else {
+  initSession();
+}
+
+async function initSession() {
+  try {
+    const res  = await fetch(`/api/connect/session/${requestId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to load session');
+
+    roomUrl = data.roomUrl;
+    const isMentor = role === 'mentor';
+
+    document.getElementById('session-title').textContent =
+      `${data.menteeName} × ${data.mentorName}`;
+
+    document.getElementById('doubt-display').textContent =
+      data.doubt || 'No topic description provided.';
+
+    document.getElementById('room-url-text').textContent = roomUrl;
+
+    document.getElementById('participants-list').innerHTML = `
+      <div class="participant">
+        <div class="p-avatar" style="background:linear-gradient(135deg,#818cf8,#6366f1);">
+          ${initials(data.mentorName)}
+        </div>
+        <div>
+          <div class="p-name">${esc(data.mentorName)} ${isMentor ? '<span class="p-you">You</span>' : ''}</div>
+          <div class="p-role">Mentor</div>
+        </div>
+      </div>
+      <div class="participant">
+        <div class="p-avatar" style="background:linear-gradient(135deg,#34d399,#059669);">
+          ${initials(data.menteeName)}
+        </div>
+        <div>
+          <div class="p-name">${esc(data.menteeName)} ${!isMentor ? '<span class="p-you">You</span>' : ''}</div>
+          <div class="p-role">Mentee</div>
+        </div>
+      </div>`;
+
+    // Init socket, Jitsi, whiteboard concurrently
+    initSocket(connectionId || requestId);
+    initJitsi(data.roomName);
+    initWhiteboard();
+
+  } catch (err) {
+    showError(err.message, roomUrl || null);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Jitsi
+══════════════════════════════════════════════════════════════ */
+function initJitsi(roomName) {
+  if (typeof JitsiMeetExternalAPI === 'undefined') {
+    showError('Jitsi script failed to load. Check your internet connection.', null);
+    return;
+  }
+  const options = {
+    roomName,
+    width:      '100%',
+    height:     '100%',
+    parentNode: document.getElementById('jitsi-container'),
+    userInfo:   { displayName: myName },
+    configOverwrite: {
+      startWithAudioMuted: false,
+      startWithVideoMuted: false,
+      disableDeepLinking:  true,
+      defaultLanguage:     'en',
+    },
+    interfaceConfigOverwrite: {
+      TOOLBAR_BUTTONS: [
+        'microphone','camera','desktop','fullscreen',
+        'fodeviceselection','hangup','recording',
+        'raisehand','videoquality','tileview','select-background',
+        'stats','shortcuts','help',
+      ],
+      SHOW_JITSI_WATERMARK:        false,
+      SHOW_BRAND_WATERMARK:        false,
+      DEFAULT_REMOTE_DISPLAY_NAME: 'Participant',
+    },
+  };
+
+  jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
+
+  jitsiApi.addEventListener('videoConferenceJoined', () => {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('live-badge').style.display     = 'flex';
+    document.getElementById('end-btn').style.display        = 'block';
+  });
+
+  jitsiApi.addEventListener('readyToClose', () => endSession());
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Socket.io — chat + whiteboard
+══════════════════════════════════════════════════════════════ */
+function initSocket(connId) {
+  socket = io({ auth: { token } });
+
+  socket.on('connect', () => {
+    socket.emit('join_chat_room', { connectionId: connId });
+    loadChatHistory(connId);
+  });
+
+  /* ── Incoming chat message ── */
+  socket.on('chat_message', (msg) => {
+    appendMessage(msg, msg.senderId === myId);
+    if (activeTab !== 'chat') {
+      chatUnread++;
+      const badge = document.getElementById('chat-badge');
+      badge.textContent = chatUnread > 9 ? '9+' : chatUnread;
+      badge.style.display = 'block';
+    }
+  });
+
+  /* ── Typing indicators ── */
+  socket.on('typing_start', ({ name }) => {
+    document.getElementById('typing-indicator').textContent = `${name} is typing…`;
+  });
+  socket.on('typing_stop', () => {
+    document.getElementById('typing-indicator').textContent = '';
+  });
+
+  /* ── Whiteboard draw ── */
+  socket.on('whiteboard_draw', ({ x0, y0, x1, y1, color, size }) => {
+    drawLine(x0, y0, x1, y1, color, size, false);
+  });
+
+  /* ── Whiteboard clear ── */
+  socket.on('whiteboard_clear', () => {
+    const ctx = getCtx();
+    if (ctx) ctx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
+  });
+
+  /* ── Whiteboard text ── */
+  socket.on('whiteboard_text', ({ x, y, text, color, size }) => {
+    drawText(x, y, text, color, size, false);
+  });
+}
+
+/* ── Load chat history ── */
+async function loadChatHistory(connId) {
+  try {
+    const res  = await fetch(`/api/chat/messages/${connId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) return;
+    const msgs = await res.json();
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = '';
+    msgs.forEach(m => appendMessage({
+      messageId:  m._id,
+      senderId:   m.sender._id || m.sender,
+      senderName: m.sender.fullName || m.senderName || 'User',
+      text:       m.text,
+      createdAt:  m.createdAt,
+    }, (m.sender._id || m.sender) === myId));
+  } catch { /* silent */ }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Chat helpers
+══════════════════════════════════════════════════════════════ */
+function appendMessage(msg, isMine) {
+  const container = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row' + (isMine ? ' mine' : '');
+
+  const avatarBg = isMine
+    ? 'background:linear-gradient(135deg,#818cf8,#6366f1)'
+    : 'background:linear-gradient(135deg,#34d399,#059669)';
+
+  const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  row.innerHTML = `
+    <div class="msg-avatar" style="${avatarBg}">${initials(msg.senderName || 'U')}</div>
+    <div class="msg-body">
+      <div class="msg-name">${esc(msg.senderName || 'User')}</div>
+      <div class="msg-bubble">${esc(msg.text)}</div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendMessage() {
+  const input  = document.getElementById('chat-input');
+  const text   = input.value.trim();
+  const connId = connectionId || requestId;
+  if (!text || !socket || !connId) return;
+  socket.emit('send_chat_message', { connectionId: connId, text });
+  input.value = '';
+  input.style.height = 'auto';
+  stopTypingSignal();
+}
+
+function onChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function onTyping(el) {
+  // auto-grow textarea
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+
+  // typing indicator
+  const connId = connectionId || requestId;
+  if (!socket || !connId) return;
+  if (!isTyping) {
+    isTyping = true;
+    socket.emit('typing_start', { connectionId: connId });
+  }
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(stopTypingSignal, 2000);
+}
+
+function stopTypingSignal() {
+  if (!isTyping) return;
+  isTyping = false;
+  const connId = connectionId || requestId;
+  if (socket && connId) socket.emit('typing_stop', { connectionId: connId });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Whiteboard
+══════════════════════════════════════════════════════════════ */
+let wbCanvas, wbCtx;
+let drawing    = false;
+let lastX      = 0;
+let lastY      = 0;
+let currentTool  = 'pen';
+let currentColor = '#ffffff';
+let currentSize  = 4;
+
+function initWhiteboard() {
+  wbCanvas = document.getElementById('wb-canvas');
+  wbCtx    = wbCanvas.getContext('2d');
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  attachTextClick();
+
+  // Mouse events
+  wbCanvas.addEventListener('mousedown',  wbStart);
+  wbCanvas.addEventListener('mousemove',  wbMove);
+  wbCanvas.addEventListener('mouseup',    wbEnd);
+  wbCanvas.addEventListener('mouseleave', wbEnd);
+
+  // Touch events
+  wbCanvas.addEventListener('touchstart',  e => { e.preventDefault(); wbStart(e.touches[0]); }, { passive: false });
+  wbCanvas.addEventListener('touchmove',   e => { e.preventDefault(); wbMove(e.touches[0]);  }, { passive: false });
+  wbCanvas.addEventListener('touchend',    wbEnd);
+}
+
+function resizeCanvas() {
+  if (!wbCanvas) return;
+  const wrap = document.getElementById('wb-canvas-wrap');
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  // Preserve drawing on resize
+  const img = wbCtx ? wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height) : null;
+  wbCanvas.width  = w;
+  wbCanvas.height = h;
+  if (img && wbCtx) wbCtx.putImageData(img, 0, 0);
+}
+
+function getCtx() { return wbCtx; }
+
+function getPos(e) {
+  const rect = wbCanvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * (wbCanvas.width  / rect.width),
+    y: (e.clientY - rect.top)  * (wbCanvas.height / rect.height),
+  };
+}
+
+function wbStart(e) {
+  if (currentTool === 'text') return; // handled on click
+  drawing = true;
+  const { x, y } = getPos(e);
+  lastX = x; lastY = y;
+}
+
+function wbMove(e) {
+  if (!drawing) return;
+  const { x, y } = getPos(e);
+  const color = currentTool === 'erase' ? '#0a0a08' : currentColor;
+  const size  = currentTool === 'erase' ? currentSize * 4 : currentSize;
+  drawLine(lastX, lastY, x, y, color, size, true);
+  lastX = x; lastY = y;
+}
+
+function wbEnd() {
+  drawing = false;
+}
+
+function drawLine(x0, y0, x1, y1, color, size, emit) {
+  const ctx = getCtx();
+  if (!ctx) return;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x1, y1);
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = size;
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+  ctx.stroke();
+
+  if (emit && socket) {
+    socket.emit('whiteboard_draw', {
+      connectionId: connectionId || requestId,
+      x0, y0, x1, y1, color, size,
+    });
+  }
+}
+
+function drawText(x, y, text, color, size, emit) {
+  const ctx = getCtx();
+  if (!ctx) return;
+  ctx.font      = `${10 + size * 2}px Inter, sans-serif`;
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+
+  if (emit && socket) {
+    socket.emit('whiteboard_text', {
+      connectionId: connectionId || requestId,
+      x, y, text, color, size,
+    });
+  }
+}
+
+// Text tool — prompt on click (attached after initWhiteboard)
+function attachTextClick() {
+  wbCanvas.addEventListener('click', (e) => {
+    if (currentTool !== 'text') return;
+    const { x, y } = getPos(e);
+    const text = prompt('Enter text:');
+    if (text && text.trim()) {
+      drawText(x, y, text.trim(), currentColor, currentSize, true);
+    }
+  });
+}
+
+function setTool(tool) {
+  currentTool = tool;
+  document.querySelectorAll('.wb-tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-' + tool)?.classList.add('active');
+  document.getElementById('wb-canvas').style.cursor =
+    tool === 'erase' ? 'cell' : tool === 'text' ? 'text' : 'crosshair';
+}
+
+function setColor(hex, el) {
+  currentColor = hex;
+  document.querySelectorAll('.wb-color-swatch').forEach(s => s.classList.remove('active'));
+  el?.classList.add('active');
+  if (currentTool === 'erase') setTool('pen'); // switch back to pen
+}
+
+function setCustomColor(hex) {
+  currentColor = hex;
+  document.querySelectorAll('.wb-color-swatch').forEach(s => s.classList.remove('active'));
+  document.getElementById('swatch-custom').classList.add('active');
+  if (currentTool === 'erase') setTool('pen');
+}
+
+function setBrushSize(val) {
+  currentSize = parseInt(val, 10);
+}
+
+function clearWhiteboard(emit) {
+  const ctx = getCtx();
+  if (ctx) ctx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
+  if (emit && socket) {
+    socket.emit('whiteboard_clear', { connectionId: connectionId || requestId });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Tab switching
+══════════════════════════════════════════════════════════════ */
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'tab-' + tab);
+  });
+
+  if (tab === 'chat') {
+    chatUnread = 0;
+    const badge = document.getElementById('chat-badge');
+    badge.style.display = 'none';
+    // scroll to bottom
+    const msgs = document.getElementById('chat-messages');
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  if (tab === 'whiteboard') {
+    // Ensure canvas fills the wrap after tab becomes visible
+    setTimeout(resizeCanvas, 50);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   End session
+══════════════════════════════════════════════════════════════ */
+function endSession() {
+  if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
+  if (socket)   { socket.emit('leave_chat_room', { connectionId: connectionId || requestId }); }
+
+  document.getElementById('jitsi-container').innerHTML = `
+    <div class="fallback">
+      <h2>Session Ended</h2>
+      <p>Your mentoring session has concluded. Head back to your dashboard to view your activity and book your next session.</p>
+      <a class="open-link" href="${dashLink}">← Back to Dashboard</a>
+    </div>`;
+
+  document.getElementById('live-badge').style.display = 'none';
+  document.getElementById('end-btn').style.display    = 'none';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Error screen
+══════════════════════════════════════════════════════════════ */
+function showError(msg, fallbackUrl) {
+  document.getElementById('loading-screen').style.display = 'none';
+  const es  = document.getElementById('error-screen');
+  es.style.display = 'flex';
+  document.getElementById('error-msg').textContent = msg;
+  const btn = document.getElementById('open-tab-btn');
+  if (fallbackUrl) {
+    btn.style.display = 'inline-block';
+    btn.onclick = () => window.open(fallbackUrl, '_blank');
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Utility
+══════════════════════════════════════════════════════════════ */
+function copyRoom() {
+  if (!roomUrl) return;
+  navigator.clipboard.writeText(roomUrl).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+
+function initials(name) {
+  return (name || 'U').split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Resize whiteboard when its tab first becomes visible
+document.querySelector('[data-tab="whiteboard"]').addEventListener('click', () => {
+  setTimeout(resizeCanvas, 60);
+});
+</script>
+</body>
+</html>

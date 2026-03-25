@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find a Mentor — Father's Advice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ============================================================
+       RESET & VARIABLES  (identical to mentor signup)
+    ============================================================ */
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:        #0a0a08;
+      --black-2:      #131310;
+      --black-3:      #1c1c18;
+      --black-4:      #252520;
+      --text-dark:    #f0ede6;
+      --text-muted:   rgba(240,237,230,0.50);
+      --text-faint:   rgba(240,237,230,0.28);
+      --gold:         #c8a84b;
+      --gold-light:   #e0be6a;
+      --gold-deep:    #b8952a;
+      --gold-dim:     rgba(200,168,75,0.10);
+      --gold-border:  rgba(200,168,75,0.30);
+      --indigo:       #5e6ad2;
+      --indigo-dim:   rgba(94,106,210,0.10);
+      --indigo-border:rgba(94,106,210,0.30);
+      --border:       rgba(255,255,255,0.08);
+      --border-2:     rgba(255,255,255,0.14);
+      --error:        #e05c5c;
+      --serif:  'Playfair Display', Georgia, serif;
+      --sans:   'Inter', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      background: var(--black);
+      color: var(--text-dark);
+      font-family: var(--sans);
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 900px; height: 600px;
+      background: radial-gradient(ellipse, rgba(94,106,210,0.06) 0%, transparent 65%);
+      pointer-events: none; z-index: 0;
+    }
+
+
+    /* ============================================================
+       TOP BAR
+    ============================================================ */
+
+    .top-bar {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 64px; height: 66px;
+      background: rgba(10,10,8,0.75);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-link {
+      display: flex; align-items: center; gap: 12px;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 38px; height: 38px;
+      background: #fff;
+      border: 1.5px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: border-color 0.2s;
+    }
+    .logo-mark-text {
+      font-family: var(--serif);
+      font-size: 12px; font-weight: 700;
+      color: var(--black);
+      letter-spacing: -1px; line-height: 1;
+    }
+    .logo-mark-text .bar { color: var(--gold-deep); font-style: normal; }
+    .logo-link:hover .logo-mark { border-color: var(--gold); }
+
+    .logo-name {
+      font-family: var(--serif);
+      font-size: 15px; font-weight: 400;
+      color: var(--text-dark); letter-spacing: 0.5px;
+    }
+
+    .signin-prompt { font-size: 13px; color: var(--text-muted); }
+    .signin-prompt a {
+      color: var(--indigo); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .signin-prompt a:hover { color: #8b96e9; }
+
+
+    /* ============================================================
+       PAGE LAYOUT
+    ============================================================ */
+
+    .page-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 52px 24px 64px;
+      position: relative; z-index: 1;
+    }
+
+    .signup-container { width: 100%; max-width: 660px; }
+
+
+    /* ============================================================
+       PAGE HEADER
+    ============================================================ */
+
+    .page-header { text-align: center; margin-bottom: 44px; }
+
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--indigo-dim);
+      border: 1px solid var(--indigo-border);
+      color: var(--indigo);
+      padding: 6px 14px;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .role-badge-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--indigo);
+    }
+
+    .page-title {
+      font-family: var(--serif);
+      font-size: 36px; font-weight: 900;
+      letter-spacing: -1px; color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+    .page-title em { font-style: italic; font-weight: 400; color: var(--indigo); }
+
+    .page-subtitle {
+      font-size: 14px; color: var(--text-muted);
+      font-weight: 300; line-height: 1.6;
+    }
+
+
+    /* ============================================================
+       STEP PROGRESS INDICATOR
+    ============================================================ */
+
+    .step-track {
+      display: flex; align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .step-item {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 7px; flex-shrink: 0;
+    }
+
+    .step-circle {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-2);
+      background: var(--black-3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .step-circle.active {
+      border-color: var(--indigo);
+      background: var(--indigo-dim);
+      color: var(--indigo);
+    }
+    .step-circle.done {
+      border-color: var(--indigo);
+      background: var(--indigo);
+      color: #fff;
+    }
+    .step-circle.done::after { content: '✓'; font-size: 14px; font-weight: 700; color: #fff; }
+    .step-circle.done span   { display: none; }
+
+    .step-label {
+      font-size: 11px; color: var(--text-faint);
+      letter-spacing: 0.5px; white-space: nowrap;
+      transition: color 0.3s;
+    }
+    .step-item.active .step-label { color: var(--indigo); }
+    .step-item.done  .step-label  { color: var(--text-muted); }
+
+    .step-line {
+      flex: 1; height: 1px;
+      background: var(--border-2);
+      margin: 0 8px;
+      margin-bottom: 24px;
+      position: relative; overflow: hidden;
+    }
+    .step-line::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      background: var(--indigo);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    .step-line.done::after { width: 100%; }
+
+
+    /* ============================================================
+       FORM CARD
+    ============================================================ */
+
+    .form-card {
+      background: var(--black-2);
+      border: 1px solid var(--border);
+      padding: 40px;
+    }
+
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    .step-heading {
+      font-family: var(--serif);
+      font-size: 22px; font-weight: 700;
+      color: var(--text-dark); margin-bottom: 4px; letter-spacing: -0.3px;
+    }
+    .step-desc {
+      font-size: 13px; color: var(--text-muted);
+      margin-bottom: 32px; line-height: 1.6;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex; flex-direction: column;
+      gap: 7px; margin-bottom: 20px;
+    }
+    .form-group:last-of-type { margin-bottom: 0; }
+
+    .form-label {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.8px; text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .label-required { color: var(--indigo); font-size: 14px; line-height: 1; }
+    .label-optional {
+      font-size: 10px; color: var(--text-faint);
+      letter-spacing: 0.5px; text-transform: uppercase; font-weight: 400;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      background: var(--black-3);
+      border: 1px solid var(--border-2);
+      color: var(--text-dark);
+      padding: 12px 16px;
+      font-family: var(--sans); font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      -webkit-appearance: none; border-radius: 0;
+    }
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: var(--text-faint); }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--indigo-border);
+      box-shadow: 0 0 0 3px rgba(94,106,210,0.08);
+    }
+    .form-input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 1000px var(--black-3) inset;
+      -webkit-text-fill-color: var(--text-dark);
+    }
+
+    .form-textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
+
+    .form-select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23b0ada6' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    .form-select option { background: var(--black-3); color: var(--text-dark); }
+
+    .field-hint   { font-size: 11px; color: var(--text-faint); line-height: 1.5; }
+    .field-error  { font-size: 11px; color: var(--error); display: none; }
+    .field-error.visible  { display: block; }
+    .form-input.has-error { border-color: rgba(224,92,92,0.55); }
+
+    .input-wrapper { position: relative; }
+    .input-wrapper .form-input { padding-right: 52px; }
+    .toggle-pw {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: var(--text-muted); font-size: 12px;
+      font-family: var(--sans); cursor: pointer;
+      transition: color 0.2s; padding: 0;
+    }
+    .toggle-pw:hover { color: var(--text-dark); }
+
+    .upload-area {
+      border: 1px dashed var(--border-2);
+      background: var(--black-3);
+      padding: 24px; text-align: center;
+      cursor: pointer; transition: border-color 0.2s;
+      position: relative;
+    }
+    .upload-area:hover { border-color: var(--indigo-border); }
+    .upload-area input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { font-size: 24px; display: block; margin-bottom: 8px; color: var(--text-faint); }
+    .upload-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .upload-text span { color: var(--indigo); }
+    .upload-preview { display: none; width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px; overflow: hidden; }
+    .upload-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+
+    /* ============================================================
+       TAG PICKER  (topics / languages)
+    ============================================================ */
+
+    .tag-input-row { display: flex; gap: 8px; }
+    .tag-input-row .form-input { flex: 1; }
+
+    .btn-add-tag {
+      background: var(--black-4);
+      border: 1px solid var(--border-2);
+      color: var(--text-muted);
+      padding: 12px 18px;
+      font-size: 13px; font-family: var(--sans);
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .btn-add-tag:hover { border-color: var(--indigo-border); color: var(--indigo); }
+
+    .tags-container {
+      display: flex; flex-wrap: wrap;
+      gap: 8px; margin-top: 10px; min-height: 32px;
+    }
+
+    .tag-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--indigo-dim);
+      border: 1px solid var(--indigo-border);
+      color: var(--indigo);
+      padding: 4px 10px 4px 12px;
+      font-size: 12px; font-weight: 500; letter-spacing: 0.3px;
+    }
+    .tag-chip-remove {
+      background: none; border: none;
+      color: var(--indigo); font-size: 14px;
+      cursor: pointer; padding: 0; line-height: 1; transition: color 0.15s;
+    }
+    .tag-chip-remove:hover { color: var(--error); }
+
+
+    /* ============================================================
+       TOPIC ROWS  (interest tag + priority weight)
+    ============================================================ */
+
+    .topic-rows { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+
+    .topic-row {
+      display: grid;
+      grid-template-columns: 1fr 200px 28px;
+      align-items: center;
+      gap: 12px;
+      background: var(--black-3);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+    }
+    .topic-row-name {
+      font-size: 13px; font-weight: 500;
+      color: var(--text-dark);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .priority-group {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .priority-label {
+      font-size: 10px; color: var(--text-faint);
+      letter-spacing: 0.5px; white-space: nowrap;
+    }
+
+    .priority-btns { display: flex; gap: 4px; }
+    .priority-btn {
+      width: 28px; height: 28px;
+      background: var(--black-4);
+      border: 1px solid var(--border-2);
+      color: var(--text-muted);
+      font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .priority-btn.selected {
+      background: var(--indigo-dim);
+      border-color: var(--indigo-border);
+      color: var(--indigo);
+    }
+    .priority-hint { font-size: 10px; color: var(--text-faint); white-space: nowrap; }
+
+    .btn-remove-topic {
+      background: none; border: none;
+      color: var(--text-faint); font-size: 16px;
+      cursor: pointer; transition: color 0.15s; padding: 0; line-height: 1;
+    }
+    .btn-remove-topic:hover { color: var(--error); }
+
+    .topics-hint { font-size: 11px; color: var(--text-faint); margin-top: 6px; line-height: 1.5; }
+
+
+    /* ============================================================
+       AVAILABILITY SLOTS
+    ============================================================ */
+
+    .slots-container { display: flex; flex-direction: column; gap: 10px; }
+
+    .slot-row {
+      display: grid;
+      grid-template-columns: 1fr 120px 120px 28px;
+      align-items: center;
+      gap: 10px;
+      background: var(--black-3);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+    }
+    .slot-row .form-select,
+    .slot-row .form-input { padding: 8px 10px; font-size: 13px; }
+
+    .btn-add-slot {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent;
+      border: 1px dashed var(--border-2);
+      color: var(--text-muted);
+      padding: 11px 18px;
+      font-size: 13px; font-family: var(--sans);
+      cursor: pointer; transition: all 0.2s;
+      width: 100%; justify-content: center; margin-top: 4px;
+    }
+    .btn-add-slot:hover { border-color: var(--indigo-border); color: var(--indigo); }
+    .btn-add-slot::before { content: '+'; font-size: 16px; font-weight: 300; }
+
+    .btn-remove-slot {
+      background: none; border: none;
+      color: var(--text-faint); font-size: 16px;
+      cursor: pointer; transition: color 0.15s; padding: 0;
+    }
+    .btn-remove-slot:hover { color: var(--error); }
+
+    /* Radio buttons (session length, session format) */
+    .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .radio-option { display: none; }
+    .radio-label {
+      display: flex; align-items: center; justify-content: center;
+      padding: 10px 18px;
+      background: var(--black-3);
+      border: 1px solid var(--border-2);
+      color: var(--text-muted);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+      user-select: none;
+    }
+    .radio-option:checked + .radio-label {
+      border-color: var(--indigo-border);
+      background: var(--indigo-dim);
+      color: var(--indigo);
+    }
+
+
+    /* ============================================================
+       NAVIGATION BUTTONS
+    ============================================================ */
+
+    .step-nav {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-top: 36px; padding-top: 28px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border-2);
+      color: var(--text-muted);
+      padding: 13px 28px;
+      font-family: var(--sans); font-size: 13px;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-back::before { content: '←'; }
+    .btn-back:hover   { border-color: var(--indigo-border); color: var(--text-dark); }
+    .btn-back:disabled{ opacity: 0.3; pointer-events: none; }
+
+    .btn-next {
+      background: var(--indigo);
+      border: 1px solid var(--indigo);
+      color: #fff;
+      padding: 13px 36px;
+      font-family: var(--sans); font-size: 13px;
+      font-weight: 600; letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer; transition: all 0.25s;
+      display: flex; align-items: center; gap: 8px;
+      margin-left: auto;
+    }
+    .btn-next::after { content: '→'; }
+    .btn-next:hover  { background: #7579e7; border-color: #7579e7; transform: translateY(-1px); }
+    .btn-next:disabled { opacity: 0.6; pointer-events: none; }
+
+    .btn-submit {
+      background: var(--indigo);
+      border: 1px solid var(--indigo);
+      color: #fff;
+      padding: 14px 40px;
+      font-family: var(--sans); font-size: 13px;
+      font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer; transition: all 0.25s;
+      margin-left: auto;
+    }
+    .btn-submit:hover {
+      background: #7579e7;
+      box-shadow: 0 6px 24px rgba(94,106,210,0.28);
+      transform: translateY(-1px);
+    }
+
+    .step-counter { font-size: 12px; color: var(--text-faint); letter-spacing: 0.5px; }
+
+    .form-message {
+      padding: 12px 16px; font-size: 13px;
+      border-left: 2px solid var(--error);
+      background: rgba(224,92,92,0.08);
+      color: var(--error); margin-bottom: 20px; display: none;
+    }
+    .form-message.visible { display: block; }
+
+    footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--text-faint);
+    }
+
+    @media (max-width: 700px) {
+      .top-bar     { padding: 0 20px; }
+      .page-body   { padding: 36px 16px 48px; }
+      .form-card   { padding: 28px 20px; }
+      .field-row   { grid-template-columns: 1fr; }
+      .topic-row   { grid-template-columns: 1fr 28px; }
+      .slot-row    { grid-template-columns: 1fr 28px; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       TOP BAR
+  ============================================================ -->
+  <header class="top-bar">
+    <a class="logo-link" href="index.html">
+      <div class="logo-mark">
+        <span class="logo-mark-text">F<i class="bar">|</i>A</span>
+      </div>
+      <span class="logo-name">Father's Advice</span>
+    </a>
+    <span class="signin-prompt">
+      Already have an account? <a href="login.html">Sign in</a>
+    </span>
+  </header>
+
+
+  <!-- ============================================================
+       PAGE BODY
+  ============================================================ -->
+  <main class="page-body">
+    <div class="signup-container">
+
+      <!-- Page heading -->
+      <div class="page-header">
+        <div class="role-badge"><span class="role-badge-dot"></span>Mentee registration</div>
+        <h1 class="page-title">Get unstuck, <em>fast.</em><br/>Grow with confidence.</h1>
+        <p class="page-subtitle">Tell us about yourself and your goals. We use this to match you with the right expert in under three minutes.</p>
+      </div>
+
+      <!-- Step progress indicator -->
+      <div class="step-track" id="step-track">
+        <div class="step-item active" data-step="1">
+          <div class="step-circle active"><span>1</span></div>
+          <div class="step-label">Account</div>
+        </div>
+        <div class="step-line" id="line-1"></div>
+        <div class="step-item" data-step="2">
+          <div class="step-circle"><span>2</span></div>
+          <div class="step-label">Background</div>
+        </div>
+        <div class="step-line" id="line-2"></div>
+        <div class="step-item" data-step="3">
+          <div class="step-circle"><span>3</span></div>
+          <div class="step-label">Goals</div>
+        </div>
+        <div class="step-line" id="line-3"></div>
+        <div class="step-item" data-step="4">
+          <div class="step-circle"><span>4</span></div>
+          <div class="step-label">Availability</div>
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div class="form-message" id="form-message"></div>
+
+      <!-- ── FORM CARD ─────────────────────────────────────────── -->
+      <div class="form-card">
+
+
+        <!-- ==================================================
+             STEP 1 — Account basics
+        ================================================== -->
+        <div class="step-panel active" id="step-1">
+
+          <div class="step-heading">Account basics</div>
+          <p class="step-desc">Create your login credentials. All fields marked with * are required.</p>
+
+          <div class="field-row">
+            <div class="form-group">
+              <label class="form-label" for="full-name">
+                Full name <span class="label-required">*</span>
+              </label>
+              <input class="form-input" type="text" id="full-name"
+                     placeholder="Your full name" autocomplete="name" />
+              <span class="field-error" id="full-name-error">Please enter your full name.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">
+                Email address <span class="label-required">*</span>
+              </label>
+              <input class="form-input" type="email" id="email"
+                     placeholder="you@example.com" autocomplete="email" />
+              <span class="field-error" id="email-error">Please enter a valid email address.</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="form-group">
+              <label class="form-label" for="password">
+                Password <span class="label-required">*</span>
+              </label>
+              <div class="input-wrapper">
+                <input class="form-input" type="password" id="password"
+                       placeholder="Min. 8 characters" autocomplete="new-password" />
+                <button type="button" class="toggle-pw" id="toggle-pw-1">Show</button>
+              </div>
+              <span class="field-error" id="password-error">Password must be at least 8 characters.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="confirm-password">
+                Confirm password <span class="label-required">*</span>
+              </label>
+              <div class="input-wrapper">
+                <input class="form-input" type="password" id="confirm-password"
+                       placeholder="Repeat password" autocomplete="new-password" />
+                <button type="button" class="toggle-pw" id="toggle-pw-2">Show</button>
+              </div>
+              <span class="field-error" id="confirm-password-error">Passwords do not match.</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Profile picture <span class="label-optional">— optional</span>
+            </label>
+            <div class="upload-area" id="avatar-upload">
+              <input type="file" id="avatar-file" accept="image/*" />
+              <div class="upload-preview" id="avatar-preview">
+                <img id="avatar-img" src="" alt="preview" />
+              </div>
+              <span class="upload-icon" id="upload-icon">&#128247;</span>
+              <p class="upload-text">
+                <span>Click to upload</span> or drag a photo here<br/>
+                JPG, PNG or WebP · max 2 MB
+              </p>
+            </div>
+          </div>
+
+        </div><!-- /step-1 -->
+
+
+        <!-- ==================================================
+             STEP 2 — Background
+        ================================================== -->
+        <div class="step-panel" id="step-2">
+
+          <div class="step-heading">Your background</div>
+          <p class="step-desc">This context helps us find a mentor who understands exactly where you are right now.</p>
+
+          <div class="field-row">
+            <div class="form-group">
+              <label class="form-label" for="role-status">
+                Current role / status <span class="label-required">*</span>
+              </label>
+              <select class="form-select" id="role-status">
+                <option value="" disabled selected>Select your status</option>
+                <option value="student">Student</option>
+                <option value="fresher">Fresher / New graduate</option>
+                <option value="professional">Working professional</option>
+                <option value="career-switcher">Career switcher</option>
+                <option value="freelancer">Freelancer</option>
+                <option value="founder">Founder / Entrepreneur</option>
+                <option value="researcher">Researcher</option>
+                <option value="other">Other</option>
+              </select>
+              <span class="field-error" id="role-status-error">Please select your current status.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="organisation">
+                Organisation / institution
+                <span class="label-optional">— optional</span>
+              </label>
+              <input class="form-input" type="text" id="organisation"
+                     placeholder="University, company…" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="form-group">
+              <label class="form-label" for="exp-level">
+                Experience level <span class="label-required">*</span>
+              </label>
+              <select class="form-select" id="exp-level">
+                <option value="" disabled selected>Select your level</option>
+                <option value="beginner">Beginner — learning the basics</option>
+                <option value="intermediate">Intermediate — can build things independently</option>
+                <option value="advanced">Advanced — experienced, need specialist depth</option>
+              </select>
+              <span class="field-error" id="exp-level-error">Please select your experience level.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="domain">
+                Domain / industry <span class="label-required">*</span>
+              </label>
+              <select class="form-select" id="domain">
+                <option value="" disabled selected>Select your domain</option>
+                <option value="ai-ml">AI / Machine Learning</option>
+                <option value="devops">DevOps / Cloud</option>
+                <option value="frontend">Frontend Development</option>
+                <option value="backend">Backend Development</option>
+                <option value="fullstack">Full-stack Development</option>
+                <option value="mobile">Mobile Development</option>
+                <option value="data">Data Science / Analytics</option>
+                <option value="system-design">System Design / Architecture</option>
+                <option value="security">Cybersecurity</option>
+                <option value="product">Product Management</option>
+                <option value="blockchain">Blockchain / Web3</option>
+                <option value="embedded">Embedded / Hardware</option>
+                <option value="other">Other</option>
+              </select>
+              <span class="field-error" id="domain-error">Please select your domain.</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bio">
+              Short bio <span class="label-optional">— optional</span>
+            </label>
+            <textarea class="form-textarea" id="bio" rows="3"
+              placeholder="A brief introduction shown to matched mentors — your background, what you're working on, what you're hoping to achieve."></textarea>
+            <span class="field-hint" id="bio-count">0 / 300 characters</span>
+          </div>
+
+        </div><!-- /step-2 -->
+
+
+        <!-- ==================================================
+             STEP 3 — Learning goals & interests
+        ================================================== -->
+        <div class="step-panel" id="step-3">
+
+          <div class="step-heading">Learning goals &amp; interests</div>
+          <p class="step-desc">This data feeds the matching algorithm (<em>E<sub>ij</sub></em>). Describe what you want to learn as specifically as possible — it directly determines how accurate your matches are.</p>
+
+          <!-- Topic tag picker with priority -->
+          <div class="form-group">
+            <label class="form-label">
+              Interest / topic tags <span class="label-required">*</span>
+            </label>
+            <div class="tag-input-row">
+              <input class="form-input" type="text" id="topic-input"
+                     placeholder="Type a topic and press Enter or click Add"
+                     autocomplete="off" />
+              <button type="button" class="btn-add-tag" id="add-topic-btn">Add</button>
+            </div>
+            <span class="field-error" id="topics-error">Please add at least 2 topics.</span>
+            <p class="topics-hint">Set priority for each topic: 1 = highest priority, 3 = lowest.</p>
+            <div class="topic-rows" id="topic-rows"></div>
+          </div>
+
+          <!-- Learning description (TF-IDF source) -->
+          <div class="form-group">
+            <label class="form-label" for="learning-desc">
+              What do you want to learn? <span class="label-required">*</span>
+            </label>
+            <textarea class="form-textarea" id="learning-desc" rows="5"
+              placeholder="Describe your learning query in detail. E.g. 'I want to understand microservices architecture and how to design distributed systems that handle 1M+ requests. I'm struggling with service discovery, inter-service communication and database per service patterns.' The more specific, the better your matches will be."></textarea>
+            <span class="field-hint" id="learning-count">0 / 800 characters · more detail = better matches</span>
+            <span class="field-error" id="learning-error">Please describe what you want to learn (at least 60 characters).</span>
+          </div>
+
+          <!-- Desired outcome -->
+          <div class="form-group">
+            <label class="form-label" for="desired-outcome">
+              Desired outcome / goal <span class="label-required">*</span>
+            </label>
+            <input class="form-input" type="text" id="desired-outcome"
+                   placeholder="e.g. get a job at a FAANG company, publish a research paper, ship my first product…" />
+            <span class="field-hint">This helps your mentor understand the finish line.</span>
+            <span class="field-error" id="outcome-error">Please describe your desired outcome.</span>
+          </div>
+
+        </div><!-- /step-3 -->
+
+
+        <!-- ==================================================
+             STEP 4 — Availability
+        ================================================== -->
+        <div class="step-panel" id="step-4">
+
+          <div class="step-heading">Your availability</div>
+          <p class="step-desc">We only show you mentors who are free when you are. Accurate availability (<em>A<sub>ij</sub></em>) means faster, better matches.</p>
+
+          <!-- Weekly slots -->
+          <div class="form-group">
+            <label class="form-label">
+              Weekly slots <span class="label-required">*</span>
+            </label>
+            <div class="slots-container" id="slots-container"></div>
+            <button type="button" class="btn-add-slot" id="add-slot-btn">
+              Add availability slot
+            </button>
+            <span class="field-error" id="slots-error">Please add at least one availability slot.</span>
+          </div>
+
+          <div class="field-row">
+            <div class="form-group">
+              <label class="form-label" for="timezone">
+                Timezone <span class="label-required">*</span>
+              </label>
+              <select class="form-select" id="timezone">
+                <option value="" disabled selected>Select timezone</option>
+                <option value="Asia/Kolkata">Asia/Kolkata (IST, UTC+5:30)</option>
+                <option value="Asia/Colombo">Asia/Colombo (UTC+5:30)</option>
+                <option value="Asia/Dhaka">Asia/Dhaka (UTC+6)</option>
+                <option value="Asia/Karachi">Asia/Karachi (UTC+5)</option>
+                <option value="Asia/Dubai">Asia/Dubai (UTC+4)</option>
+                <option value="Asia/Singapore">Asia/Singapore (UTC+8)</option>
+                <option value="Asia/Tokyo">Asia/Tokyo (UTC+9)</option>
+                <option value="Europe/London">Europe/London (GMT/BST)</option>
+                <option value="Europe/Berlin">Europe/Berlin (CET)</option>
+                <option value="America/New_York">America/New_York (EST)</option>
+                <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
+                <option value="America/Chicago">America/Chicago (CST)</option>
+                <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                <option value="UTC">UTC</option>
+              </select>
+              <span class="field-error" id="timezone-error">Please select your timezone.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="required-hours">
+                Required hours / week <span class="label-required">*</span>
+              </label>
+              <input class="form-input" type="number" id="required-hours"
+                     min="1" max="20" placeholder="e.g. 4" />
+              <span class="field-hint">1–20 hours · A<sub>ij</sub> normaliser for scheduling</span>
+              <span class="field-error" id="hours-error">Please enter hours per week (1–20).</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <!-- Session format -->
+            <div class="form-group">
+              <label class="form-label">
+                Session format <span class="label-optional">— optional</span>
+              </label>
+              <div class="radio-group">
+                <input type="radio" class="radio-option" name="session-fmt" id="fmt-live" value="live" checked />
+                <label class="radio-label" for="fmt-live">Live</label>
+                <input type="radio" class="radio-option" name="session-fmt" id="fmt-async" value="async" />
+                <label class="radio-label" for="fmt-async">Async</label>
+                <input type="radio" class="radio-option" name="session-fmt" id="fmt-both" value="both" />
+                <label class="radio-label" for="fmt-both">Both</label>
+              </div>
+            </div>
+
+            <!-- Session length -->
+            <div class="form-group">
+              <label class="form-label">
+                Preferred session length <span class="label-optional">— optional</span>
+              </label>
+              <div class="radio-group">
+                <input type="radio" class="radio-option" name="session-len" id="len-30" value="30" />
+                <label class="radio-label" for="len-30">30 min</label>
+                <input type="radio" class="radio-option" name="session-len" id="len-60" value="60" checked />
+                <label class="radio-label" for="len-60">60 min</label>
+                <input type="radio" class="radio-option" name="session-len" id="len-90" value="90" />
+                <label class="radio-label" for="len-90">90 min</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Languages -->
+          <div class="form-group">
+            <label class="form-label">
+              Languages preferred <span class="label-required">*</span>
+            </label>
+            <div class="tag-input-row">
+              <input class="form-input" type="text" id="lang-input"
+                     placeholder="Type a language and press Enter" autocomplete="off" />
+              <button type="button" class="btn-add-tag" id="add-lang-btn">Add</button>
+            </div>
+            <div class="tags-container" id="lang-tags"></div>
+            <span class="field-error" id="lang-error">Please add at least one language.</span>
+          </div>
+
+        </div><!-- /step-4 -->
+
+
+        <!-- Step navigation buttons -->
+        <div class="step-nav">
+          <span class="step-counter" id="step-counter">Step 1 of 4</span>
+          <button class="btn-back" id="btn-back" disabled>Previous</button>
+          <button class="btn-next" id="btn-next">Next step</button>
+          <button class="btn-submit" id="btn-submit" style="display:none;">Find my mentor</button>
+        </div>
+
+      </div><!-- /form-card -->
+    </div>
+  </main>
+
+
+  <!-- ============================================================
+       PAGE FOOTER
+  ============================================================ -->
+  <footer>© 2025 Father's Advice. All rights reserved.</footer>
+
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+  <script>
+
+    /* ── Redirect if already logged in ─────────────────────────── */
+    (function() {
+      const t = localStorage.getItem('fa_token');
+      const r = localStorage.getItem('fa_role');
+      if (t && r === 'mentor')  window.location.replace('dashboard-mentor.html');
+      else if (t && r === 'mentee') window.location.replace('dashboard-mentee.html');
+    })();
+
+    /* ── State ─────────────────────────────────────────────────── */
+
+    let currentStep = 1;
+    const TOTAL_STEPS = 4;
+
+    const menteeData = {
+      fullName: '', email: '', password: '', profilePicture: null,
+      roleStatus: '', organisation: '', expLevel: '', domain: '', bio: '',
+      topics: [],     /* [{name, priority}] */
+      learningDescription: '', desiredOutcome: '',
+      slots: [],      /* [{day, start, end}] */
+      timezone: '', requiredHours: '',
+      sessionFormat: 'live', sessionLength: '60',
+      languages: [],
+    };
+
+
+    /* ── Step navigation ───────────────────────────────────────── */
+
+    const btnBack   = document.getElementById('btn-back');
+    const btnNext   = document.getElementById('btn-next');
+    const btnSubmit = document.getElementById('btn-submit');
+
+    btnNext.addEventListener('click', () => {
+      if (!validateStep(currentStep)) return;
+      saveStepData(currentStep);
+      if (currentStep < TOTAL_STEPS) goToStep(currentStep + 1);
+    });
+
+    btnBack.addEventListener('click', () => {
+      if (currentStep > 1) goToStep(currentStep - 1);
+    });
+
+    btnSubmit.addEventListener('click', submitForm);
+
+    function goToStep(step) {
+      document.getElementById(`step-${currentStep}`).classList.remove('active');
+      const prevItem   = document.querySelector(`.step-item[data-step="${currentStep}"]`);
+      const prevCircle = prevItem.querySelector('.step-circle');
+      prevItem.classList.remove('active');
+
+      if (step > currentStep) {
+        prevCircle.classList.remove('active');
+        prevCircle.classList.add('done');
+        prevItem.classList.add('done');
+        document.getElementById(`line-${currentStep}`)?.classList.add('done');
+      } else {
+        prevCircle.classList.remove('done');
+        if (currentStep > 1) {
+          document.getElementById(`line-${currentStep - 1}`)?.classList.remove('done');
+        }
+      }
+
+      currentStep = step;
+      document.getElementById(`step-${currentStep}`).classList.add('active');
+      const newItem = document.querySelector(`.step-item[data-step="${currentStep}"]`);
+      newItem.classList.add('active');
+      newItem.querySelector('.step-circle').classList.add('active');
+      newItem.querySelector('.step-circle').classList.remove('done');
+
+      btnBack.disabled = (currentStep === 1);
+      btnNext.style.display   = currentStep < TOTAL_STEPS ? 'flex' : 'none';
+      btnSubmit.style.display = currentStep === TOTAL_STEPS ? 'block' : 'none';
+
+      document.getElementById('step-counter').textContent = `Step ${currentStep} of ${TOTAL_STEPS}`;
+      document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      clearMessage();
+    }
+
+
+    /* ── Validation ────────────────────────────────────────────── */
+
+    function validateStep(step) {
+      clearAllErrors();
+      let ok = true;
+
+      if (step === 1) {
+        ok = require('full-name', 'full-name-error', v => v.length >= 2) && ok;
+        ok = require('email', 'email-error', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) && ok;
+        ok = require('password', 'password-error', v => v.length >= 8) && ok;
+        const pw = val('password'), cpw = val('confirm-password');
+        if (pw && cpw && pw !== cpw) { showError('confirm-password', 'confirm-password-error'); ok = false; }
+      }
+
+      if (step === 2) {
+        ok = require('role-status', 'role-status-error', v => v !== '') && ok;
+        ok = require('exp-level',  'exp-level-error',   v => v !== '') && ok;
+        ok = require('domain',     'domain-error',      v => v !== '') && ok;
+      }
+
+      if (step === 3) {
+        if (menteeData.topics.length < 2) {
+          document.getElementById('topics-error').classList.add('visible'); ok = false;
+        }
+        ok = require('learning-desc',    'learning-error', v => v.length >= 60) && ok;
+        ok = require('desired-outcome',  'outcome-error',  v => v.length >= 10) && ok;
+      }
+
+      if (step === 4) {
+        if (menteeData.slots.length < 1) {
+          document.getElementById('slots-error').classList.add('visible'); ok = false;
+        }
+        ok = require('timezone',       'timezone-error', v => v !== '')      && ok;
+        ok = require('required-hours', 'hours-error',    v => +v >= 1 && +v <= 20) && ok;
+        if (menteeData.languages.length < 1) {
+          document.getElementById('lang-error').classList.add('visible'); ok = false;
+        }
+      }
+
+      if (!ok) showMessage('Please fill in all required fields correctly.');
+      return ok;
+    }
+
+    function require(id, errId, test) {
+      const v = val(id);
+      if (!test(v)) { showError(id, errId); return false; }
+      return true;
+    }
+    function showError(id, errId) {
+      document.getElementById(id)?.classList.add('has-error');
+      document.getElementById(errId)?.classList.add('visible');
+    }
+    function clearAllErrors() {
+      document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+      document.querySelectorAll('.field-error.visible').forEach(el => el.classList.remove('visible'));
+    }
+    function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+    function showMessage(text) {
+      const el = document.getElementById('form-message');
+      el.textContent = text; el.classList.add('visible');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function clearMessage() { document.getElementById('form-message').classList.remove('visible'); }
+
+
+    /* ── Save step data ────────────────────────────────────────── */
+
+    function saveStepData(step) {
+      if (step === 1) {
+        menteeData.fullName = val('full-name');
+        menteeData.email    = val('email');
+        menteeData.password = val('password');
+      }
+      if (step === 2) {
+        menteeData.roleStatus   = val('role-status');
+        menteeData.organisation = val('organisation');
+        menteeData.expLevel     = val('exp-level');
+        menteeData.domain       = val('domain');
+        menteeData.bio          = val('bio');
+      }
+      if (step === 3) {
+        menteeData.learningDescription = val('learning-desc');
+        menteeData.desiredOutcome      = val('desired-outcome');
+      }
+      if (step === 4) {
+        menteeData.timezone      = val('timezone');
+        menteeData.requiredHours = val('required-hours');
+        menteeData.sessionFormat = document.querySelector('input[name="session-fmt"]:checked')?.value || 'live';
+        menteeData.sessionLength = document.querySelector('input[name="session-len"]:checked')?.value || '60';
+      }
+    }
+
+
+    /* ── Password show/hide ────────────────────────────────────── */
+
+    function setupToggle(toggleId, inputId) {
+      document.getElementById(toggleId).addEventListener('click', function () {
+        const input = document.getElementById(inputId);
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        this.textContent = isHidden ? 'Hide' : 'Show';
+      });
+    }
+    setupToggle('toggle-pw-1', 'password');
+    setupToggle('toggle-pw-2', 'confirm-password');
+
+
+    /* ── Avatar upload preview ─────────────────────────────────── */
+
+    document.getElementById('avatar-file').addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('avatar-img').src = e.target.result;
+        document.getElementById('avatar-preview').style.display = 'block';
+        document.getElementById('upload-icon').style.display = 'none';
+        menteeData.profilePicture = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+
+    /* ── Bio character counter ─────────────────────────────────── */
+
+    document.getElementById('bio').addEventListener('input', function () {
+      document.getElementById('bio-count').textContent = `${this.value.length} / 300 characters`;
+    });
+    document.getElementById('learning-desc').addEventListener('input', function () {
+      document.getElementById('learning-count').textContent =
+        `${this.value.length} / 800 characters · more detail = better matches`;
+    });
+
+
+    /* ── Topic tag picker with priority ───────────────────────── */
+
+    function addTopic(name) {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      if (menteeData.topics.find(t => t.name.toLowerCase() === trimmed.toLowerCase())) return;
+      menteeData.topics.push({ name: trimmed, priority: 1 });
+      renderTopicRows();
+      document.getElementById('topic-input').value = '';
+    }
+
+    function removeTopic(index) {
+      menteeData.topics.splice(index, 1);
+      renderTopicRows();
+    }
+
+    function setTopicPriority(index, priority) {
+      menteeData.topics[index].priority = priority;
+      renderTopicRows();
+    }
+
+    function renderTopicRows() {
+      const container = document.getElementById('topic-rows');
+      container.innerHTML = menteeData.topics.map((topic, i) => `
+        <div class="topic-row">
+          <span class="topic-row-name" title="${topic.name}">${topic.name}</span>
+          <div class="priority-group">
+            <span class="priority-label">Priority</span>
+            <div class="priority-btns">
+              ${[1,2,3].map(p => `
+                <button class="priority-btn ${topic.priority === p ? 'selected' : ''}"
+                        onclick="setTopicPriority(${i}, ${p})"
+                        title="Priority ${p}${p===1?' (highest)':p===3?' (lowest)':''}">${p}</button>
+              `).join('')}
+            </div>
+            <span class="priority-hint">1=high</span>
+          </div>
+          <button class="btn-remove-topic" onclick="removeTopic(${i})" title="Remove">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('add-topic-btn').addEventListener('click', () =>
+      addTopic(document.getElementById('topic-input').value)
+    );
+    document.getElementById('topic-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addTopic(e.target.value); }
+    });
+
+
+    /* ── Language tag picker ───────────────────────────────────── */
+
+    function addLanguage(name) {
+      const trimmed = name.trim();
+      if (!trimmed || menteeData.languages.includes(trimmed.toLowerCase())) return;
+      menteeData.languages.push(trimmed);
+      renderLangTags();
+      document.getElementById('lang-input').value = '';
+    }
+    function removeLanguage(index) {
+      menteeData.languages.splice(index, 1);
+      renderLangTags();
+    }
+    function renderLangTags() {
+      document.getElementById('lang-tags').innerHTML = menteeData.languages.map((l, i) => `
+        <div class="tag-chip">
+          ${l}
+          <button class="tag-chip-remove" onclick="removeLanguage(${i})">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('add-lang-btn').addEventListener('click', () =>
+      addLanguage(document.getElementById('lang-input').value)
+    );
+    document.getElementById('lang-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addLanguage(e.target.value); }
+    });
+
+
+    /* ── Availability slot builder ─────────────────────────────── */
+
+    const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+    function addSlot() {
+      const id = Date.now();
+      menteeData.slots.push({ id, day: 'Monday', start: '18:00', end: '20:00' });
+      renderSlots();
+    }
+    function removeSlot(id) {
+      menteeData.slots = menteeData.slots.filter(s => s.id !== id);
+      renderSlots();
+    }
+    function renderSlots() {
+      const container = document.getElementById('slots-container');
+      container.innerHTML = menteeData.slots.map(slot => `
+        <div class="slot-row">
+          <select class="form-select" onchange="updateSlot(${slot.id},'day',this.value)">
+            ${DAYS.map(d => `<option value="${d}" ${slot.day === d ? 'selected' : ''}>${d}</option>`).join('')}
+          </select>
+          <input class="form-input" type="time" value="${slot.start}"
+                 onchange="updateSlot(${slot.id},'start',this.value)" />
+          <input class="form-input" type="time" value="${slot.end}"
+                 onchange="updateSlot(${slot.id},'end',this.value)" />
+          <button class="btn-remove-slot" onclick="removeSlot(${slot.id})">&times;</button>
+        </div>
+      `).join('');
+    }
+    function updateSlot(id, key, value) {
+      const slot = menteeData.slots.find(s => s.id === id);
+      if (slot) slot[key] = value;
+    }
+
+    document.getElementById('add-slot-btn').addEventListener('click', addSlot);
+    addSlot(); /* one default slot */
+
+
+    /* ── Final submission ──────────────────────────────────────── */
+
+    async function submitForm() {
+      if (!validateStep(4)) return;
+      saveStepData(4);
+
+      const btn = document.getElementById('btn-submit');
+      btn.textContent = 'Setting up your profile…';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/auth/register/mentee', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(menteeData),
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          if (data.token) localStorage.setItem('fa_token', data.token);
+          localStorage.setItem('fa_role', 'mentee');
+          if (data.user?.fullName) localStorage.setItem('fa_name', data.user.fullName);
+          if (data.user?.id)       localStorage.setItem('fa_id',   data.user.id);
+          window.location.href = '/dashboard-mentee.html';
+        } else {
+          showMessage(data.message || 'Something went wrong. Please try again.');
+          btn.textContent = 'Find my mentor';
+          btn.disabled = false;
+        }
+      } catch {
+        showMessage('Unable to connect. Please check your internet connection.');
+        btn.textContent = 'Find my mentor';
+        btn.disabled = false;
+      }
+    }
+
+  </script>
+
+
+</body>
+</html>

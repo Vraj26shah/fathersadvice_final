@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mentor Dashboard — Father's Advice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── CSS Variables ─────────────────────────────────────── */
+    :root {
+      --black:       #0a0a08;
+      --cream:       #f5f2eb;
+      --white:       #ffffff;
+      --text:        #1a1a18;
+      --muted:       #6b6b65;
+      --gold:        #c8a84b;
+      --gold-deep:   #a8882b;
+      --gold-border: rgba(200,168,75,0.35);
+      --gold-glow:   rgba(200,168,75,0.15);
+      --card-bg:     #141412;
+      --border:      rgba(255,255,255,0.08);
+      --serif:       'Playfair Display', Georgia, serif;
+      --sans:        'Inter', system-ui, sans-serif;
+      --radius:      12px;
+      --shadow:      0 4px 24px rgba(0,0,0,0.4);
+      --sidebar-w:   240px;
+    }
+
+    /* ─── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--sans);
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ─── Sidebar ────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--card-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 28px 24px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* CSS F|A logo mark */
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--white);
+      border: 1.5px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark-text {
+      font-family: var(--serif);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -1px;
+    }
+    .logo-mark-text .bar { color: var(--gold-deep); font-style: normal; }
+    .logo-name {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--white);
+      line-height: 1.2;
+    }
+    .logo-name span { display: block; font-size: 10px; font-family: var(--sans); color: var(--muted); font-weight: 400; margin-top: 1px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    /* Sidebar nav */
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 0;
+    }
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 16px 24px 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 24px;
+      color: rgba(255,255,255,0.55);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      font-weight: 500;
+      border-left: 2px solid transparent;
+      text-decoration: none;
+    }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+    .nav-item.active {
+      color: var(--gold);
+      border-left-color: var(--gold);
+      background: rgba(200,168,75,0.06);
+    }
+    .nav-item .icon {
+      width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--black);
+      flex-shrink: 0;
+    }
+    .user-meta { flex: 1; min-width: 0; }
+    .user-meta .name { font-size: 13px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-meta .role { font-size: 11px; color: var(--gold); font-weight: 500; }
+    .logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; font-size: 14px; transition: color 0.2s; }
+    .logout-btn:hover { color: var(--white); }
+
+    /* ─── Main Content ───────────────────────────────────────── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top bar */
+    .topbar {
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(10,10,8,0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-title { font-size: 18px; font-weight: 600; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .badge-gold {
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-border);
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .btn-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.2s;
+      position: relative;
+    }
+    .btn-icon:hover { color: var(--white); background: rgba(255,255,255,0.1); }
+    .notif-dot {
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 7px; height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      border: 2px solid var(--black);
+    }
+
+    /* Page body */
+    .page-body { padding: 32px; display: flex; flex-direction: column; gap: 28px; }
+
+    /* ─── Stats Row ──────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--gold-border); }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--white); font-family: var(--serif); line-height: 1; }
+    .stat-change { font-size: 12px; color: #4ade80; font-weight: 500; }
+    .stat-change.neutral { color: var(--muted); }
+
+    /* ─── Two-column layout ──────────────────────────────────── */
+    .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+
+    /* ─── Section cards ──────────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title { font-size: 15px; font-weight: 600; }
+    .card-action { font-size: 13px; color: var(--gold); cursor: pointer; font-weight: 500; text-decoration: none; }
+    .card-action:hover { text-decoration: underline; }
+    .card-body { padding: 0; }
+
+    /* ─── Mentee Request Items ───────────────────────────────── */
+    .request-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .request-item:last-child { border-bottom: none; }
+    .request-item:hover { background: rgba(255,255,255,0.02); }
+    .req-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--black);
+    }
+    .req-details { flex: 1; min-width: 0; }
+    .req-name { font-size: 14px; font-weight: 600; color: var(--white); }
+    .req-goal { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .req-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .tag-chip {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(200,168,75,0.1);
+      border: 1px solid var(--gold-border);
+      color: var(--gold);
+    }
+    .req-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .req-time { font-size: 11px; color: var(--muted); }
+    .req-actions { display: flex; gap: 6px; }
+    .btn-accept, .btn-decline {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    .btn-accept { background: var(--gold); color: var(--black); }
+    .btn-accept:hover { background: var(--gold-deep); }
+    .btn-decline { background: rgba(255,255,255,0.06); color: var(--muted); }
+    .btn-decline:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+
+    /* ─── Schedule list ──────────────────────────────────────── */
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .schedule-item:last-child { border-bottom: none; }
+    .schedule-date {
+      width: 44px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .schedule-date .day { font-size: 20px; font-weight: 700; color: var(--gold); font-family: var(--serif); line-height: 1; }
+    .schedule-date .mon { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+    .schedule-info { flex: 1; }
+    .schedule-name { font-size: 13px; font-weight: 600; }
+    .schedule-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .schedule-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .badge-confirmed { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+    .badge-pending   { background: rgba(200,168,75,0.1); color: var(--gold); border: 1px solid var(--gold-border); }
+
+    /* ─── Activity feed (right column) ──────────────────────── */
+    .activity-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+    .activity-dot.green { background: #4ade80; }
+    .activity-dot.blue  { background: #60a5fa; }
+    .activity-text { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+    .activity-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* ─── Profile completion card ────────────────────────────── */
+    .profile-card {
+      background: linear-gradient(135deg, rgba(200,168,75,0.12), rgba(200,168,75,0.04));
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .profile-card .pct { font-size: 32px; font-weight: 700; color: var(--gold); font-family: var(--serif); }
+    .profile-card p { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 4px; }
+    .progress-bar-wrap { margin-top: 12px; background: rgba(255,255,255,0.08); border-radius: 99px; height: 6px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold-deep), var(--gold)); }
+    .profile-items { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .profile-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.7); }
+    .check { color: #4ade80; }
+    .cross { color: var(--muted); }
+
+    /* ─── Empty state ────────────────────────────────────────── */
+    .empty-state {
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .empty-state .big { font-size: 32px; margin-bottom: 10px; }
+    .empty-state p { font-size: 13px; line-height: 1.6; }
+
+    /* ─── Modal overlay ──────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1a1a18;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 480px;
+      max-width: 95vw;
+      padding: 32px;
+    }
+    .modal h3 { font-family: var(--serif); font-size: 20px; margin-bottom: 16px; }
+    .modal p  { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+    .btn-primary { background: var(--gold); color: var(--black); border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; }
+    .btn-primary:hover { background: var(--gold-deep); }
+    .btn-secondary { background: rgba(255,255,255,0.07); color: var(--white); border: 1px solid var(--border); padding: 10px 22px; border-radius: 8px; font-weight: 500; font-size: 14px; cursor: pointer; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+    /* ─── Active connection cards ────────────────────────────── */
+    .connection-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+    }
+    .connection-item:last-child { border-bottom: none; }
+    .conn-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; flex-shrink: 0;
+    }
+    .conn-details { flex: 1; min-width: 0; }
+    .conn-name { font-size: 14px; font-weight: 600; }
+    .conn-doubt {
+      font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .btn-join-session {
+      background: rgba(74,222,128,0.12);
+      color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.3);
+      padding: 6px 14px; border-radius: 7px;
+      font-size: 12px; font-weight: 700;
+      text-decoration: none; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 5px;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .btn-join-session:hover { background: rgba(74,222,128,0.22); }
+    .live-dot-sm {
+      width: 6px; height: 6px; border-radius: 50%; background: #4ade80;
+      animation: blink-sm 1.2s ease-in-out infinite;
+    }
+    @keyframes blink-sm { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ─── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 1100px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 700px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .page-body { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ Sidebar ═══════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <span class="logo-mark-text">F<i class="bar">|</i>A</span>
+      </div>
+      <div class="logo-name">
+        Father's Advice
+        <span>Mentor Portal</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+
+      <a class="nav-item active" href="dashboard-mentor.html">
+        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+        Dashboard
+      </a>
+      <a class="nav-item" href="find-mentee.html">
+        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        Find a Mentee
+      </a>
+      <a class="nav-item" href="#" onclick="showSection('requests')">
+        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        Mentee Requests
+        <span style="margin-left:auto;background:var(--gold);color:var(--black);font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;" id="req-badge">3</span>
+      </a>
+      <a class="nav-item" href="calendar.html">
+        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+        My Sessions
+      </a>
+      <a class="nav-item" href="chat.html">
+        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        Messages
+      </a>
+      <a class="nav-item" href="progress.html">
+        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        My Progress
+      </a>
+      <div class="nav-section-label" style="margin-top:8px;">Settings</div>
+      <a class="nav-item" href="profile.html">
+        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        My Profile
+      </a>
+      <a class="nav-item" href="profile.html">
+        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>
+        Availability
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar">JD</div>
+        <div class="user-meta">
+          <div class="name" id="sidebar-name">John Doe</div>
+          <div class="role">Mentor</div>
+        </div>
+        <button class="logout-btn" title="Sign out" onclick="signOut()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ Main ═══════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title">Good morning, <span id="topbar-name">Mentor</span> 👋</div>
+      <div class="topbar-actions">
+        <span class="badge-gold">Mentor</span>
+        <div class="btn-icon" title="Notifications">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-dot"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <div class="page-body">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Active Mentees</div>
+          <div class="stat-value" id="stat-mentees">—</div>
+          <div class="stat-change" id="stat-mentees-sub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Sessions Done</div>
+          <div class="stat-value" id="stat-sessions">—</div>
+          <div class="stat-change" id="stat-sessions-sub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hours Mentored</div>
+          <div class="stat-value" id="stat-hours">—</div>
+          <div class="stat-change" id="stat-hours-sub"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Upcoming Sessions</div>
+          <div class="stat-value" id="stat-upcoming">—</div>
+          <div class="stat-change" id="stat-upcoming-sub"></div>
+        </div>
+      </div>
+
+      <!-- Two-column section -->
+      <div class="two-col">
+
+        <!-- Left: requests + schedule -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Pending Requests -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Pending Requests</div>
+            </div>
+            <div class="card-body" id="requests-list">
+              <div style="color:var(--muted);font-size:14px;padding:12px 0;">Loading requests…</div>
+            </div>
+          </div>
+
+          <!-- Active Connections (accepted) -->
+          <div class="card" id="active-connections-card">
+            <div class="card-header">
+              <div class="card-title">Active Connections</div>
+              <span id="conn-count" style="font-size:12px;color:var(--muted);"></span>
+            </div>
+            <div class="card-body" id="connections-list">
+              <div style="color:var(--muted);font-size:14px;padding:12px 0;">Loading…</div>
+            </div>
+          </div>
+
+          <!-- Upcoming Sessions -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Upcoming Sessions</div>
+              <a class="card-action" href="calendar.html">Full calendar</a>
+            </div>
+            <div class="card-body" id="upcoming-sessions-list">
+              <div style="color:var(--muted);font-size:14px;padding:12px 0;">Loading sessions…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+          <!-- Profile completion -->
+          <div class="profile-card">
+            <div class="pct">75%</div>
+            <p>Profile completeness — add availability slots to improve match quality.</p>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:75%;"></div></div>
+            <div class="profile-items">
+              <div class="profile-item"><span class="check">✓</span> Basic info</div>
+              <div class="profile-item"><span class="check">✓</span> Professional background</div>
+              <div class="profile-item"><span class="check">✓</span> Skills &amp; expertise</div>
+              <div class="profile-item"><span class="cross">○</span> Availability slots</div>
+            </div>
+          </div>
+
+          <!-- Activity feed -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Recent Activity</div>
+            </div>
+            <div class="card-body" id="activity-feed">
+              <div style="color:var(--muted);font-size:14px;padding:12px 0;">Loading activity…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-body -->
+  </main>
+
+  <!-- ═══ Modal: Accept / Schedule ══════════════════════════ -->
+  <div class="modal-overlay" id="accept-modal">
+    <div class="modal">
+
+      <!-- Step 1: Confirm -->
+      <div id="modal-step-confirm">
+        <h3>Accept mentee request?</h3>
+        <p id="modal-mentee-doubt" style="font-size:13px;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin:12px 0;font-style:italic;line-height:1.6;"></p>
+        <p style="font-size:13px;color:rgba(255,255,255,0.6);">They will be notified via in-app alert and email.</p>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn-primary" id="confirm-accept-btn" onclick="confirmAccept()">Accept Request</button>
+        </div>
+      </div>
+
+      <!-- Step 2: After accept — online or offline -->
+      <div id="modal-step-next" style="display:none;">
+        <h3 id="modal-next-title">Connected!</h3>
+        <div id="modal-online-now" style="display:none;">
+          <div style="display:flex;align-items:center;gap:8px;margin:14px 0;font-size:14px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#4ade80;animation:blink-sm 1s infinite;flex-shrink:0;"></div>
+            <span id="modal-mentee-name-online"></span> is <strong style="color:#4ade80;">online right now!</strong>
+          </div>
+          <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:18px;">Join the session immediately or schedule for a specific time.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a id="join-now-btn" href="#" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Join Session Now
+            </a>
+            <button class="btn-secondary" onclick="showScheduleForm()">Schedule for Later</button>
+          </div>
+        </div>
+        <div id="modal-offline-msg" style="display:none;">
+          <div style="display:flex;align-items:center;gap:8px;margin:14px 0;font-size:14px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#6b6b65;flex-shrink:0;"></div>
+            <span id="modal-mentee-name-offline"></span> is <strong style="color:#6b6b65;">offline</strong> — email notification sent.
+          </div>
+          <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:18px;">Schedule a session time so they know when to show up.</p>
+          <button class="btn-primary" onclick="showScheduleForm()">Schedule a Session</button>
+        </div>
+        <div class="modal-actions" style="margin-top:16px;">
+          <button class="btn-secondary" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Schedule form -->
+      <div id="modal-step-schedule" style="display:none;">
+        <h3>Schedule a Session</h3>
+        <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:16px;">Pick a date and time. Both of you will receive a confirmation email.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px;">Date & Time</label>
+            <input type="datetime-local" id="sched-datetime"
+              style="width:100%;background:#1a1a18;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;outline:none;" />
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px;">Duration</label>
+            <select id="sched-duration"
+              style="width:100%;background:#1a1a18;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;outline:none;">
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60" selected>60 minutes</option>
+              <option value="90">90 minutes</option>
+              <option value="120">2 hours</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px;">Note / Agenda (optional)</label>
+            <input type="text" id="sched-notes" placeholder="e.g. We'll cover your PM transition roadmap"
+              style="width:100%;background:#1a1a18;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;outline:none;" />
+          </div>
+        </div>
+        <div id="sched-error" style="font-size:12px;color:#e05c5c;margin-top:8px;display:none;"></div>
+        <div class="modal-actions" style="margin-top:20px;">
+          <button class="btn-secondary" onclick="showStepNext()">Back</button>
+          <button class="btn-primary" id="send-sched-btn" onclick="sendSchedule()">Send Invite</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- ═══ Scripts ════════════════════════════════════════════ -->
+  <script>
+    /* ── Auth guard ─────────────────────────────────────── */
+    const token = localStorage.getItem('fa_token');
+    const role  = localStorage.getItem('fa_role');
+    if (!token) {
+      window.location.href = '/login.html';
+    } else if (role && role !== 'mentor') {
+      window.location.href = '/dashboard-mentee.html';
+    }
+
+    /* ── Populate user name ─────────────────────────────── */
+    const storedName = localStorage.getItem('fa_name') || 'Mentor';
+    const initials   = storedName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('topbar-name').textContent    = storedName.split(' ')[0];
+    document.getElementById('sidebar-name').textContent   = storedName;
+    document.getElementById('sidebar-avatar').textContent = initials;
+
+    /* ── Gradient colours for avatars ───────────────────── */
+    const GRADIENTS = [
+      'linear-gradient(135deg,#818cf8,#6366f1)',
+      'linear-gradient(135deg,#34d399,#059669)',
+      'linear-gradient(135deg,#fb923c,#ea580c)',
+      'linear-gradient(135deg,#f472b6,#db2777)',
+      'linear-gradient(135deg,#38bdf8,#0284c7)',
+      'linear-gradient(135deg,#c8a84b,#a8882b)',
+    ];
+
+    /* ── Load accepted connections ───────────────────────── */
+    async function loadConnections() {
+      try {
+        const res = await fetch('/api/connect/accepted', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        renderConnections(data.connections);
+      } catch (err) {
+        document.getElementById('connections-list').innerHTML =
+          `<div style="color:#e05c5c;font-size:14px;">${err.message}</div>`;
+      }
+    }
+
+    function renderConnections(connections) {
+      const container = document.getElementById('connections-list');
+      const countEl   = document.getElementById('conn-count');
+      // Update stat card
+      const statEl  = document.getElementById('stat-mentees');
+      const statSub = document.getElementById('stat-mentees-sub');
+      if (statEl)  statEl.textContent  = connections.length;
+      if (statSub) statSub.textContent = connections.length
+        ? `${connections.length} active mentee${connections.length !== 1 ? 's' : ''}`
+        : 'No active mentees yet';
+      if (!connections.length) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">No active connections yet — accept a request to start.</div>';
+        countEl.textContent = '';
+        return;
+      }
+      countEl.textContent = `${connections.length} mentee${connections.length !== 1 ? 's' : ''}`;
+      container.innerHTML = connections.map((c, i) => {
+        const av   = c.menteeName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+        const grad = GRADIENTS[i % GRADIENTS.length];
+        return `
+          <div class="connection-item">
+            <div class="conn-avatar" style="background:${grad};">${av}</div>
+            <div class="conn-details">
+              <div class="conn-name">${c.menteeName}</div>
+              <div class="conn-doubt">${c.doubt}</div>
+            </div>
+            <a class="btn-join-session" href="session.html?requestId=${c.requestId}">
+              <div class="live-dot-sm"></div>Join Session
+            </a>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Load pending requests ───────────────────────────── */
+    async function loadRequests() {
+      try {
+        const res = await fetch('/api/connect/requests', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        renderRequests(data.requests);
+        updateBadge(data.requests.length);
+      } catch (err) {
+        document.getElementById('requests-list').innerHTML =
+          `<div style="color:#e05c5c;font-size:14px;">Could not load requests: ${err.message}</div>`;
+      }
+    }
+
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      return `${Math.floor(hrs / 24)}d ago`;
+    }
+
+    function renderRequests(requests) {
+      const container = document.getElementById('requests-list');
+      if (!requests.length) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">No pending requests.</div>';
+        return;
+      }
+      container.innerHTML = requests.map((r, i) => {
+        const av = r.menteeName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+        const grad = GRADIENTS[i % GRADIENTS.length];
+        return `
+          <div class="request-item" data-request-id="${r.requestId}">
+            <div class="req-avatar" style="background:${grad};">${av}</div>
+            <div class="req-details">
+              <div class="req-name">${r.menteeName}</div>
+              <div class="req-goal">${r.doubt}</div>
+            </div>
+            <div class="req-meta">
+              <div class="req-time">${timeAgo(r.sentAt)}</div>
+              <div class="req-actions">
+                <button class="btn-accept"  onclick="handleRequest(this, 'accept')">Accept</button>
+                <button class="btn-decline" onclick="handleRequest(this, 'decline')">Decline</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Request accept / decline ────────────────────────── */
+    let pendingRequestEl = null;
+    let pendingRequestId = null;   // kept after accept for scheduling
+
+    function handleRequest(btn, action) {
+      const item = btn.closest('.request-item');
+      if (action === 'accept') {
+        pendingRequestEl = item;
+        // Pre-fill the doubt in the modal
+        const doubt = item.querySelector('.req-goal')?.textContent || '';
+        document.getElementById('modal-mentee-doubt').textContent = doubt;
+        // Show step 1
+        showStepConfirm();
+        document.getElementById('accept-modal').classList.add('open');
+      } else {
+        declineRequest(item);
+      }
+    }
+
+    async function declineRequest(item) {
+      const requestId = item.dataset.requestId;
+      item.style.transition = 'opacity 0.3s, transform 0.3s';
+      item.style.opacity = '0';
+      item.style.transform = 'translateX(20px)';
+      try {
+        await fetch(`/api/connect/decline/${requestId}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+      } catch (_) { /* ignore network errors for optimistic UI */ }
+      setTimeout(() => {
+        item.remove();
+        updateBadge(document.querySelectorAll('.request-item').length);
+      }, 300);
+    }
+
+    /* ── Modal step helpers ──────────────────────────────── */
+    function showStepConfirm() {
+      document.getElementById('modal-step-confirm').style.display  = '';
+      document.getElementById('modal-step-next').style.display     = 'none';
+      document.getElementById('modal-step-schedule').style.display = 'none';
+    }
+    function showStepNext() {
+      document.getElementById('modal-step-confirm').style.display  = 'none';
+      document.getElementById('modal-step-next').style.display     = '';
+      document.getElementById('modal-step-schedule').style.display = 'none';
+    }
+    function showScheduleForm() {
+      document.getElementById('modal-step-confirm').style.display  = 'none';
+      document.getElementById('modal-step-next').style.display     = 'none';
+      document.getElementById('modal-step-schedule').style.display = '';
+      // Pre-fill datetime with next hour
+      const next = new Date(Date.now() + 60 * 60 * 1000);
+      next.setMinutes(0, 0, 0);
+      document.getElementById('sched-datetime').value = next.toISOString().slice(0,16);
+    }
+
+    async function confirmAccept() {
+      if (!pendingRequestEl) return;
+      const menteeName = pendingRequestEl.querySelector('.req-name').textContent;
+      const requestId  = pendingRequestEl.dataset.requestId;
+      const btn = document.getElementById('confirm-accept-btn');
+      btn.textContent = 'Accepting…'; btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/connect/accept/${requestId}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to accept.');
+
+        // Animate out the request card
+        pendingRequestEl.style.transition = 'opacity 0.3s';
+        pendingRequestEl.style.opacity    = '0';
+        setTimeout(() => {
+          pendingRequestEl.remove();
+          updateBadge(document.querySelectorAll('.request-item').length);
+          pendingRequestEl = null;
+          loadConnections();
+        }, 300);
+
+        // Store requestId for scheduling step
+        pendingRequestId = requestId;
+
+        // Move to step 2
+        document.getElementById('modal-next-title').textContent = `Connected with ${menteeName}!`;
+        if (data.menteeOnline) {
+          document.getElementById('modal-online-now').style.display  = '';
+          document.getElementById('modal-offline-msg').style.display = 'none';
+          document.getElementById('modal-mentee-name-online').textContent = menteeName;
+          document.getElementById('join-now-btn').href = `session.html?requestId=${requestId}`;
+        } else {
+          document.getElementById('modal-online-now').style.display  = 'none';
+          document.getElementById('modal-offline-msg').style.display = '';
+          document.getElementById('modal-mentee-name-offline').textContent = menteeName;
+        }
+        showStepNext();
+
+      } catch (err) {
+        closeModal();
+        showToast(err.message);
+      } finally {
+        btn.textContent = 'Accept Request'; btn.disabled = false;
+      }
+    }
+
+    async function sendSchedule() {
+      const dt   = document.getElementById('sched-datetime').value;
+      const dur  = document.getElementById('sched-duration').value;
+      const note = document.getElementById('sched-notes').value.trim();
+      const errEl = document.getElementById('sched-error');
+
+      if (!dt) { errEl.textContent = 'Please pick a date and time.'; errEl.style.display = ''; return; }
+      if (new Date(dt) <= Date.now()) { errEl.textContent = 'Please pick a future time.'; errEl.style.display = ''; return; }
+      errEl.style.display = 'none';
+
+      const btn = document.getElementById('send-sched-btn');
+      btn.textContent = 'Sending…'; btn.disabled = true;
+      try {
+        const res = await fetch('/api/sessions/propose', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body:    JSON.stringify({ requestId: pendingRequestId, scheduledTime: new Date(dt).toISOString(), durationMins: Number(dur), notes: note }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        closeModal();
+        showToast('Session invite sent! They\'ll receive an email to confirm.');
+        loadSessions();
+      } catch (err) {
+        errEl.textContent = err.message; errEl.style.display = '';
+      } finally {
+        btn.textContent = 'Send Invite'; btn.disabled = false;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('accept-modal').classList.remove('open');
+      pendingRequestEl = null;
+      showStepConfirm();
+    }
+
+    document.getElementById('accept-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    function updateBadge(count) {
+      const badge = document.getElementById('req-badge');
+      badge.textContent = count;
+      badge.style.display = count === 0 ? 'none' : '';
+    }
+
+    /* ── Toast notification ─────────────────────────────── */
+    function showToast(msg) { showToastWithLink(msg, null); }
+
+    function showToastWithLink(msg, href) {
+      const t = document.createElement('div');
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '28px', right: '28px',
+        background: 'var(--gold)', color: 'var(--black)',
+        fontWeight: '600', fontSize: '14px',
+        padding: '14px 20px', borderRadius: '10px',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.4)',
+        zIndex: '9999', opacity: '0',
+        transition: 'opacity 0.3s, transform 0.3s',
+        transform: 'translateY(10px)',
+        display: 'flex', flexDirection: 'column', gap: '8px',
+        maxWidth: '280px',
+      });
+      const msgEl = document.createElement('span');
+      msgEl.textContent = msg;
+      t.appendChild(msgEl);
+      if (href) {
+        const link = document.createElement('a');
+        link.href = href;
+        link.textContent = '→ Join Session Now';
+        Object.assign(link.style, {
+          display: 'block', background: 'rgba(0,0,0,0.15)',
+          color: 'var(--black)', textDecoration: 'none',
+          fontWeight: '700', fontSize: '13px',
+          padding: '6px 12px', borderRadius: '6px',
+          textAlign: 'center',
+        });
+        t.appendChild(link);
+      }
+      document.body.appendChild(t);
+      requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(10px)';
+        setTimeout(() => t.remove(), 300);
+      }, 5000);
+    }
+
+    /* ── Sign out ───────────────────────────────────────── */
+    function signOut() {
+      localStorage.removeItem('fa_token');
+      localStorage.removeItem('fa_role');
+      localStorage.removeItem('fa_name');
+      window.location.href = '/login.html';
+    }
+
+    /* ── Load scheduled sessions ─────────────────────────── */
+    let _allSessions = [];
+
+    async function loadSessions() {
+      try {
+        const res = await fetch('/api/sessions/mine', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) return;
+        _allSessions = data.sessions || [];
+        renderSessions(_allSessions);
+        updateStats();
+        renderActivity();
+      } catch (_) {}
+    }
+
+    function renderSessions(sessions) {
+      const container = document.getElementById('upcoming-sessions-list');
+      if (!container) return;
+      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const upcoming = sessions.filter(s => new Date(s.scheduledTime) > Date.now())
+                               .sort((a,b) => new Date(a.scheduledTime) - new Date(b.scheduledTime))
+                               .slice(0, 4);
+      if (!upcoming.length) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">No upcoming sessions scheduled.</div>';
+        return;
+      }
+      container.innerHTML = upcoming.map(s => {
+        const d     = new Date(s.scheduledTime);
+        const other = s.mentee?.fullName || s.mentor?.fullName || 'Mentee';
+        const badgeClass = s.status === 'confirmed' ? 'badge-confirmed' : 'badge-pending';
+        const badgeText  = s.status === 'confirmed' ? 'Confirmed' : 'Pending';
+        return `
+          <div class="schedule-item">
+            <div class="schedule-date">
+              <div class="day">${d.getDate()}</div>
+              <div class="mon">${MONTHS[d.getMonth()]}</div>
+            </div>
+            <div class="schedule-info">
+              <div class="schedule-name">1:1 with ${other}</div>
+              <div class="schedule-time">${d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} · ${s.durationMins || 60} min</div>
+            </div>
+            <span class="schedule-badge ${badgeClass}">${badgeText}</span>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Stats from sessions + connections ───────────────── */
+    function updateStats() {
+      const sessions = _allSessions;
+      const done     = sessions.filter(s => s.status === 'completed');
+      const upcoming = sessions.filter(s => new Date(s.scheduledTime) > Date.now() && s.status !== 'completed');
+      const hours    = done.reduce((acc, s) => acc + (s.durationMins || 60), 0) / 60;
+
+      document.getElementById('stat-sessions').textContent  = done.length;
+      document.getElementById('stat-sessions-sub').textContent = done.length ? `${done.length} total completed` : 'No sessions yet';
+      document.getElementById('stat-hours').textContent     = hours % 1 === 0 ? hours : hours.toFixed(1);
+      document.getElementById('stat-hours-sub').textContent = hours ? `across ${done.length} sessions` : 'Start mentoring today';
+      document.getElementById('stat-upcoming').textContent  = upcoming.length;
+      document.getElementById('stat-upcoming-sub').textContent = upcoming.length ? `${upcoming.length} scheduled` : 'Nothing scheduled yet';
+    }
+
+    /* ── Activity feed derived from real data ─────────────── */
+    function renderActivity() {
+      const container = document.getElementById('activity-feed');
+      if (!container) return;
+      const sessions  = _allSessions;
+      const events = [];
+
+      sessions.forEach(s => {
+        const other = s.mentee?.fullName || s.mentor?.fullName || 'Someone';
+        if (s.status === 'confirmed') {
+          events.push({ text: `<strong>${other}</strong> confirmed a session`, time: new Date(s.updatedAt || s.scheduledTime), dot: 'green' });
+        } else if (s.status === 'completed') {
+          events.push({ text: `Session with <strong>${other}</strong> completed`, time: new Date(s.updatedAt || s.scheduledTime), dot: 'green' });
+        } else if (s.status === 'proposed') {
+          events.push({ text: `Session proposed with <strong>${other}</strong>`, time: new Date(s.createdAt || s.scheduledTime), dot: 'blue' });
+        }
+      });
+
+      events.sort((a,b) => b.time - a.time);
+      if (!events.length) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0;">No recent activity yet.</div>';
+        return;
+      }
+      container.innerHTML = events.slice(0,5).map(e => `
+        <div class="activity-item">
+          <div class="activity-dot ${e.dot || ''}"></div>
+          <div>
+            <div class="activity-text">${e.text}</div>
+            <div class="activity-time">${timeAgo(e.time.toISOString())}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    /* ── Socket.io — real-time events ───────────────────── */
+    (function initSocket() {
+      if (typeof io === 'undefined') return;
+      const socket = io({ auth: { token } });
+      socket.on('session_confirmed', (data) => {
+        showToastWithLink(
+          `${data.confirmerName} confirmed your session!`,
+          `session.html?requestId=${data.requestId}`
+        );
+        loadSessions();
+      });
+      socket.on('request_accepted', () => {
+        loadConnections();
+        loadSessions();
+      });
+      socket.on('new_request', () => {
+        loadRequests();
+      });
+    })();
+
+    loadRequests();
+    loadConnections();
+    loadSessions();
+  </script>
+</body>
+</html>

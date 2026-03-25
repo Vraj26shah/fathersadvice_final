@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in — Father's Advice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+
+    /* ============================================================
+       RESET & VARIABLES  (keep same as main site)
+    ============================================================ */
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:         #0a0a08;
+      --black-2:       #131310;
+      --black-3:       #1c1c18;
+      --black-4:       #252520;
+      --cream:         #f7f4ef;
+      --text-dark:     #f0ede6;
+      --text-muted:    rgba(240,237,230,0.5);
+      --text-faint:    rgba(240,237,230,0.28);
+      --gold:          #c8a84b;
+      --gold-light:    #e0be6a;
+      --gold-deep:     #b8952a;
+      --gold-dim:      rgba(200,168,75,0.10);
+      --gold-border:   rgba(200,168,75,0.30);
+      --border-dark:   rgba(255,255,255,0.08);
+      --border-dark2:  rgba(255,255,255,0.15);
+      --error:         #e05c5c;
+      --success:       #4caf7d;
+      --serif:  'Playfair Display', Georgia, serif;
+      --sans:   'Inter', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      background: var(--black);
+      color: var(--text-dark);
+      font-family: var(--sans);
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+
+    /* ============================================================
+       AMBIENT BACKGROUND GLOW
+    ============================================================ */
+
+    .bg-glow {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-glow::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(200,168,75,0.07) 0%, transparent 65%);
+    }
+    .bg-glow::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(200,168,75,0.04) 0%, transparent 65%);
+    }
+
+
+    /* ============================================================
+       TOP BAR  (minimal nav, same style as main site)
+    ============================================================ */
+
+    .top-bar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 64px;
+      height: 66px;
+      border-bottom: 1px solid var(--border-dark);
+      background: rgba(10,10,8,0.7);
+      backdrop-filter: blur(16px);
+    }
+
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    /* CSS recreation of the F|A logo mark */
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      background: #fff;
+      border: 1.5px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.2s;
+    }
+    .logo-mark-text {
+      font-family: var(--serif);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .logo-mark-text .bar { color: var(--gold-deep); font-style: normal; }
+    .logo-link:hover .logo-mark { border-color: var(--gold); }
+
+    .logo-name {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-dark);
+      letter-spacing: 0.5px;
+    }
+
+    .back-link {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-link:hover { color: var(--text-dark); }
+    .back-link::before { content: '←'; }
+
+
+    /* ============================================================
+       MAIN LAYOUT  — centered card
+    ============================================================ */
+
+    .page-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+    }
+
+
+    /* ============================================================
+       CARD HEADER  — logo + headline
+    ============================================================ */
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    /* Large version of the logo mark for the card */
+    .card-logo-mark {
+      width: 56px;
+      height: 56px;
+      background: #fff;
+      border: 2px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .card-logo-mark-text {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -1.5px;
+      line-height: 1;
+    }
+    .card-logo-mark-text .bar { color: var(--gold-deep); font-style: normal; }
+
+    .card-title {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+    .card-title em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--gold);
+    }
+
+    .card-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+
+    /* ============================================================
+       FORM
+    ============================================================ */
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      background: var(--black-3);
+      border: 1px solid var(--border-dark2);
+      color: var(--text-dark);
+      padding: 13px 16px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 400;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      border-radius: 0;                  /* sharp corners — matches logo aesthetic */
+      -webkit-appearance: none;
+    }
+    .form-input::placeholder { color: var(--text-faint); }
+    .form-input:focus {
+      border-color: var(--gold-border);
+      box-shadow: 0 0 0 3px rgba(200,168,75,0.10);
+    }
+    /* Browser autofill styling */
+    .form-input:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 1000px var(--black-3) inset;
+      -webkit-text-fill-color: var(--text-dark);
+    }
+
+    /* Row for label + "Forgot?" link */
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .forgot-link {
+      font-size: 12px;
+      color: var(--gold);
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      transition: color 0.2s;
+    }
+    .forgot-link:hover { color: var(--gold-light); }
+
+    /* Password field wrapper — for show/hide toggle */
+    .password-wrapper {
+      position: relative;
+    }
+    .password-wrapper .form-input {
+      padding-right: 48px;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-family: var(--sans);
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+      padding: 0;
+    }
+    .toggle-password:hover { color: var(--text-dark); }
+
+
+    /* ============================================================
+       DIVIDER  — OR separator
+    ============================================================ */
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 4px 0;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border-dark2);
+    }
+    .divider-text {
+      font-size: 11px;
+      color: var(--text-faint);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
+
+    .btn-signin {
+      width: 100%;
+      background: var(--gold);
+      border: 1px solid var(--gold);
+      color: var(--black);
+      padding: 14px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-top: 4px;
+    }
+    .btn-signin:hover {
+      background: var(--gold-light);
+      border-color: var(--gold-light);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(200,168,75,0.28);
+    }
+    .btn-signin:active { transform: translateY(0); }
+
+    .btn-google {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border-dark2);
+      color: var(--text-dark);
+      padding: 13px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-google:hover {
+      background: var(--border-dark);
+      border-color: var(--border-dark2);
+    }
+
+    /* Google "G" logo using CSS */
+    .google-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #EA4335 0deg 90deg,
+        #FBBC05 90deg 180deg,
+        #34A853 180deg 270deg,
+        #4285F4 270deg 360deg
+      );
+      flex-shrink: 0;
+    }
+
+
+    /* ============================================================
+       FORM FOOTER  — signup link & terms
+    ============================================================ */
+
+    .form-footer {
+      text-align: center;
+      margin-top: 28px;
+    }
+
+    .signup-prompt {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .signup-prompt a {
+      color: var(--gold);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .signup-prompt a:hover { color: var(--gold-light); }
+
+    .terms-note {
+      font-size: 11px;
+      color: var(--text-faint);
+      line-height: 1.7;
+    }
+    .terms-note a {
+      color: rgba(200,168,75,0.6);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .terms-note a:hover { color: var(--gold); }
+
+
+    /* ============================================================
+       ERROR / SUCCESS STATE  — shown via JS
+    ============================================================ */
+
+    .form-message {
+      padding: 12px 16px;
+      font-size: 13px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      border-left: 2px solid;
+    }
+    .form-message.error   { color: var(--error);   background: rgba(224,92,92,0.08);   border-color: var(--error); }
+    .form-message.success { color: var(--success);  background: rgba(76,175,125,0.08);  border-color: var(--success); }
+    .form-message.visible { display: flex; }
+
+    /* Input error state */
+    .form-input.has-error { border-color: rgba(224,92,92,0.6); }
+    .field-error {
+      font-size: 11px;
+      color: var(--error);
+      letter-spacing: 0.2px;
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+
+    /* ============================================================
+       PAGE FOOTER
+    ============================================================ */
+
+    .page-footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid var(--border-dark);
+      font-size: 11px;
+      color: var(--text-faint);
+      letter-spacing: 0.3px;
+    }
+
+
+    /* ============================================================
+       FADE-IN ON LOAD
+    ============================================================ */
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card-header { animation: fadeInUp 0.55s ease both; }
+    .login-form  { animation: fadeInUp 0.55s 0.1s ease both; }
+    .form-footer { animation: fadeInUp 0.55s 0.2s ease both; }
+
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+
+    @media (max-width: 600px) {
+      .top-bar  { padding: 0 20px; }
+      .page-body { padding: 36px 20px; align-items: flex-start; padding-top: 56px; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow"></div>
+
+  <!-- ============================================================
+       TOP BAR
+  ============================================================ -->
+  <header class="top-bar">
+    <a class="logo-link" href="index.html">
+      <div class="logo-mark">
+        <span class="logo-mark-text">F<i class="bar">|</i>A</span>
+      </div>
+      <span class="logo-name">Father's Advice</span>
+    </a>
+    <a class="back-link" href="index.html">Back to home</a>
+  </header>
+
+
+  <!-- ============================================================
+       MAIN CONTENT  — login card
+  ============================================================ -->
+  <main class="page-body">
+    <div class="login-card">
+
+      <!-- Card header -->
+      <div class="card-header">
+        <div class="card-logo-mark">
+          <span class="card-logo-mark-text">F<i class="bar">|</i>A</span>
+        </div>
+        <h1 class="card-title">Welcome <em>back.</em></h1>
+        <p class="card-subtitle">Sign in to access your sessions and mentors.</p>
+      </div>
+
+      <!-- Error / success message (shown by JS) -->
+      <div class="form-message error" id="form-message" role="alert"></div>
+
+      <!-- Login form -->
+      <form class="login-form" id="login-form" novalidate>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email address</label>
+          <input
+            class="form-input"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          />
+          <span class="field-error" id="email-error">Please enter a valid email address.</span>
+        </div>
+
+        <div class="form-group">
+          <div class="label-row">
+            <label class="form-label" for="password">Password</label>
+            <a class="forgot-link" href="#">Forgot password?</a>
+          </div>
+          <div class="password-wrapper">
+            <input
+              class="form-input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+            <button type="button" class="toggle-password" id="toggle-password" aria-label="Show password">
+              Show
+            </button>
+          </div>
+          <span class="field-error" id="password-error">Password must be at least 8 characters.</span>
+        </div>
+
+        <button type="submit" class="btn-signin" id="submit-btn">
+          Sign in
+        </button>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <span class="divider-text">or continue with</span>
+          <div class="divider-line"></div>
+        </div>
+
+        <button type="button" class="btn-google" id="google-btn">
+          <span class="google-icon"></span>
+          Continue with Google
+        </button>
+
+      </form>
+
+      <!-- Footer links -->
+      <div class="form-footer">
+        <p class="signup-prompt">
+          Don't have an account?
+          <a href="signup.html">Get started free</a>
+        </p>
+        <p class="terms-note">
+          By signing in you agree to our
+          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- ============================================================
+       PAGE FOOTER
+  ============================================================ -->
+  <footer class="page-footer">
+    © 2025 Father's Advice. All rights reserved.
+  </footer>
+
+
+  <!-- ============================================================
+       FORM VALIDATION & INTERACTIONS
+  ============================================================ -->
+  <script>
+
+    // ── Auto-redirect already logged-in users ───────────────────
+    (function() {
+      const t = localStorage.getItem('fa_token');
+      const r = localStorage.getItem('fa_role');
+      if (t && r === 'mentor')  window.location.replace('dashboard-mentor.html');
+      else if (t && r === 'mentee') window.location.replace('dashboard-mentee.html');
+    })();
+
+    // ── Show / hide password toggle ──────────────────────────────
+    const passwordInput = document.getElementById('password');
+    const toggleBtn     = document.getElementById('toggle-password');
+
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = passwordInput.type === 'password';
+      passwordInput.type  = isHidden ? 'text' : 'password';
+      toggleBtn.textContent = isHidden ? 'Hide' : 'Show';
+    });
+
+
+    // ── Clear error states when user starts typing ───────────────
+    document.getElementById('email').addEventListener('input', () => {
+      document.getElementById('email').classList.remove('has-error');
+      document.getElementById('email-error').classList.remove('visible');
+      hideMessage();
+    });
+
+    document.getElementById('password').addEventListener('input', () => {
+      document.getElementById('password').classList.remove('has-error');
+      document.getElementById('password-error').classList.remove('visible');
+      hideMessage();
+    });
+
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function showMessage(text, type = 'error') {
+      const el = document.getElementById('form-message');
+      el.textContent = text;
+      el.className = `form-message ${type} visible`;
+    }
+
+    function hideMessage() {
+      const el = document.getElementById('form-message');
+      el.className = 'form-message error';
+    }
+
+    function showFieldError(fieldId, errorId) {
+      document.getElementById(fieldId).classList.add('has-error');
+      document.getElementById(errorId).classList.add('visible');
+    }
+
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+
+    // ── Form submission ──────────────────────────────────────────
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn      = document.getElementById('submit-btn');
+
+      // Reset previous errors
+      hideMessage();
+      document.getElementById('email').classList.remove('has-error');
+      document.getElementById('password').classList.remove('has-error');
+      document.getElementById('email-error').classList.remove('visible');
+      document.getElementById('password-error').classList.remove('visible');
+
+      // Client-side validation
+      let hasError = false;
+
+      if (!email || !isValidEmail(email)) {
+        showFieldError('email', 'email-error');
+        hasError = true;
+      }
+
+      if (!password || password.length < 8) {
+        showFieldError('password', 'password-error');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      // Show loading state
+      btn.textContent = 'Signing in…';
+      btn.disabled    = true;
+      btn.style.opacity = '0.7';
+
+      try {
+        // Replace this fetch with your real API endpoint
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage('Signed in successfully. Redirecting…', 'success');
+          if (data.token) localStorage.setItem('fa_token', data.token);
+          if (data.user?.role)     localStorage.setItem('fa_role', data.user.role);
+          if (data.user?.fullName) localStorage.setItem('fa_name', data.user.fullName);
+          if (data.user?.id)       localStorage.setItem('fa_id',   data.user.id);
+          const dest = data.user?.role === 'mentor' ? '/dashboard-mentor.html' : '/dashboard-mentee.html';
+          setTimeout(() => { window.location.href = dest; }, 1200);
+        } else {
+          // Server returned an error
+          showMessage(data.message || 'Incorrect email or password. Please try again.');
+          btn.textContent = 'Sign in';
+          btn.disabled    = false;
+          btn.style.opacity = '1';
+        }
+      } catch {
+        // Network / server unreachable
+        showMessage('Unable to connect. Please check your internet connection.');
+        btn.textContent = 'Sign in';
+        btn.disabled    = false;
+        btn.style.opacity = '1';
+      }
+    });
+
+
+    // ── Google SSO placeholder ───────────────────────────────────
+    document.getElementById('google-btn').addEventListener('click', () => {
+      // Wire up to your OAuth provider (e.g. Firebase, Auth0, Passport)
+      showMessage('Google sign-in is not configured yet.', 'error');
+    });
+
+  </script>
+
+
+</body>
+</html>
