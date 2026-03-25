@@ -138,6 +138,27 @@ export function emailMorningReminder({ recipientName, otherName, otherRole, sche
   </div>`;
 }
 
+export function emailOtpVerification({ otp }) {
+  return `
+  <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:36px;background:#0a0a08;color:#ffffff;border-radius:12px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <h2 style="font-family:Georgia,serif;color:#5e6ad2;font-size:22px;margin:0 0 6px;">Verify your email</h2>
+      <p style="color:#888;font-size:13px;margin:0;">Father's Advice</p>
+    </div>
+    <p style="color:#ccc;font-size:14px;line-height:1.7;margin-bottom:28px;">
+      Enter the following code to complete your registration. This code is valid for <strong style="color:#fff;">10 minutes</strong>.
+    </p>
+    <div style="background:#1a1a17;border:1px solid rgba(94,106,210,0.35);border-radius:12px;padding:28px;text-align:center;margin-bottom:28px;">
+      <div style="font-size:40px;font-weight:700;letter-spacing:14px;color:#5e6ad2;font-family:monospace;">${otp}</div>
+    </div>
+    <p style="color:#555;font-size:12px;line-height:1.6;">
+      If you did not request this, you can safely ignore this email.
+    </p>
+    <hr style="border:none;border-top:1px solid #1e1e1a;margin:24px 0;" />
+    <p style="color:#333;font-size:11px;">Father's Advice — Mentorship Platform</p>
+  </div>`;
+}
+
 export function emailHourReminder({ recipientName, otherName, otherRole, scheduledTime, sessionUrl, durationMins, minutesAway }) {
   return `
   <div style="font-family:sans-serif;max-width:540px;margin:auto;padding:32px;background:#0a0a08;color:#ffffff;border-radius:12px;">
