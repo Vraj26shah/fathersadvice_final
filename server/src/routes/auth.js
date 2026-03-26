@@ -269,13 +269,19 @@ router.post('/google', async (req, res) => {
 
     if (tokenInfo.error) {
       console.error('Google tokeninfo rejected token:', tokenInfo.error, tokenInfo.error_description);
-      return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
+      return res.status(401).json({
+        message: 'Google sign-in failed. Please try again.',
+        _debug: `tokeninfo_error: ${JSON.stringify(tokenInfo.error)} | ${tokenInfo.error_description || ''}`,
+      });
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     if (tokenInfo.aud !== clientId) {
       console.error('Token audience mismatch:', tokenInfo.aud, '!==', clientId);
-      return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
+      return res.status(401).json({
+        message: 'Google sign-in failed. Please try again.',
+        _debug: `aud_mismatch: token_aud=${tokenInfo.aud} server_id=${clientId}`,
+      });
     }
 
     const { email, name, sub: googleId, picture } = tokenInfo;
