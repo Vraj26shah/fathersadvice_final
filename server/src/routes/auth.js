@@ -9,8 +9,6 @@ import Feedback from '../models/Feedback.js';
 import { protect } from '../middleware/auth.js';
 import { sendMail, emailOtpVerification } from '../utils/email.js';
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 // In-memory OTP store: email → { otp, expiresAt, verified }
 const otpStore = new Map();
 
@@ -264,6 +262,7 @@ router.post('/google', async (req, res) => {
     const { idToken } = req.body;
     if (!idToken) return res.status(400).json({ message: 'Google token is required.' });
 
+    const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     const ticket = await googleClient.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
