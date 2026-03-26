@@ -312,7 +312,7 @@ router.post('/google', async (req, res) => {
 
     sendAuth(res, 200, user);
   } catch (err) {
-    console.error('google auth error:', err.message);
+    console.error('google auth error:', err.message, '| CLIENT_ID set:', !!process.env.GOOGLE_CLIENT_ID);
     res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
   }
 });
