@@ -1,6 +1,5 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import MentorProfile from '../models/MentorProfile.js';
 import MenteeProfile from '../models/MenteeProfile.js';
@@ -262,12 +261,24 @@ router.post('/google', async (req, res) => {
     const { idToken } = req.body;
     if (!idToken) return res.status(400).json({ message: 'Google token is required.' });
 
-    const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const { email, name, sub: googleId, picture } = ticket.getPayload();
+    // Verify with Google's tokeninfo endpoint — no library needed, clear error messages
+    const tokenInfoRes = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`
+    );
+    const tokenInfo = await tokenInfoRes.json();
+
+    if (tokenInfo.error) {
+      console.error('Google tokeninfo rejected token:', tokenInfo.error, tokenInfo.error_description);
+      return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (tokenInfo.aud !== clientId) {
+      console.error('Token audience mismatch:', tokenInfo.aud, '!==', clientId);
+      return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
+    }
+
+    const { email, name, sub: googleId, picture } = tokenInfo;
     const normalizedEmail = email.toLowerCase();
     const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase();
 
@@ -311,8 +322,8 @@ router.post('/google', async (req, res) => {
 
     sendAuth(res, 200, user);
   } catch (err) {
-    console.error('google auth error:', err.message, '| CLIENT_ID set:', !!process.env.GOOGLE_CLIENT_ID);
-    res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
+    console.error('google auth unexpected error:', err.message);
+    res.status(500).json({ message: 'Server error during Google sign-in. Please try again.' });
   }
 });
 
