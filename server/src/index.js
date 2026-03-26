@@ -52,7 +52,7 @@ app.use('/api/chat',     chatRoutes);
 app.use('/api/admin',    adminRoutes);
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'OK', message: "Father's Advice API is running" });
+  res.json({ status: 'OK', message: "Father's Advice API is running", v: 'v4-tokeninfo' });
 });
 
 // Expose public config to the frontend (no secrets)
