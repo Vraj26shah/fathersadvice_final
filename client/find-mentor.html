@@ -49,22 +49,22 @@
     .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; color: rgba(255,255,255,0.55); cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; border-left: 2px solid transparent; text-decoration: none; }
     .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.04); }
     .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-glow); }
-    .sidebar-footer { border-top: 1px solid var(--border); padding: 16px 20px; }
+    .sidebar-footer { border-top: 1px solid var(--border); padding: 20px 24px; }
     .user-info { display: flex; align-items: center; gap: 10px; }
-    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--white); flex-shrink: 0; }
     .user-meta { flex: 1; min-width: 0; }
     .user-meta .name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-meta .role { font-size: 11px; color: var(--muted); }
+    .user-meta .role { font-size: 11px; color: var(--accent); font-weight: 500; }
     .logout-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; border-radius: 4px; display: flex; align-items: center; }
     .logout-btn:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 
     /* ── Main ── */
     .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-    .topbar { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; background: rgba(10,10,8,0.9); backdrop-filter: blur(12px); z-index: 50; }
-    .topbar-title { font-size: 15px; font-weight: 600; }
+    .topbar { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; background: rgba(10,10,8,0.9); backdrop-filter: blur(12px); z-index: 50; }
+    .topbar-title { font-size: 18px; font-weight: 600; }
     .topbar-actions { display: flex; align-items: center; gap: 12px; }
     .badge-accent { background: var(--accent-glow); border: 1px solid var(--accent-border); color: var(--accent); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
-    .page-body { padding: 28px 28px 60px; }
+    .page-body { padding: 28px 32px 60px; }
 
     /* ── Search hero ── */
     .search-hero { background: linear-gradient(135deg, rgba(94,106,210,0.15), rgba(94,106,210,0.04)); border: 1px solid var(--accent-border); border-radius: 16px; padding: 32px; margin-bottom: 28px; }
@@ -144,6 +144,10 @@
     .btn-primary { background: var(--accent); color: var(--white); border: none; padding: 9px 22px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; }
     .btn-primary:hover { background: var(--accent-deep); }
     .btn-primary:disabled { background: rgba(94,106,210,0.4); cursor: default; }
+
+    /* ── Verified / Unverified badge ── */
+    .verified-badge   { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; vertical-align: middle; margin-left: 6px; }
+    .unverified-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.35); vertical-align: middle; margin-left: 6px; }
 
     /* ── Teaching languages ── */
     .mentor-langs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
@@ -427,12 +431,16 @@
             </div>`
           : '';
 
+        const verifiedBadge = m.isVerified
+          ? `<span class="verified-badge">✓ Verified</span>`
+          : `<span class="unverified-badge">○ Unverified</span>`;
+
         return `
-          <div class="mentor-card ${isConnected ? 'connected' : ''}">
+          <div class="mentor-card ${isConnected ? 'connected' : ''}" data-mentor-id="${m.mentorId}" data-request-id="${m.requestId || ''}">
             ${rankBadge}
             <div class="mentor-pic" style="background:${grad};">${init}</div>
             <div class="mentor-info">
-              <div class="mentor-name">${m.fullName}</div>
+              <div class="mentor-name">${m.fullName}${verifiedBadge}</div>
               <div class="mentor-title">${[m.jobTitle, m.organisation].filter(Boolean).join(' — ')}${m.yearsExperience ? ` · ${m.yearsExperience} yrs` : ''}</div>
               ${bioText ? `<div class="mentor-bio">${bioText}</div>` : ''}
               <div class="mentor-skills">${topSkills}</div>
@@ -452,6 +460,11 @@
                   <span class="score-bar-label">Avail</span>
                   <div class="score-bar-track"><div class="score-bar-fill green" style="width:${m.availabilityScore ?? 0}%;"></div></div>
                   <span style="font-size:10px;color:var(--muted);width:28px;">${m.availabilityScore ?? 0}%</span>
+                </div>
+                <div class="score-bar-row">
+                  <span class="score-bar-label">Rating</span>
+                  <div class="score-bar-track"><div class="score-bar-fill" style="width:${m.ratingScore ?? 70}%;background:#facc15;"></div></div>
+                  <span style="font-size:10px;color:var(--muted);width:28px;">${m.ratingScore ?? 70}%</span>
                 </div>
               </div>
               ${actionHtml}
@@ -544,6 +557,43 @@
     (function initSocket() {
       if (typeof io === 'undefined') return;
       const socket = io({ auth: { token } });
+      socket.on('mentor_verification_changed', ({ mentorUserId, isVerified }) => {
+        const card = document.querySelector(`.mentor-card[data-mentor-id="${mentorUserId}"]`);
+        if (!card) return;
+        const nameEl = card.querySelector('.mentor-name');
+        if (!nameEl) return;
+        const old = nameEl.querySelector('.verified-badge, .unverified-badge');
+        if (old) old.remove();
+        const badge = document.createElement('span');
+        badge.className = isVerified ? 'verified-badge' : 'unverified-badge';
+        badge.textContent = isVerified ? '✓ Verified' : '○ Unverified';
+        nameEl.appendChild(badge);
+      });
+
+      socket.on('connection_reset', ({ mentorUserId }) => {
+        const card = document.querySelector(`.mentor-card[data-mentor-id="${mentorUserId}"]`);
+        if (!card) return;
+        // Remove "connected" styling
+        card.classList.remove('connected');
+        card.removeAttribute('data-request-id');
+        // Swap action area to a fresh Connect button
+        const scoreCol = card.querySelector('.mentor-score-col');
+        if (!scoreCol) return;
+        const oldConnected = scoreCol.querySelector('.connected-tag');
+        const oldSession   = scoreCol.querySelector('.btn-session');
+        if (oldConnected) oldConnected.remove();
+        if (oldSession)   oldSession.remove();
+        // Only inject Connect button if there isn't one already
+        if (!scoreCol.querySelector('.btn-connect')) {
+          const btn = document.createElement('button');
+          btn.className = 'btn-connect';
+          const mentorName = card.querySelector('.mentor-name')?.textContent?.replace(/[✓○].*/, '').trim() || '';
+          btn.textContent = 'Connect';
+          btn.onclick = () => openModal(mentorUserId, mentorName, '');
+          scoreCol.appendChild(btn);
+        }
+      });
+
       socket.on('request_accepted', (data) => {
         showToast(`🎉 ${data.mentorName} accepted your request!`);
         // If currently viewing mentors, refresh list

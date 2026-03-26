@@ -53,43 +53,120 @@
     .btn-back:hover { background: rgba(255,255,255,0.12); }
 
     /* ── Main layout ─────────────────────────────────────── */
-    .content { flex: 1; display: flex; overflow: hidden; }
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
-    /* ── Video column ────────────────────────────────────── */
-    .video-col { flex: 0 0 60%; position: relative; border-right: 1px solid var(--border); }
-    #jitsi-container { width: 100%; height: 100%; }
-
-    .loading-screen {
-      position: absolute; inset: 0; background: #0e0e0c;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 5;
+    /* ── Video row (top) ──────────────────────────────────── */
+    .video-col {
+      flex: 0 0 56%; width: 100%; position: relative;
+      border-bottom: 1px solid var(--border); background: #000; overflow: hidden;
     }
-    .spinner { width: 36px; height: 36px; border: 3px solid rgba(94,106,210,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    /* Remote video fills the area */
+    #remote-video {
+      width: 100%; height: 100%; object-fit: cover; display: block; background: #0d0d0b;
+    }
+
+    /* Local video — picture-in-picture bottom-right */
+    #local-video {
+      position: absolute; bottom: 62px; right: 14px;
+      width: 160px; height: 100px; object-fit: cover; border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.18); background: #1a1a17; z-index: 6;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    @media (max-width: 600px) {
+      #local-video { width: 90px; height: 58px; bottom: 56px; right: 8px; }
+    }
+
+    /* Controls bar */
+    .call-controls {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 12px 20px; background: linear-gradient(transparent, rgba(0,0,0,0.82));
+      z-index: 7;
+    }
+    .ctrl-btn {
+      width: 46px; height: 46px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+      transition: background 0.15s, transform 0.1s; flex-shrink: 0;
+      position: relative;
+    }
+    .ctrl-btn:active { transform: scale(0.88); }
+    .ctrl-btn.on  { background: rgba(255,255,255,0.16); color: #fff; }
+    .ctrl-btn.on:hover { background: rgba(255,255,255,0.26); }
+    .ctrl-btn.off { background: rgba(239,68,68,0.28); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+    .ctrl-btn.off:hover { background: rgba(239,68,68,0.42); }
+    .ctrl-btn.end { background: #ef4444; color: #fff; width: 52px; height: 52px; font-size: 20px; }
+    .ctrl-btn.end:hover { background: #dc2626; }
+    .ctrl-btn .ctrl-label {
+      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; color: rgba(255,255,255,0.55); white-space: nowrap; pointer-events: none;
+    }
+
+    /* Participant name tag on remote video */
+    #remote-name {
+      position: absolute; bottom: 62px; left: 14px;
+      background: rgba(0,0,0,0.55); color: #fff; font-size: 12px; font-weight: 500;
+      padding: 3px 10px; border-radius: 5px; z-index: 6; display: none;
+    }
+
+    /* Overlays */
+    .vc-overlay {
+      position: absolute; inset: 0; background: #0c0c0a;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; z-index: 8; text-align: center; padding: 32px;
+    }
+    .vc-overlay.hidden { display: none; }
+    .spinner { width: 42px; height: 42px; border: 3px solid rgba(94,106,210,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-size: 13px; color: var(--muted); }
-
-    .error-screen {
-      position: absolute; inset: 0; background: var(--black);
-      display: none; flex-direction: column; align-items: center; justify-content: center;
-      gap: 12px; padding: 40px; text-align: center; z-index: 5;
+    .vc-overlay h3   { font-family: var(--serif); font-size: 20px; margin: 0; }
+    .vc-overlay p    { font-size: 13px; color: var(--muted); max-width: 360px; line-height: 1.7; margin: 0; white-space: pre-line; }
+    .vc-overlay .retry-btn {
+      background: var(--accent); color: var(--white); border: none;
+      padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
     }
-    .error-screen h3  { font-family: var(--serif); font-size: 20px; }
-    .error-screen p   { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 380px; }
-    .error-screen .open-btn { background: var(--accent); color: var(--white); border: none; padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+    .vc-overlay .retry-btn:hover { background: var(--accent-deep); }
 
-    /* ── Right panel ─────────────────────────────────────── */
-    .right-panel { flex: 0 0 40%; display: flex; flex-direction: column; min-width: 0; }
+    /* Reconnecting banner */
+    #reconnect-banner {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      background: rgba(234,179,8,0.18); border: 1px solid rgba(234,179,8,0.4);
+      color: #fef08a; font-size: 12px; font-weight: 600; padding: 5px 16px;
+      border-radius: 20px; z-index: 9; display: none; white-space: nowrap;
+    }
+
+    /* Info panel grid on wide screens */
+    @media (min-width: 800px) {
+      .info-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-content: start; }
+      .info-card.full-width { grid-column: 1/-1; }
+    }
+
+    /* ── Drag-to-resize handle ────────────────────────────── */
+    .resize-handle {
+      width: 100%; height: 5px; background: transparent; cursor: row-resize; flex-shrink: 0;
+      position: relative; z-index: 10;
+    }
+    .resize-handle::after {
+      content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+      top: 1px; width: 40px; height: 3px; border-radius: 2px;
+      background: rgba(255,255,255,0.15);
+    }
+    .resize-handle:hover::after { background: var(--accent); }
+
+    /* ── Tools panel (bottom) ─────────────────────────────── */
+    .right-panel { flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 
     /* Tabs */
     .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: var(--card-bg); flex-shrink: 0; }
     .tab-btn {
-      flex: 1; padding: 13px 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+      flex: 1; padding: 11px 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
       text-align: center; cursor: pointer; color: var(--muted); border: none; background: none;
       border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; position: relative;
     }
     .tab-btn.active { color: var(--white); border-bottom-color: var(--accent); }
     .tab-btn:hover:not(.active) { color: rgba(255,255,255,0.6); }
     .tab-badge {
-      position: absolute; top: 8px; right: calc(50% - 18px);
+      position: absolute; top: 6px; right: calc(50% - 18px);
       background: #ef4444; color: #fff; font-size: 9px; font-weight: 700;
       padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center;
       display: none;
@@ -160,9 +237,17 @@
       border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; outline: none;
     }
     .wb-size-select option { background: #1a1a17; }
-    .wb-canvas-wrap { flex: 1; position: relative; overflow: hidden; }
-    #wb-canvas { display: block; cursor: crosshair; touch-action: none; }
-    .wb-hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 11px; color: rgba(255,255,255,0.2); pointer-events: none; white-space: nowrap; }
+    .wb-canvas-wrap { flex: 1; position: relative; overflow: hidden; background: #ffffff; }
+    #wb-canvas { display: block; cursor: crosshair; touch-action: none; background: #ffffff; }
+    .wb-hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 11px; color: rgba(0,0,0,0.25); pointer-events: none; white-space: nowrap; }
+    /* Inline text input that appears on the canvas at click position */
+    #wb-text-input {
+      position: absolute; display: none; z-index: 20;
+      background: rgba(255,255,255,0.97); border: 2px solid var(--accent);
+      border-radius: 5px; color: #111; font-size: 15px; font-family: var(--sans);
+      outline: none; padding: 4px 8px; min-width: 120px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+    }
 
     /* ── Info panel ──────────────────────────────────────── */
     .info-panel { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
@@ -182,6 +267,53 @@
     .tip-item { display: flex; gap: 10px; margin-bottom: 9px; font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.5; }
     .tip-item:last-child { margin-bottom: 0; }
 
+    /* ── Feedback modal ──────────────────────────────────── */
+    .fb-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 300;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .fb-overlay.hidden { display: none; }
+    .fb-modal {
+      background: var(--card-bg); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px; padding: 36px 32px; max-width: 420px; width: 100%;
+      text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+    .fb-icon { font-size: 36px; margin-bottom: 12px; }
+    .fb-title { font-family: var(--serif); font-size: 20px; margin-bottom: 6px; }
+    .fb-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+    .fb-stars { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+    .fb-star {
+      background: none; border: none; cursor: pointer;
+      font-size: 36px; color: rgba(255,255,255,0.18); transition: color 0.12s, transform 0.1s;
+      line-height: 1; padding: 0;
+    }
+    .fb-star:hover, .fb-star.lit { color: #facc15; }
+    .fb-star:active { transform: scale(0.85); }
+    .fb-star-hint { font-size: 11px; color: var(--muted); margin-bottom: 16px; min-height: 16px; }
+    .fb-textarea {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--white); font-size: 13px; font-family: var(--sans);
+      padding: 10px 12px; resize: none; height: 84px; outline: none; margin-bottom: 18px;
+      transition: border-color 0.15s;
+    }
+    .fb-textarea:focus { border-color: var(--accent-border); }
+    .fb-textarea::placeholder { color: var(--muted); }
+    .fb-actions { display: flex; gap: 10px; }
+    .fb-submit {
+      flex: 1; background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .fb-submit:hover { background: var(--accent-deep); }
+    .fb-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+    .fb-skip {
+      background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.65);
+      border: 1px solid var(--border); border-radius: 8px; padding: 11px 18px;
+      font-size: 13px; cursor: pointer; white-space: nowrap;
+    }
+    .fb-skip:hover { background: rgba(255,255,255,0.12); color: var(--white); }
+    .fb-thanks { font-size: 14px; color: var(--green); font-weight: 600; margin-top: 12px; min-height: 20px; }
+
     /* ── Session ended fallback ──────────────────────────── */
     .fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; padding: 40px; text-align: center; }
     .fallback h2 { font-family: var(--serif); font-size: 22px; }
@@ -189,14 +321,14 @@
     .open-link { display: inline-block; background: var(--accent); color: var(--white); padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; margin-top: 4px; }
     .open-link:hover { background: var(--accent-deep); }
 
-    @media (max-width: 900px) {
-      .video-col  { flex: 0 0 55%; }
-      .right-panel{ flex: 0 0 45%; }
+    /* Info panel — two-column grid on wide screens */
+    @media (min-width: 900px) {
+      .info-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-content: start; }
+      .info-card.full-width { grid-column: 1 / -1; }
     }
+
     @media (max-width: 600px) {
-      .video-col  { flex: 0 0 100%; position: fixed; top: 54px; left: 0; right: 0; bottom: 280px; }
-      .right-panel{ flex: 0 0 100%; position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: 280px; border-top: 1px solid var(--border); }
-      .content    { position: relative; }
+      .video-col { flex: 0 0 45%; }
     }
   </style>
 </head>
@@ -224,34 +356,83 @@
 <!-- ═══ Main content ═════════════════════════════════════════ -->
 <div class="content">
 
-  <!-- Video column (60%) -->
-  <div class="video-col">
-    <div class="loading-screen" id="loading-screen">
+  <!-- Video call (top strip, full width) -->
+  <div class="video-col" id="video-col">
+
+    <!-- Remote stream fills the area -->
+    <video id="remote-video" autoplay playsinline></video>
+
+    <!-- Local stream — picture-in-picture -->
+    <video id="local-video"  autoplay playsinline muted></video>
+
+    <!-- Reconnecting banner -->
+    <div id="reconnect-banner">Reconnecting…</div>
+
+    <!-- Requesting camera overlay (initial) -->
+    <div class="vc-overlay" id="vc-loading">
       <div class="spinner"></div>
-      <div class="loading-text">Connecting to your session…</div>
+      <h3>Starting video call…</h3>
+      <p id="vc-loading-msg">Requesting camera and microphone access</p>
     </div>
-    <div class="error-screen" id="error-screen">
-      <h3>Could not embed meeting</h3>
-      <p id="error-msg">Your browser may be blocking the meeting. Click below to open it in a new tab.</p>
-      <button class="open-btn" id="open-tab-btn">Open Meeting in New Tab →</button>
+
+    <!-- Waiting for other participant -->
+    <div class="vc-overlay hidden" id="vc-waiting">
+      <div class="spinner"></div>
+      <h3 id="vc-wait-title">Waiting for the other participant</h3>
+      <p id="vc-wait-msg">Your camera is ready. The call connects automatically when they join.</p>
+      <!-- Debug status — visible so you can see exactly what's happening -->
+      <p id="vc-debug" style="font-size:11px;color:rgba(255,255,255,0.28);margin-top:4px;"></p>
     </div>
-    <div id="jitsi-container"></div>
+
+    <!-- Error -->
+    <div class="vc-overlay hidden" id="vc-error">
+      <h3>Could not start video</h3>
+      <p id="vc-error-msg">Allow camera and microphone access in your browser then click Retry.</p>
+      <button class="retry-btn" onclick="retryVideo()">Retry</button>
+    </div>
+
+    <!-- Remote participant name -->
+    <div id="remote-name"></div>
+
+    <!-- Controls bar -->
+    <div class="call-controls" id="call-controls" style="display:none;">
+      <button class="ctrl-btn on" id="btn-mic" title="Mute / Unmute" onclick="toggleMic()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span class="ctrl-label">Mute</span>
+      </button>
+      <button class="ctrl-btn on" id="btn-cam" title="Camera on / off" onclick="toggleCam()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        <span class="ctrl-label">Camera</span>
+      </button>
+      <button class="ctrl-btn on" id="btn-screen" title="Share screen" onclick="toggleScreen()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><polyline points="9 9 12 6 15 9"/><line x1="12" y1="6" x2="12" y2="14"/></svg>
+        <span class="ctrl-label">Share</span>
+      </button>
+      <button class="ctrl-btn end" title="End session" onclick="endSession()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M23.71 16.67C20.66 13.78 16.54 12 12 12S3.34 13.78.29 16.67c-.18.18-.29.43-.29.68 0 .25.1.49.28.67l2.23 2.23c.18.19.43.29.68.29.3 0 .57-.14.75-.36.72-.95 1.59-1.77 2.56-2.43.26-.17.41-.45.41-.74v-2.1c1.21-.41 2.5-.64 3.83-.64 1.33 0 2.62.23 3.83.64v2.1c0 .28.15.57.41.74.98.66 1.84 1.48 2.56 2.43.18.22.46.36.76.36.25 0 .49-.1.68-.28l2.23-2.23c.18-.18.28-.42.28-.67-.01-.25-.11-.49-.29-.67z"/></svg>
+        <span class="ctrl-label">End</span>
+      </button>
+    </div>
+
   </div>
 
-  <!-- Right panel (40%) -->
-  <div class="right-panel">
+  <!-- Drag-to-resize handle -->
+  <div class="resize-handle" id="resize-handle"></div>
+
+  <!-- Tools panel (bottom strip, full width) -->
+  <div class="right-panel" id="right-panel">
 
     <!-- Tab bar -->
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="chat" onclick="switchTab('chat')">
-        💬 Chat
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;margin-right:5px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat
         <span class="tab-badge" id="chat-badge"></span>
       </button>
       <button class="tab-btn" data-tab="whiteboard" onclick="switchTab('whiteboard')">
-        🎨 Whiteboard
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;margin-right:5px"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M8 9l2 2 4-4"/></svg>Whiteboard
       </button>
       <button class="tab-btn" data-tab="info" onclick="switchTab('info')">
-        ℹ️ Info
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;margin-right:5px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8" stroke-width="3"/><line x1="12" y1="12" x2="12" y2="16"/></svg>Info
       </button>
     </div>
 
@@ -270,7 +451,7 @@
           onkeydown="onChatKey(event)"
           oninput="onTyping(this)"
         ></textarea>
-        <button class="send-btn" onclick="sendMessage()" title="Send">➤</button>
+        <button class="send-btn" onclick="sendMessage()" title="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
       </div>
     </div>
 
@@ -282,7 +463,7 @@
         <button class="wb-tool-btn"        id="tool-text"  onclick="setTool('text')">T Text</button>
         <div class="wb-sep"></div>
         <!-- Colour swatches -->
-        <div class="wb-color-swatch active" id="swatch-white"  style="background:#ffffff;" title="White"  onclick="setColor('#ffffff', this)"></div>
+        <div class="wb-color-swatch active" id="swatch-black"  style="background:#1a1a17; border: 1px solid rgba(255,255,255,0.25);" title="Black"  onclick="setColor('#1a1a17', this)"></div>
         <div class="wb-color-swatch"        id="swatch-yellow" style="background:#facc15;" title="Yellow" onclick="setColor('#facc15', this)"></div>
         <div class="wb-color-swatch"        id="swatch-green"  style="background:#4ade80;" title="Green"  onclick="setColor('#4ade80', this)"></div>
         <div class="wb-color-swatch"        id="swatch-red"    style="background:#f87171;" title="Red"    onclick="setColor('#f87171', this)"></div>
@@ -302,6 +483,7 @@
       </div>
       <div class="wb-canvas-wrap" id="wb-canvas-wrap">
         <canvas id="wb-canvas"></canvas>
+        <input type="text" id="wb-text-input" placeholder="Type & press Enter…" />
         <div class="wb-hint">Draw freely — syncs in real-time with your partner</div>
       </div>
     </div>
@@ -324,12 +506,12 @@
             <button class="copy-btn" onclick="copyRoom()">Copy</button>
           </div>
         </div>
-        <div class="info-card">
+        <div class="info-card full-width">
           <div class="info-card-label">Quick Tips</div>
-          <div class="tip-item">🎙️ Mute when not speaking to reduce background noise.</div>
-          <div class="tip-item">🖥 Share your screen from the video toolbar to show code or slides.</div>
-          <div class="tip-item">🎨 Use the Whiteboard tab to sketch diagrams together.</div>
-          <div class="tip-item">💬 Chat persists after the session for reference.</div>
+          <div class="tip-item">Mute when not speaking to reduce background noise.</div>
+          <div class="tip-item">Share your screen from the video toolbar to show code or slides.</div>
+          <div class="tip-item">Use the Whiteboard tab to sketch diagrams together.</div>
+          <div class="tip-item">Chat persists after the session for reference.</div>
         </div>
       </div>
     </div>
@@ -337,12 +519,43 @@
   </div><!-- end right-panel -->
 </div><!-- end content -->
 
+<!-- ═══ Feedback Modal ══════════════════════════════════════════ -->
+<div class="fb-overlay hidden" id="fb-overlay">
+  <div class="fb-modal">
+    <div class="fb-icon">🎓</div>
+    <div class="fb-title">How was the session?</div>
+    <p class="fb-subtitle">Rate your experience with <strong id="fb-peer-name">your partner</strong></p>
+    <div class="fb-stars" id="fb-stars">
+      <button class="fb-star" data-v="1" onclick="selectStar(1)">★</button>
+      <button class="fb-star" data-v="2" onclick="selectStar(2)">★</button>
+      <button class="fb-star" data-v="3" onclick="selectStar(3)">★</button>
+      <button class="fb-star" data-v="4" onclick="selectStar(4)">★</button>
+      <button class="fb-star" data-v="5" onclick="selectStar(5)">★</button>
+    </div>
+    <div class="fb-star-hint" id="fb-star-hint">Tap a star to rate</div>
+    <textarea class="fb-textarea" id="fb-comment" placeholder="Share what went well or what could improve… (optional)"></textarea>
+    <div class="fb-actions">
+      <button class="fb-submit" id="fb-submit" onclick="submitFeedback()" disabled>Submit Feedback</button>
+      <button class="fb-skip" onclick="skipFeedback()">Skip</button>
+    </div>
+    <div class="fb-thanks" id="fb-thanks"></div>
+  </div>
+</div>
+
 <!-- Socket.io client -->
 <script src="/socket.io/socket.io.js"></script>
-<!-- Jitsi IFrame API -->
-<script src="https://meet.jit.si/external_api.js"></script>
 
 <script>
+/* ── SVG icon strings (reused in dynamic button updates) ── */
+const IC = {
+  micOn:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`,
+  micOff:   `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><path d="M18.89 13.23A7 7 0 0 0 19 11v-1M5 10v1a7 7 0 0 0 12.02 2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33M9 9v3a3 3 0 0 0 5.12 2.12"/></svg>`,
+  camOn:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
+  camOff:   `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34"/><path d="m16 11.37A4 4 0 1 1 9.88 7.25"/></svg>`,
+  shareOn:  `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><polyline points="9 9 12 6 15 9"/><line x1="12" y1="6" x2="12" y2="14"/></svg>`,
+  shareOff: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><line x1="9" y1="8" x2="15" y2="14"/><line x1="15" y1="8" x2="9" y2="14"/></svg>`,
+};
+
 /* ═══════════════════════════════════════════════════════════
    Bootstrap
 ══════════════════════════════════════════════════════════════ */
@@ -353,16 +566,14 @@ const role   = localStorage.getItem('fa_role')   || 'mentee';
 const myName = localStorage.getItem('fa_name')   || 'User';
 const myId   = localStorage.getItem('fa_id') || '';
 
-const params      = new URLSearchParams(location.search);
-const requestId   = params.get('requestId');
-const connectionId = params.get('connectionId') || requestId; // fallback
+const params       = new URLSearchParams(location.search);
+const requestId    = params.get('requestId');
+const connectionId = params.get('connectionId') || requestId;
 
-// Role-aware back / logo links
 const dashLink = role === 'mentor' ? 'dashboard-mentor.html' : 'dashboard-mentee.html';
 document.getElementById('logo-link').href = dashLink;
 document.getElementById('back-btn').href  = dashLink;
 
-let jitsiApi   = null;
 let roomUrl    = '';
 let socket     = null;
 let typingTimer = null;
@@ -374,7 +585,7 @@ let activeTab  = 'chat';
    Init
 ══════════════════════════════════════════════════════════════ */
 if (!requestId) {
-  showError('No session ID provided. Please go back and try again.', null);
+  showVcError('No session ID provided. Please go back and try again.');
 } else {
   initSession();
 }
@@ -392,11 +603,14 @@ async function initSession() {
 
     document.getElementById('session-title').textContent =
       `${data.menteeName} × ${data.mentorName}`;
-
     document.getElementById('doubt-display').textContent =
       data.doubt || 'No topic description provided.';
-
     document.getElementById('room-url-text').textContent = roomUrl;
+
+    // Store for feedback modal and session completion
+    fbConnId         = requestId;
+    fbPeerName       = isMentor ? data.menteeName : data.mentorName;
+    currentSessionId = data.sessionId || null;
 
     document.getElementById('participants-list').innerHTML = `
       <div class="participant">
@@ -418,62 +632,287 @@ async function initSession() {
         </div>
       </div>`;
 
-    // Init socket, Jitsi, whiteboard concurrently
-    initSocket(connectionId || requestId);
-    initJitsi(data.roomName);
+    const connId = connectionId || requestId;
+    initSocket(connId);
     initWhiteboard();
 
   } catch (err) {
-    showError(err.message, roomUrl || null);
+    showVcError(err.message);
   }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Jitsi
+   WebRTC — native peer-to-peer video
+   Fixes applied:
+   1. pendingOffer flag: peer_joined arriving before camera is
+      ready no longer silently drops the offer creation.
+   2. ICE candidate buffering: candidates arriving before
+      setRemoteDescription are queued and flushed immediately
+      after — the #1 cause of WebRTC failures.
+   3. Camera fallback constraints: NotReadableError (camera
+      in use by another app) is caught and reported clearly.
+   4. TURN relay servers for symmetric-NAT networks.
+   5. Screen sharing with live track replacement.
 ══════════════════════════════════════════════════════════════ */
-function initJitsi(roomName) {
-  if (typeof JitsiMeetExternalAPI === 'undefined') {
-    showError('Jitsi script failed to load. Check your internet connection.', null);
-    return;
-  }
-  const options = {
-    roomName,
-    width:      '100%',
-    height:     '100%',
-    parentNode: document.getElementById('jitsi-container'),
-    userInfo:   { displayName: myName },
-    configOverwrite: {
-      startWithAudioMuted: false,
-      startWithVideoMuted: false,
-      disableDeepLinking:  true,
-      defaultLanguage:     'en',
-    },
-    interfaceConfigOverwrite: {
-      TOOLBAR_BUTTONS: [
-        'microphone','camera','desktop','fullscreen',
-        'fodeviceselection','hangup','recording',
-        'raisehand','videoquality','tileview','select-background',
-        'stats','shortcuts','help',
+const ICE_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302'  },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    {
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turns:openrelay.metered.ca:443',
       ],
-      SHOW_JITSI_WATERMARK:        false,
-      SHOW_BRAND_WATERMARK:        false,
-      DEFAULT_REMOTE_DISPLAY_NAME: 'Participant',
+      username: 'openrelayproject', credential: 'openrelayproject',
     },
+  ],
+};
+
+let localStream    = null;
+let screenStream   = null;
+let pc             = null;
+let iceBuf         = [];
+let remoteDescSet  = false;
+let pendingOffer   = false;   // peer joined before our camera was ready
+let callLive       = false;
+let sessionWasLive = false;   // true once both sides were connected
+let isMicOn        = true;
+let isCamOn        = true;
+let isSharing      = false;
+let _connId        = '';      // saved connection id for deferred offer
+let fbConnId       = '';      // connectionId for feedback submission
+let fbPeerName     = '';      // name of the other participant
+let fbRating       = 0;       // selected star rating
+let currentSessionId = null;  // ScheduledSession._id for the active session
+
+/* ── Overlay helpers ── */
+function showOverlay(id) {
+  ['vc-loading','vc-waiting','vc-error'].forEach(x =>
+    document.getElementById(x).classList.toggle('hidden', x !== id));
+}
+function showVcError(msg) {
+  document.getElementById('vc-error-msg').textContent = msg;
+  showOverlay('vc-error');
+}
+
+/* ── Debug status (visible on screen + console) ── */
+function setDebug(msg) {
+  console.log('[WebRTC]', msg);
+  const el = document.getElementById('vc-debug');
+  if (el) el.textContent = msg;
+}
+
+/* ── Camera/mic with auto-retry (fixes page-refresh camera lock) ── */
+async function startLocalMedia(connId) {
+  _connId = connId;
+  showOverlay('vc-loading');
+
+  /*
+   * Strategy (tried in order):
+   * 1. HD constraints          — ideal quality
+   * 2. Basic {video,audio}     — any camera, any mic
+   * 3. Wait 1.5 s and retry 2  — camera lock from old tab releases fast
+   * 4. Audio only              — if camera is permanently unavailable
+   * 5. Show error              — permission denied / no devices
+   */
+  const attempts = [
+    { video: { width:{ideal:1280}, height:{ideal:720} }, audio: { echoCancellation:true, noiseSuppression:true } },
+    { video: true, audio: true },
+    { video: true, audio: true },   // retry after delay
+    { video: false, audio: true },  // audio-only fallback
+  ];
+
+  for (let i = 0; i < attempts.length; i++) {
+    if (i === 2) {
+      document.getElementById('vc-loading-msg').textContent =
+        'Camera is locked — waiting for it to release…';
+      setDebug('Camera NotReadableError — waiting 1.5 s then retrying…');
+      await new Promise(r => setTimeout(r, 1500));
+    }
+    if (i === 3) {
+      document.getElementById('vc-loading-msg').textContent =
+        'Falling back to audio only…';
+      setDebug('Trying audio-only fallback');
+    }
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia(attempts[i]);
+      break;  // success
+    } catch (err) {
+      setDebug(`Attempt ${i+1} failed: ${err.name}`);
+      const retriable = ['NotReadableError','TrackStartError','AbortError'];
+      if (retriable.includes(err.name) && i < 2) continue;   // will retry
+      if (i < 3)                                  continue;   // try next
+      /* All attempts exhausted */
+      const msgs = {
+        NotAllowedError:      'Camera/microphone access denied.\nClick the camera icon in your browser bar, choose Allow, then Retry.',
+        PermissionDeniedError:'Camera/microphone access denied.\nClick the camera icon in your browser bar, choose Allow, then Retry.',
+        NotFoundError:        'No camera or microphone detected.\nConnect a camera and click Retry.',
+        DevicesNotFoundError: 'No camera or microphone detected.\nConnect a camera and click Retry.',
+        NotReadableError:     'Camera is locked by another app.\nClose Teams / Zoom / OBS / other browser tabs that use the camera, then Retry.',
+        TrackStartError:      'Camera is locked by another app.\nClose Teams / Zoom / OBS / other browser tabs that use the camera, then Retry.',
+      };
+      showVcError(msgs[err.name] || `Camera error (${err.name}): ${err.message}\nClose other video apps and click Retry.`);
+      return;
+    }
+  }
+
+  /* Warn if video was disabled (audio-only fallback) */
+  const hasVideo = localStream.getVideoTracks().length > 0;
+  if (!hasVideo) {
+    setDebug('Audio-only mode active (camera unavailable)');
+    document.getElementById('local-video').style.display = 'none';
+  } else {
+    document.getElementById('local-video').srcObject = localStream;
+    document.getElementById('local-video').style.display = '';
+    setDebug('Camera + mic ready');
+  }
+
+  showOverlay('vc-waiting');
+  setDebug('Joining WebRTC room…');
+  socket.emit('webrtc_join', { connectionId: connId });
+
+  if (pendingOffer) {
+    pendingOffer = false;
+    setDebug('Peer was already waiting — creating offer now');
+    await makeOffer(connId);
+  }
+}
+
+function retryVideo() { startLocalMedia(_connId); }
+
+/* ── Build RTCPeerConnection ── */
+function buildPC(connId) {
+  if (pc) { try { pc.close(); } catch {} }
+  pc = new RTCPeerConnection(ICE_CONFIG);
+  iceBuf = []; remoteDescSet = false;
+  setDebug('Building peer connection…');
+
+  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+  pc.onicecandidate = ({ candidate }) => {
+    if (candidate) {
+      setDebug('ICE candidate gathered → sending');
+      socket.emit('webrtc_ice', { connectionId: connId, candidate });
+    } else {
+      setDebug('ICE gathering complete');
+    }
   };
 
-  jitsiApi = new JitsiMeetExternalAPI('meet.jit.si', options);
+  pc.ontrack = ({ streams }) => {
+    setDebug('Remote track received — call connecting…');
+    document.getElementById('remote-video').srcObject = streams[0];
+    onCallLive();
+  };
 
-  jitsiApi.addEventListener('videoConferenceJoined', () => {
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('live-badge').style.display     = 'flex';
-    document.getElementById('end-btn').style.display        = 'block';
-  });
+  pc.onconnectionstatechange = () => {
+    const s = pc.connectionState;
+    setDebug(`Connection state: ${s}`);
+    document.getElementById('reconnect-banner').style.display =
+      s === 'disconnected' ? 'block' : 'none';
+    if (s === 'failed') { setDebug('Connection failed — restarting ICE…'); pc.restartIce(); }
+  };
 
-  jitsiApi.addEventListener('readyToClose', () => endSession());
+  pc.onicegatheringstatechange = () => {
+    setDebug(`ICE gathering: ${pc.iceGatheringState}`);
+  };
+}
+
+async function flushIceBuf() {
+  remoteDescSet = true;
+  if (iceBuf.length) setDebug(`Flushing ${iceBuf.length} buffered ICE candidate(s)…`);
+  for (const c of iceBuf) {
+    try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
+  }
+  iceBuf = [];
+}
+
+/* ── Create and send offer ── */
+async function makeOffer(connId) {
+  buildPC(connId);
+  try {
+    setDebug('Creating offer…');
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    setDebug('Offer sent — waiting for answer…');
+    socket.emit('webrtc_offer', { connectionId: connId, offer: pc.localDescription });
+  } catch (e) {
+    setDebug(`makeOffer error: ${e.name}`);
+    console.error('makeOffer:', e);
+  }
+}
+
+/* ── Call is live ── */
+function onCallLive() {
+  if (callLive) return;
+  callLive = true;
+  sessionWasLive = true; // both sides connected at least once
+  ['vc-loading','vc-waiting','vc-error'].forEach(x =>
+    document.getElementById(x).classList.add('hidden'));
+  document.getElementById('call-controls').style.display = 'flex';
+  document.getElementById('live-badge').style.display    = 'flex';
+  document.getElementById('end-btn').style.display       = 'block';
+}
+
+/* ── Controls ── */
+function toggleMic() {
+  isMicOn = !isMicOn;
+  localStream?.getAudioTracks().forEach(t => { t.enabled = isMicOn; });
+  const btn = document.getElementById('btn-mic');
+  btn.innerHTML = (isMicOn ? IC.micOn : IC.micOff) + '<span class="ctrl-label">' + (isMicOn ? 'Mute' : 'Unmute') + '</span>';
+  btn.className = `ctrl-btn ${isMicOn ? 'on' : 'off'}`;
+}
+
+function toggleCam() {
+  isCamOn = !isCamOn;
+  localStream?.getVideoTracks().forEach(t => { t.enabled = isCamOn; });
+  const btn = document.getElementById('btn-cam');
+  btn.innerHTML = (isCamOn ? IC.camOn : IC.camOff) + '<span class="ctrl-label">' + (isCamOn ? 'Camera' : 'No cam') + '</span>';
+  btn.className = `ctrl-btn ${isCamOn ? 'on' : 'off'}`;
+}
+
+async function toggleScreen() {
+  if (isSharing) { stopScreenShare(); return; }
+  try {
+    screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    const track = screenStream.getVideoTracks()[0];
+    /* Replace video track on the live peer connection */
+    if (pc) {
+      const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+      if (sender) await sender.replaceTrack(track);
+    }
+    /* Show screen in the local PiP */
+    document.getElementById('local-video').srcObject = new MediaStream([track]);
+    track.onended = stopScreenShare;
+    isSharing = true;
+    const btn = document.getElementById('btn-screen');
+    btn.innerHTML = IC.shareOff + '<span class="ctrl-label">Stop</span>';
+    btn.className = 'ctrl-btn off';
+  } catch (e) {
+    if (e.name !== 'NotAllowedError') console.error('screenshare:', e);
+  }
+}
+
+function stopScreenShare() {
+  if (!isSharing) return;
+  isSharing = false;
+  /* Restore camera track */
+  if (localStream && pc) {
+    const cam = localStream.getVideoTracks()[0];
+    const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+    if (sender && cam) sender.replaceTrack(cam);
+  }
+  screenStream?.getTracks().forEach(t => t.stop());
+  screenStream = null;
+  document.getElementById('local-video').srcObject = localStream;
+  const btn = document.getElementById('btn-screen');
+  btn.innerHTML = IC.shareOn + '<span class="ctrl-label">Share</span>';
+  btn.className = 'ctrl-btn on';
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Socket.io — chat + whiteboard
+   Socket.io — WebRTC signalling + chat + whiteboard
 ══════════════════════════════════════════════════════════════ */
 function initSocket(connId) {
   socket = io({ auth: { token } });
@@ -481,9 +920,79 @@ function initSocket(connId) {
   socket.on('connect', () => {
     socket.emit('join_chat_room', { connectionId: connId });
     loadChatHistory(connId);
+    startLocalMedia(connId);
+    // Announce presence so the other party's dashboard shows "Join Now"
+    socket.emit('announce_session_presence', { requestId: requestId || connId });
   });
 
-  /* ── Incoming chat message ── */
+  // Other participant entered session.html — update waiting overlay
+  socket.on('session_peer_joined', ({ userName }) => {
+    document.getElementById('vc-wait-title').textContent = `${userName} has joined!`;
+    document.getElementById('vc-wait-msg').textContent   = 'Connecting the video call…';
+    setDebug(`${userName} entered the session room`);
+  });
+
+  // Other participant left / closed session tab
+  socket.on('session_peer_left', () => {
+    if (!callLive) {
+      document.getElementById('vc-wait-title').textContent = 'Waiting for the other participant';
+      document.getElementById('vc-wait-msg').textContent   = 'Your camera is ready. The call connects automatically when they join.';
+    }
+  });
+
+  /* ── WebRTC: second peer joined → first peer makes offer ── */
+  socket.on('webrtc_peer_joined', async () => {
+    /* ─── KEY FIX: camera might still be loading — save flag ─── */
+    if (!localStream) { pendingOffer = true; _connId = connId; return; }
+    await makeOffer(connId);
+  });
+
+  /* ── WebRTC: received offer (we are the second peer) ── */
+  socket.on('webrtc_offer', async ({ offer }) => {
+    if (!localStream) return;
+    buildPC(connId);
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      await flushIceBuf();          // flush any early candidates
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit('webrtc_answer', { connectionId: connId, answer: pc.localDescription });
+    } catch (e) { console.error('webrtc_offer handler:', e); }
+  });
+
+  /* ── WebRTC: received answer (we are the first peer) ── */
+  socket.on('webrtc_answer', async ({ answer }) => {
+    if (!pc || pc.signalingState === 'stable') return;
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      await flushIceBuf();          // flush any early candidates
+    } catch (e) { console.error('webrtc_answer handler:', e); }
+  });
+
+  /* ── WebRTC: ICE candidate ── */
+  socket.on('webrtc_ice', async ({ candidate }) => {
+    if (!pc || !candidate) return;
+    if (remoteDescSet) {
+      try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch {}
+    } else {
+      iceBuf.push(candidate);       // buffer — not drop
+    }
+  });
+
+  /* ── WebRTC: other peer ended the call ── */
+  socket.on('webrtc_peer_left', () => {
+    callLive = false;
+    document.getElementById('remote-video').srcObject = null;
+    document.getElementById('remote-name').style.display = 'none';
+    document.getElementById('call-controls').style.display = 'none';
+    document.getElementById('live-badge').style.display    = 'none';
+    document.getElementById('end-btn').style.display       = 'none';
+    document.getElementById('vc-wait-title').textContent = 'Participant left';
+    document.getElementById('vc-wait-msg').textContent   = 'Waiting for them to rejoin…';
+    showOverlay('vc-waiting');
+  });
+
+  /* ── Chat ── */
   socket.on('chat_message', (msg) => {
     appendMessage(msg, msg.senderId === myId);
     if (activeTab !== 'chat') {
@@ -494,7 +1003,7 @@ function initSocket(connId) {
     }
   });
 
-  /* ── Typing indicators ── */
+  /* ── Typing ── */
   socket.on('typing_start', ({ name }) => {
     document.getElementById('typing-indicator').textContent = `${name} is typing…`;
   });
@@ -502,20 +1011,24 @@ function initSocket(connId) {
     document.getElementById('typing-indicator').textContent = '';
   });
 
-  /* ── Whiteboard draw ── */
-  socket.on('whiteboard_draw', ({ x0, y0, x1, y1, color, size }) => {
-    drawLine(x0, y0, x1, y1, color, size, false);
+  /* ── Whiteboard — normalize coords back to local canvas pixels, buffer if not ready ── */
+  socket.on('whiteboard_draw', (d) => {
+    const fn = () => drawLine(
+      d.x0 * wbCanvas.width,  d.y0 * wbCanvas.height,
+      d.x1 * wbCanvas.width,  d.y1 * wbCanvas.height,
+      d.color, d.size, false
+    );
+    if (wbReady) fn(); else wbPendingEvents.push(fn);
   });
 
-  /* ── Whiteboard clear ── */
+  socket.on('whiteboard_text', (d) => {
+    const fn = () => drawText(d.x * wbCanvas.width, d.y * wbCanvas.height, d.text, d.color, d.size, false);
+    if (wbReady) fn(); else wbPendingEvents.push(fn);
+  });
+
   socket.on('whiteboard_clear', () => {
-    const ctx = getCtx();
-    if (ctx) ctx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
-  });
-
-  /* ── Whiteboard text ── */
-  socket.on('whiteboard_text', ({ x, y, text, color, size }) => {
-    drawText(x, y, text, color, size, false);
+    const fn = () => { const ctx = getCtx(); if (ctx) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, wbCanvas.width, wbCanvas.height); } };
+    if (wbReady) fn(); else wbPendingEvents.push(fn);
   });
 }
 
@@ -614,8 +1127,10 @@ let drawing    = false;
 let lastX      = 0;
 let lastY      = 0;
 let currentTool  = 'pen';
-let currentColor = '#ffffff';
+let currentColor = '#1a1a17';
 let currentSize  = 4;
+let wbReady        = false;   // true once canvas has real pixel dimensions
+let wbPendingEvents = [];     // events that arrived before canvas was ready
 
 function initWhiteboard() {
   wbCanvas = document.getElementById('wb-canvas');
@@ -642,11 +1157,22 @@ function resizeCanvas() {
   const wrap = document.getElementById('wb-canvas-wrap');
   const w = wrap.clientWidth;
   const h = wrap.clientHeight;
-  // Preserve drawing on resize
-  const img = wbCtx ? wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height) : null;
+  if (!w || !h) return; // tab still hidden — skip, will be called again on tab switch
+  // Preserve existing drawing only when canvas already has valid dimensions
+  const img = (wbCtx && wbCanvas.width > 0 && wbCanvas.height > 0)
+    ? wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height)
+    : null;
   wbCanvas.width  = w;
   wbCanvas.height = h;
-  if (img && wbCtx) wbCtx.putImageData(img, 0, 0);
+  wbCtx.fillStyle = '#ffffff';
+  wbCtx.fillRect(0, 0, w, h);
+  if (img) wbCtx.putImageData(img, 0, 0);
+  // First time canvas has real dimensions — replay any events that arrived early
+  if (!wbReady) {
+    wbReady = true;
+    wbPendingEvents.forEach(fn => fn());
+    wbPendingEvents = [];
+  }
 }
 
 function getCtx() { return wbCtx; }
@@ -669,7 +1195,7 @@ function wbStart(e) {
 function wbMove(e) {
   if (!drawing) return;
   const { x, y } = getPos(e);
-  const color = currentTool === 'erase' ? '#0a0a08' : currentColor;
+  const color = currentTool === 'erase' ? '#ffffff' : currentColor;
   const size  = currentTool === 'erase' ? currentSize * 4 : currentSize;
   drawLine(lastX, lastY, x, y, color, size, true);
   lastX = x; lastY = y;
@@ -694,7 +1220,9 @@ function drawLine(x0, y0, x1, y1, color, size, emit) {
   if (emit && socket) {
     socket.emit('whiteboard_draw', {
       connectionId: connectionId || requestId,
-      x0, y0, x1, y1, color, size,
+      x0: x0 / wbCanvas.width,  y0: y0 / wbCanvas.height,
+      x1: x1 / wbCanvas.width,  y1: y1 / wbCanvas.height,
+      color, size,
     });
   }
 }
@@ -709,21 +1237,47 @@ function drawText(x, y, text, color, size, emit) {
   if (emit && socket) {
     socket.emit('whiteboard_text', {
       connectionId: connectionId || requestId,
-      x, y, text, color, size,
+      x: x / wbCanvas.width,  y: y / wbCanvas.height,
+      text, color, size,
     });
   }
 }
 
-// Text tool — prompt on click (attached after initWhiteboard)
+// Text tool — inline floating input (no browser prompt)
+let _textX = 0, _textY = 0;
+
 function attachTextClick() {
+  const input = document.getElementById('wb-text-input');
+
   wbCanvas.addEventListener('click', (e) => {
     if (currentTool !== 'text') return;
     const { x, y } = getPos(e);
-    const text = prompt('Enter text:');
-    if (text && text.trim()) {
-      drawText(x, y, text.trim(), currentColor, currentSize, true);
-    }
+    _textX = x; _textY = y;
+
+    // Position the input box at the click point relative to the canvas wrap
+    const wrapRect   = document.getElementById('wb-canvas-wrap').getBoundingClientRect();
+    const canvasRect = wbCanvas.getBoundingClientRect();
+    const scaleX = canvasRect.width  / wbCanvas.width;
+    const scaleY = canvasRect.height / wbCanvas.height;
+    input.style.left = (canvasRect.left - wrapRect.left + x * scaleX) + 'px';
+    input.style.top  = (canvasRect.top  - wrapRect.top  + y * scaleY - 30) + 'px';
+    input.style.display = 'block';
+    input.value = '';
+    input.focus();
   });
+
+  function commitText() {
+    const text = input.value.trim();
+    if (text) drawText(_textX, _textY, text, currentColor, currentSize, true);
+    input.style.display = 'none';
+    input.value = '';
+  }
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter')  { e.preventDefault(); commitText(); }
+    if (e.key === 'Escape') { input.style.display = 'none'; input.value = ''; }
+  });
+  input.addEventListener('blur', commitText);
 }
 
 function setTool(tool) {
@@ -754,7 +1308,7 @@ function setBrushSize(val) {
 
 function clearWhiteboard(emit) {
   const ctx = getCtx();
-  if (ctx) ctx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
+  if (ctx) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, wbCanvas.width, wbCanvas.height); }
   if (emit && socket) {
     socket.emit('whiteboard_clear', { connectionId: connectionId || requestId });
   }
@@ -771,6 +1325,11 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(p => {
     p.classList.toggle('active', p.id === 'tab-' + tab);
   });
+
+  if (tab === 'whiteboard') {
+    // Canvas was hidden (display:none) during initWhiteboard — measure now that it's visible
+    setTimeout(resizeCanvas, 0);
+  }
 
   if (tab === 'chat') {
     chatUnread = 0;
@@ -790,36 +1349,100 @@ function switchTab(tab) {
 /* ═══════════════════════════════════════════════════════════
    End session
 ══════════════════════════════════════════════════════════════ */
-function endSession() {
-  if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
-  if (socket)   { socket.emit('leave_chat_room', { connectionId: connectionId || requestId }); }
+async function endSession() {
+  stopScreenShare();
+  if (localStream)  { localStream.getTracks().forEach(t => t.stop());  localStream  = null; }
+  if (pc)           { try { pc.close(); } catch {} pc = null; }
+  callLive = false;
 
-  document.getElementById('jitsi-container').innerHTML = `
-    <div class="fallback">
-      <h2>Session Ended</h2>
-      <p>Your mentoring session has concluded. Head back to your dashboard to view your activity and book your next session.</p>
-      <a class="open-link" href="${dashLink}">← Back to Dashboard</a>
-    </div>`;
+  // Notify the other peer and leave rooms
+  if (socket) {
+    const connId = connectionId || requestId;
+    socket.emit('webrtc_leave',            { connectionId: connId });
+    socket.emit('leave_chat_room',         { connectionId: connId });
+    socket.emit('leave_session_presence',  { requestId: requestId || connId });
+  }
+
+  // Mark the scheduled session as completed (removes it from calendar)
+  if (currentSessionId) {
+    try {
+      await fetch(`/api/sessions/complete/${currentSessionId}`, {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch { /* silent — don't block UI */ }
+  }
+
+  // Replace the video area with a "session ended" screen
+  showEndedScreen();
 
   document.getElementById('live-badge').style.display = 'none';
   document.getElementById('end-btn').style.display    = 'none';
+
+  // Always show feedback popup when session is ended manually
+  document.getElementById('fb-peer-name').textContent = fbPeerName || 'your partner';
+  document.getElementById('fb-overlay').classList.remove('hidden');
 }
 
-/* ═══════════════════════════════════════════════════════════
-   Error screen
-══════════════════════════════════════════════════════════════ */
-function showError(msg, fallbackUrl) {
-  document.getElementById('loading-screen').style.display = 'none';
-  const es  = document.getElementById('error-screen');
-  es.style.display = 'flex';
-  document.getElementById('error-msg').textContent = msg;
-  const btn = document.getElementById('open-tab-btn');
-  if (fallbackUrl) {
-    btn.style.display = 'inline-block';
-    btn.onclick = () => window.open(fallbackUrl, '_blank');
-  } else {
-    btn.style.display = 'none';
-  }
+function showEndedScreen() {
+  const videoCol = document.getElementById('video-col');
+  videoCol.innerHTML = `
+    <div class="vc-overlay" style="position:absolute;inset:0;background:#0e0e0c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center;">
+      <h3 style="font-family:var(--serif);font-size:20px;">Session Ended</h3>
+      <p style="font-size:13px;color:var(--muted);max-width:340px;line-height:1.6;">
+        Your mentoring session has concluded. Head back to your dashboard to view your activity and book your next session.
+      </p>
+      <a style="background:var(--accent);color:#fff;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;" href="${dashLink}">← Back to Dashboard</a>
+    </div>`;
+}
+
+/* ── Feedback modal helpers ── */
+const STAR_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+
+function selectStar(v) {
+  fbRating = v;
+  document.querySelectorAll('.fb-star').forEach(s =>
+    s.classList.toggle('lit', Number(s.dataset.v) <= v));
+  document.getElementById('fb-star-hint').textContent = STAR_LABELS[v] || '';
+  document.getElementById('fb-submit').disabled = false;
+}
+
+async function resetConnection() {
+  if (!fbConnId) return;
+  try {
+    await fetch(`/api/connect/${fbConnId}`, {
+      method:  'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch { /* silent */ }
+}
+
+async function submitFeedback() {
+  if (!fbRating) return;
+  const btn     = document.getElementById('fb-submit');
+  const comment = document.getElementById('fb-comment').value.trim();
+  btn.disabled  = true;
+  btn.textContent = 'Submitting…';
+  try {
+    await fetch('/api/auth/feedback', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body:    JSON.stringify({ connectionId: fbConnId, rating: fbRating, comment }),
+    });
+  } catch { /* silent */ }
+  await resetConnection();
+  document.getElementById('fb-thanks').textContent = 'Thanks for your feedback!';
+  setTimeout(() => {
+    document.getElementById('fb-overlay').classList.add('hidden');
+    window.location.href = dashLink;
+  }, 1400);
+}
+
+function skipFeedback() {
+  resetConnection().finally(() => {
+    document.getElementById('fb-overlay').classList.add('hidden');
+    window.location.href = dashLink;
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -850,6 +1473,73 @@ function esc(str) {
 document.querySelector('[data-tab="whiteboard"]').addEventListener('click', () => {
   setTimeout(resizeCanvas, 60);
 });
+
+// Announce presence leave when tab closes / navigates away
+window.addEventListener('beforeunload', () => {
+  if (socket) {
+    const connId = connectionId || requestId;
+    socket.emit('leave_session_presence', { requestId: requestId || connId });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   Drag-to-resize: video top / tools bottom
+══════════════════════════════════════════════════════════════ */
+(function () {
+  const handle    = document.getElementById('resize-handle');
+  const videoCol  = document.getElementById('video-col');
+  const content   = videoCol.parentElement; // .content
+  let dragging    = false;
+  let startY      = 0;
+  let startPct    = 56; // initial video height %
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  handle.addEventListener('mousedown', (e) => {
+    dragging = true;
+    startY   = e.clientY;
+    startPct = (videoCol.offsetHeight / content.offsetHeight) * 100;
+    document.body.style.cursor    = 'row-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const dy     = e.clientY - startY;
+    const totalH = content.offsetHeight;
+    const newPct = clamp(startPct + (dy / totalH) * 100, 25, 75);
+    videoCol.style.flex = `0 0 ${newPct}%`;
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.cursor    = '';
+    document.body.style.userSelect = '';
+    setTimeout(resizeCanvas, 50);
+  });
+
+  // Touch support
+  handle.addEventListener('touchstart', (e) => {
+    dragging = true;
+    startY   = e.touches[0].clientY;
+    startPct = (videoCol.offsetHeight / content.offsetHeight) * 100;
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    const dy     = e.touches[0].clientY - startY;
+    const totalH = content.offsetHeight;
+    const newPct = clamp(startPct + (dy / totalH) * 100, 25, 75);
+    videoCol.style.flex = `0 0 ${newPct}%`;
+  }, { passive: true });
+
+  window.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    setTimeout(resizeCanvas, 50);
+  });
+})();
 </script>
 </body>
 </html>

@@ -500,6 +500,7 @@
     }
 
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -586,10 +587,8 @@
           <div class="divider-line"></div>
         </div>
 
-        <button type="button" class="btn-google" id="google-btn">
-          <span class="google-icon"></span>
-          Continue with Google
-        </button>
+        <!-- Google renders its real button here -->
+        <div id="google-btn-render" style="display:flex;justify-content:center;min-height:44px;"></div>
 
       </form>
 
@@ -747,11 +746,74 @@
     });
 
 
-    // ── Google SSO placeholder ───────────────────────────────────
-    document.getElementById('google-btn').addEventListener('click', () => {
-      // Wire up to your OAuth provider (e.g. Firebase, Auth0, Passport)
-      showMessage('Google sign-in is not configured yet.', 'error');
-    });
+    // ── Google Sign-In ───────────────────────────────────────────
+    function handleGoogleCredential(response) {
+      hideMessage();
+      fetch('/api/auth/google', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ idToken: response.credential }),
+      })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (ok) {
+            showMessage('Signed in successfully. Redirecting…', 'success');
+            localStorage.setItem('fa_token', data.token);
+            localStorage.setItem('fa_role',  data.user.role);
+            localStorage.setItem('fa_name',  data.user.fullName);
+            localStorage.setItem('fa_id',    data.user.id);
+            let dest = '/dashboard-mentee.html';
+            if (data.user.isAdmin || data.user.role === 'admin') dest = '/admin.html';
+            else if (data.user.role === 'mentor') dest = '/dashboard-mentor.html';
+            setTimeout(() => { window.location.href = dest; }, 1200);
+          } else {
+            showMessage(data.message || 'Google sign-in failed. Please try again.');
+          }
+        })
+        .catch(() => {
+          showMessage('Unable to connect. Please check your internet connection.');
+        });
+    }
+
+    // Render Google's real button once both the config and GSI script are ready
+    function renderGoogleButton(clientId) {
+      const container = document.getElementById('google-btn-render');
+      if (!container || !clientId || typeof google === 'undefined') return;
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback:  handleGoogleCredential,
+        ux_mode:   'popup',
+      });
+      google.accounts.id.renderButton(container, {
+        theme:         'filled_black',
+        size:          'large',
+        text:          'continue_with',
+        shape:         'rectangular',
+        logo_alignment: 'left',
+        width:         360,
+      });
+    }
+
+    // Load client ID, then render once GSI is ready
+    fetch('/api/config')
+      .then(r => r.json())
+      .then(cfg => {
+        if (!cfg.googleClientId) return;
+        // GSI may already be loaded (fast network) or still loading (async script)
+        if (typeof google !== 'undefined') {
+          renderGoogleButton(cfg.googleClientId);
+        } else {
+          // Poll until GSI script loads (max ~5 s)
+          const t = setInterval(() => {
+            if (typeof google !== 'undefined') {
+              clearInterval(t);
+              renderGoogleButton(cfg.googleClientId);
+            }
+          }, 100);
+          setTimeout(() => clearInterval(t), 5000);
+        }
+      })
+      .catch(() => {});
 
   </script>
 

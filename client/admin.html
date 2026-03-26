@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Father's Advice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --black:       #0a0a08;
+      --white:       #ffffff;
+      --muted:       #6b6b65;
+      --accent:      #5e6ad2;
+      --accent-deep: #4a54b8;
+      --accent-border: rgba(94,106,210,0.35);
+      --accent-glow:   rgba(94,106,210,0.12);
+      --gold:        #c8a84b;
+      --gold-border: rgba(200,168,75,0.35);
+      --card-bg:     #141412;
+      --border:      rgba(255,255,255,0.08);
+      --green:       #4ade80;
+      --green-bg:    rgba(74,222,128,0.12);
+      --green-border:rgba(74,222,128,0.3);
+      --red:         #e05c5c;
+      --serif:       'Playfair Display', Georgia, serif;
+      --sans:        'Inter', system-ui, sans-serif;
+      --radius:      12px;
+      --sidebar-w:   220px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--sans); background: var(--black); color: var(--white); min-height: 100vh; display: flex; }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+    .sidebar-logo { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-mark { width: 36px; height: 36px; background: var(--white); border: 1.5px solid var(--gold-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-mark-text { font-family: var(--serif); font-size: 11px; font-weight: 700; color: var(--black); letter-spacing: -1px; }
+    .logo-mark-text .bar { color: var(--gold); font-style: normal; }
+    .logo-name { font-family: var(--serif); font-size: 14px; color: var(--white); line-height: 1.2; }
+    .logo-name span { display: block; font-size: 10px; font-family: var(--sans); color: var(--muted); font-weight: 400; margin-top: 1px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-section-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 16px 24px 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; color: rgba(255,255,255,0.55); cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; border-left: 2px solid transparent; text-decoration: none; }
+    .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+    .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-glow); }
+    .sidebar-footer { border-top: 1px solid var(--border); padding: 16px 20px; }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .user-meta { flex: 1; min-width: 0; }
+    .user-meta .name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-meta .role { font-size: 11px; color: var(--muted); }
+    .logout-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; border-radius: 4px; display: flex; align-items: center; }
+    .logout-btn:hover { color: var(--white); }
+
+    /* Main */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; background: rgba(10,10,8,0.9); backdrop-filter: blur(12px); z-index: 50; }
+    .topbar-title { font-size: 15px; font-weight: 600; }
+    .badge-admin { background: rgba(224,92,92,0.12); border: 1px solid rgba(224,92,92,0.3); color: var(--red); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .page-body { padding: 28px 28px 60px; }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+    .stat-val { font-family: var(--serif); font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Filter tabs */
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-tab { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500; padding: 7px 16px; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+    .filter-tab:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+    .filter-tab.active { background: var(--accent-glow); border-color: var(--accent-border); color: var(--accent); }
+    .filter-tab .count { display: inline-block; background: rgba(255,255,255,0.12); border-radius: 20px; font-size: 11px; padding: 1px 7px; margin-left: 4px; }
+
+    /* Mentor table */
+    .mentor-table { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .table-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .mentor-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 80px; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); align-items: center; transition: background 0.15s; }
+    .mentor-row:last-child { border-bottom: none; }
+    .mentor-row:hover { background: rgba(255,255,255,0.025); }
+    .mentor-row-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .mentor-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .mentor-name-text { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mentor-email-text { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mentor-job { font-size: 13px; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .status-badge.approved  { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green); }
+    .status-badge.pending   { background: rgba(200,168,75,0.12); border: 1px solid var(--gold-border); color: var(--gold); }
+    .status-badge.rejected  { background: rgba(224,92,92,0.1); border: 1px solid rgba(224,92,92,0.3); color: var(--red); }
+    .status-badge.unverified{ background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--muted); }
+    .resume-link { font-size: 12px; color: var(--accent); cursor: pointer; text-decoration: underline; white-space: nowrap; }
+    .no-resume { font-size: 12px; color: var(--muted); }
+    .action-btn { background: none; border: 1px solid var(--border); color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+    .action-btn:hover { background: rgba(255,255,255,0.06); color: var(--white); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 50px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* Spinner */
+    .spinner { width: 28px; height: 28px; border: 3px solid rgba(94,106,210,0.25); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 60px auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a18; border: 1px solid var(--border); border-radius: 16px; width: 560px; max-width: 95vw; padding: 28px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-family: var(--serif); font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .modal-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; display: block; }
+    .modal-textarea { width: 100%; min-height: 80px; resize: vertical; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: var(--white); padding: 10px 12px; font-family: var(--sans); font-size: 14px; border-radius: 8px; outline: none; line-height: 1.6; }
+    .modal-textarea:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; flex-wrap: wrap; }
+    .btn-approve { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green); font-size: 13px; font-weight: 600; padding: 9px 20px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+    .btn-approve:hover { background: rgba(74,222,128,0.2); }
+    .btn-approve:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-reject  { background: rgba(224,92,92,0.1); border: 1px solid rgba(224,92,92,0.3); color: var(--red); font-size: 13px; font-weight: 600; padding: 9px 20px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+    .btn-reject:hover  { background: rgba(224,92,92,0.2); }
+    .btn-reject:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-cancel  { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500; padding: 9px 18px; border-radius: 8px; cursor: pointer; }
+    .btn-cancel:hover  { background: rgba(255,255,255,0.1); color: var(--white); }
+    .resume-preview-frame { width: 100%; height: 400px; border: none; border-radius: 8px; background: #111; margin-top: 12px; }
+    .resume-loading { text-align: center; padding: 30px; color: var(--muted); font-size: 13px; }
+    .download-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--accent); text-decoration: none; margin-top: 8px; }
+    .download-link:hover { text-decoration: underline; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1e1e1b; border: 1px solid var(--border); color: var(--white); font-size: 14px; padding: 12px 20px; border-radius: 10px; opacity: 0; transition: all 0.3s; z-index: 999; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(74,222,128,0.3); }
+    .toast.error   { border-color: rgba(224,92,92,0.4); }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><span class="logo-mark-text">F<i class="bar">|</i>A</span></div>
+      <div class="logo-name">Father's Advice<span>Admin Panel</span></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Management</div>
+      <a class="nav-item active" href="admin.html">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Mentor Verification
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar-sm" id="sidebar-avatar">A</div>
+        <div class="user-meta">
+          <div class="name" id="sidebar-name">Admin</div>
+          <div class="role">Administrator</div>
+        </div>
+        <button class="logout-btn" title="Sign out" onclick="signOut()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title">Mentor Verification</div>
+      <span class="badge-admin">Admin</span>
+    </header>
+
+    <div class="page-body" id="page-body">
+      <div class="spinner"></div>
+    </div>
+  </main>
+
+  <!-- Verify Modal -->
+  <div class="modal-overlay" id="verify-modal">
+    <div class="modal">
+      <div class="modal-title" id="modal-mentor-name">Mentor Name</div>
+      <div class="modal-sub" id="modal-mentor-meta">Job title — Organisation</div>
+      <div id="modal-resume-area" class="resume-loading">Loading resume…</div>
+      <div style="margin-top:16px;">
+        <label class="modal-label">Admin note (optional — shown to mentor if rejected)</label>
+        <textarea class="modal-textarea" id="modal-note" placeholder="e.g. Please re-upload a clearer version of your resume…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-reject"  id="btn-reject"  onclick="submitVerify('reject')">Reject</button>
+        <button class="btn-approve" id="btn-approve" onclick="submitVerify('approve')">Approve</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const token = localStorage.getItem('fa_token');
+    if (!token) window.location.href = '/login.html';
+
+    const storedName = localStorage.getItem('fa_name') || 'Admin';
+    document.getElementById('sidebar-name').textContent   = storedName;
+    document.getElementById('sidebar-avatar').textContent = storedName[0].toUpperCase();
+
+    function signOut() { localStorage.clear(); window.location.href = '/login.html'; }
+
+    let allMentors = [];
+    let activeFilter = 'all';
+    let activeMentorProfileId = null;
+
+    let toastTimer;
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { t.className = 'toast'; }, 3200);
+    }
+
+    /* ── Load ─────────────────────────────────────────────── */
+    async function load() {
+      try {
+        const res  = await fetch('/api/admin/mentors', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.status === 403) {
+          document.getElementById('page-body').innerHTML =
+            `<div style="text-align:center;padding:60px 20px;color:var(--muted);">
+              <div style="font-size:40px;margin-bottom:12px;">🔒</div>
+              <h3 style="font-family:var(--serif);font-size:20px;color:var(--white);margin-bottom:8px;">Access Denied</h3>
+              <p style="font-size:14px;">This page is restricted to administrators only.</p>
+            </div>`;
+          return;
+        }
+        const data = await res.json();
+        allMentors = data.mentors || [];
+        render();
+      } catch (err) {
+        document.getElementById('page-body').innerHTML =
+          `<p style="color:var(--muted);padding:40px;">Could not load mentor data.</p>`;
+      }
+    }
+
+    /* ── Render ───────────────────────────────────────────── */
+    function render() {
+      const counts = {
+        all:        allMentors.length,
+        pending:    allMentors.filter(m => m.verificationStatus === 'pending').length,
+        approved:   allMentors.filter(m => m.verificationStatus === 'approved').length,
+        rejected:   allMentors.filter(m => m.verificationStatus === 'rejected').length,
+        unverified: allMentors.filter(m => m.verificationStatus === 'unverified').length,
+      };
+
+      const filtered = activeFilter === 'all'
+        ? allMentors
+        : allMentors.filter(m => m.verificationStatus === activeFilter);
+
+      const GRADIENTS = [
+        'linear-gradient(135deg,#5e6ad2,#4a54b8)',
+        'linear-gradient(135deg,#c8a84b,#a8882b)',
+        'linear-gradient(135deg,#34d399,#059669)',
+        'linear-gradient(135deg,#fb923c,#ea580c)',
+        'linear-gradient(135deg,#f472b6,#db2777)',
+        'linear-gradient(135deg,#38bdf8,#0284c7)',
+      ];
+
+      const statusLabel = {
+        unverified: 'Not Verified',
+        pending:    'Pending',
+        approved:   'Approved',
+        rejected:   'Rejected',
+      };
+
+      document.getElementById('page-body').innerHTML = `
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-val">${counts.all}</div>
+            <div class="stat-label">Total Mentors</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(200,168,75,0.2);">
+            <div class="stat-val" style="color:var(--gold);">${counts.pending}</div>
+            <div class="stat-label">Pending Review</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(74,222,128,0.2);">
+            <div class="stat-val" style="color:var(--green);">${counts.approved}</div>
+            <div class="stat-label">Verified</div>
+          </div>
+          <div class="stat-card" style="border-color:rgba(224,92,92,0.2);">
+            <div class="stat-val" style="color:var(--red);">${counts.rejected}</div>
+            <div class="stat-label">Rejected</div>
+          </div>
+        </div>
+
+        <div class="filter-tabs">
+          ${['all','pending','approved','rejected','unverified'].map(f => `
+            <button class="filter-tab ${activeFilter === f ? 'active' : ''}" onclick="setFilter('${f}')">
+              ${f.charAt(0).toUpperCase() + f.slice(1)} <span class="count">${counts[f]}</span>
+            </button>`).join('')}
+        </div>
+
+        ${filtered.length === 0 ? `
+          <div class="mentor-table">
+            <div class="empty-state">
+              <div class="icon">🎉</div>
+              <p>No mentors in this category.</p>
+            </div>
+          </div>` : `
+        <div class="mentor-table">
+          <div class="table-header">
+            <div>Mentor</div>
+            <div>Role / Organisation</div>
+            <div>Status</div>
+            <div>Resume</div>
+            <div>Action</div>
+          </div>
+          ${filtered.map((m, i) => {
+            const init = m.fullName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+            const grad = GRADIENTS[i % GRADIENTS.length];
+            const badge = statusLabel[m.verificationStatus] || 'Unknown';
+            return `
+              <div class="mentor-row">
+                <div class="mentor-row-name">
+                  <div class="mentor-avatar" style="background:${grad};">${init}</div>
+                  <div>
+                    <div class="mentor-name-text">${m.fullName}</div>
+                    <div class="mentor-email-text">${m.email}</div>
+                  </div>
+                </div>
+                <div class="mentor-job">${[m.jobTitle, m.organisation].filter(Boolean).join(' — ') || '—'}</div>
+                <div><span class="status-badge ${m.verificationStatus}">${badge}</span></div>
+                <div>${m.hasResume
+                  ? `<span class="resume-link" onclick="openModal('${m.profileId}','${m.fullName.replace(/'/g,"\\'")}','${(m.jobTitle||'').replace(/'/g,"\\'")}','${(m.organisation||'').replace(/'/g,"\\'")}')">View Resume</span>`
+                  : `<span class="no-resume">None</span>`}</div>
+                <div>
+                  <button class="action-btn" onclick="openModal('${m.profileId}','${m.fullName.replace(/'/g,"\\'")}','${(m.jobTitle||'').replace(/'/g,"\\'")}','${(m.organisation||'').replace(/'/g,"\\'")}')">Review</button>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`}
+      `;
+    }
+
+    function setFilter(f) {
+      activeFilter = f;
+      render();
+    }
+
+    /* ── Modal ────────────────────────────────────────────── */
+    async function openModal(profileId, name, jobTitle, org) {
+      activeMentorProfileId = profileId;
+      document.getElementById('modal-mentor-name').textContent = name;
+      document.getElementById('modal-mentor-meta').textContent = [jobTitle, org].filter(Boolean).join(' — ') || 'No title provided';
+      document.getElementById('modal-note').value = '';
+      document.getElementById('modal-resume-area').innerHTML = '<div class="resume-loading">Loading resume…</div>';
+      document.getElementById('btn-approve').disabled = false;
+      document.getElementById('btn-reject').disabled  = false;
+      document.getElementById('verify-modal').classList.add('open');
+
+      try {
+        const res  = await fetch(`/api/admin/mentor-resume/${profileId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.status === 404) {
+          document.getElementById('modal-resume-area').innerHTML =
+            `<div class="resume-loading" style="color:var(--muted);">No resume uploaded by this mentor.</div>`;
+          return;
+        }
+        const data = await res.json();
+        const { resumeBase64, resumeFileName } = data;
+        const isPDF = resumeFileName.toLowerCase().endsWith('.pdf');
+
+        if (isPDF) {
+          document.getElementById('modal-resume-area').innerHTML = `
+            <iframe class="resume-preview-frame" src="${resumeBase64}" title="Resume"></iframe>
+            <a class="download-link" href="${resumeBase64}" download="${resumeFileName}">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download ${resumeFileName}
+            </a>`;
+        } else {
+          document.getElementById('modal-resume-area').innerHTML = `
+            <div class="resume-loading" style="color:rgba(255,255,255,0.7);">
+              Preview not available for .doc/.docx files.
+            </div>
+            <a class="download-link" href="${resumeBase64}" download="${resumeFileName}">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download ${resumeFileName}
+            </a>`;
+        }
+      } catch {
+        document.getElementById('modal-resume-area').innerHTML =
+          `<div class="resume-loading" style="color:var(--red);">Failed to load resume.</div>`;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('verify-modal').classList.remove('open');
+      activeMentorProfileId = null;
+    }
+
+    async function submitVerify(action) {
+      if (!activeMentorProfileId) return;
+      const note = document.getElementById('modal-note').value.trim();
+      document.getElementById('btn-approve').disabled = true;
+      document.getElementById('btn-reject').disabled  = true;
+
+      try {
+        const res  = await fetch(`/api/admin/verify/${activeMentorProfileId}`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body:    JSON.stringify({ action, note }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message, 'success');
+          closeModal();
+          // Update local state without full reload
+          const m = allMentors.find(x => x.profileId === activeMentorProfileId);
+          if (m) {
+            m.verificationStatus = action === 'approve' ? 'approved' : 'rejected';
+            m.isVerified = action === 'approve';
+          }
+          render();
+        } else {
+          showToast(data.message || 'Action failed', 'error');
+          document.getElementById('btn-approve').disabled = false;
+          document.getElementById('btn-reject').disabled  = false;
+        }
+      } catch {
+        showToast('Network error. Try again.', 'error');
+        document.getElementById('btn-approve').disabled = false;
+        document.getElementById('btn-reject').disabled  = false;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

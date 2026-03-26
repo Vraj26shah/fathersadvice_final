@@ -44,24 +44,24 @@
     .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; color: rgba(255,255,255,0.55); cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; border-left: 2px solid transparent; text-decoration: none; }
     .nav-item:hover { color: var(--white); background: rgba(255,255,255,0.04); }
     .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-glow); }
-    .sidebar-footer { border-top: 1px solid var(--border); padding: 16px 20px; }
+    .sidebar-footer { border-top: 1px solid var(--border); padding: 20px 24px; }
     .user-info { display: flex; align-items: center; gap: 10px; }
-    .user-avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .user-avatar-sm { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--white); flex-shrink: 0; }
     .user-meta { flex: 1; min-width: 0; }
     .user-meta .name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-meta .role { font-size: 11px; color: var(--muted); }
+    .user-meta .role { font-size: 11px; color: var(--accent); font-weight: 500; }
     .logout-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; border-radius: 4px; display: flex; align-items: center; }
     .logout-btn:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 
     /* ── Main ── */
     .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-    .topbar { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; background: rgba(10,10,8,0.9); backdrop-filter: blur(12px); z-index: 50; }
-    .topbar-title { font-size: 15px; font-weight: 600; }
+    .topbar { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; position: sticky; top: 0; background: rgba(10,10,8,0.9); backdrop-filter: blur(12px); z-index: 50; }
+    .topbar-title { font-size: 18px; font-weight: 600; }
     .badge-accent { background: var(--accent-glow); border: 1px solid var(--accent-border); color: var(--accent); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
     .page-body { padding: 28px 28px 60px; max-width: 860px; }
 
     /* ── Profile header ── */
-    .profile-header { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; display: flex; gap: 24px; align-items: center; margin-bottom: 24px; }
+    .profile-header { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; display: flex; gap: 24px; align-items: center; margin-bottom: 24px; position: relative; }
     .avatar-circle { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 24px; font-weight: 700; flex-shrink: 0; background: linear-gradient(135deg,#5e6ad2,#4a54b8); }
     .avatar-circle img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
     .header-info { flex: 1; }
@@ -75,7 +75,8 @@
 
     /* ── Sections ── */
     .section { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
-    .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 16px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
     .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
     .field { display: flex; flex-direction: column; gap: 4px; }
     .field.full { grid-column: 1 / -1; }
@@ -107,12 +108,122 @@
     .spinner { width: 28px; height: 28px; border: 3px solid rgba(94,106,210,0.25); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 60px auto; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Edit button ── */
+    .edit-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 500;
+      padding: 5px 12px; border-radius: 8px; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .edit-btn:hover { background: rgba(94,106,210,0.12); border-color: var(--accent-border); color: var(--accent); }
+
+    /* ── Edit form ── */
+    .edit-form { display: flex; flex-direction: column; gap: 14px; }
+    .ef-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    .ef-field { display: flex; flex-direction: column; gap: 6px; }
+    .ef-field.full { grid-column: 1/-1; }
+    .ef-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    .ef-input, .ef-textarea, .ef-select {
+      background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 8px; color: var(--white); font-family: var(--sans); font-size: 14px;
+      padding: 9px 12px; outline: none; transition: border-color 0.15s; width: 100%;
+    }
+    .ef-input:focus, .ef-textarea:focus, .ef-select:focus { border-color: rgba(94,106,210,0.6); background: rgba(94,106,210,0.06); }
+    .ef-textarea { resize: vertical; min-height: 80px; }
+    .ef-select option { background: #1c1c18; }
+
+    /* ── Tag row (languages, skills, topics) ── */
+    .ef-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; min-height: 28px; }
+    .ef-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500;
+              padding: 3px 8px 3px 10px; border-radius: 20px;
+              background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: rgba(255,255,255,0.75); }
+    .ef-tag-x { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.4); font-size: 14px; line-height: 1; padding: 0 2px; }
+    .ef-tag-x:hover { color: #e05c5c; }
+    .ef-add-row { display: flex; gap: 8px; }
+    .ef-add-row .ef-input { flex: 1; }
+    .ef-add-btn { background: rgba(94,106,210,0.15); border: 1.5px solid var(--accent-border); color: var(--accent);
+                  font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+    .ef-add-btn:hover { background: rgba(94,106,210,0.25); }
+
+    /* ── Slot rows ── */
+    .ef-slot-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .ef-slot-row { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+    .ef-slot-row select, .ef-slot-row input[type=time] { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--white); font-size: 13px; padding: 5px 8px; outline: none; }
+    .ef-slot-row select { flex: 1.5; }
+    .ef-slot-row input[type=time] { flex: 1; }
+    .ef-slot-rm { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.3); font-size: 18px; padding: 0 4px; }
+    .ef-slot-rm:hover { color: #e05c5c; }
+
+    /* ── Skill edit rows ── */
+    .ef-skill-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .ef-skill-row { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+    .ef-skill-name { flex: 2; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--white); font-size: 13px; padding: 5px 8px; outline: none; }
+    .ef-skill-lvl { width: 56px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--white); font-size: 13px; padding: 5px 6px; outline: none; text-align: center; }
+    .ef-skill-yrs { width: 56px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--white); font-size: 13px; padding: 5px 6px; outline: none; }
+    .ef-skill-label { font-size: 10px; color: var(--muted); }
+
+    /* ── Form actions ── */
+    .ef-actions { display: flex; gap: 10px; padding-top: 4px; }
+    .ef-save-btn { background: var(--accent); border: none; color: #fff; font-size: 14px; font-weight: 600;
+                   padding: 10px 22px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+    .ef-save-btn:hover { background: var(--accent-deep); }
+    .ef-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ef-cancel-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: rgba(255,255,255,0.5);
+                     font-size: 14px; font-weight: 500; padding: 10px 18px; border-radius: 8px; cursor: pointer; }
+    .ef-cancel-btn:hover { background: rgba(255,255,255,0.09); color: var(--white); }
+
+    /* ── Verification badge ── */
+    .verify-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+    .verify-badge.approved  { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
+    .verify-badge.pending   { background: rgba(200,168,75,0.12); border: 1px solid rgba(200,168,75,0.35); color: var(--gold); }
+    .verify-badge.rejected  { background: rgba(224,92,92,0.12); border: 1px solid rgba(224,92,92,0.3); color: #e05c5c; }
+    .verify-badge.unverified{ background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--muted); }
+    .resume-upload-area { border: 2px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+    .resume-upload-area:hover { border-color: rgba(94,106,210,0.5); }
+    .resume-upload-area input[type=file] { display: none; }
+    .resume-file-name { font-size: 13px; color: var(--accent); margin-top: 6px; word-break: break-all; }
+    .upload-btn { background: var(--accent); border: none; color: #fff; font-size: 13px; font-weight: 600; padding: 8px 18px; border-radius: 8px; cursor: pointer; margin-top: 12px; transition: background 0.15s; }
+    .upload-btn:hover { background: var(--accent-deep); }
+    .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .verify-note { font-size: 13px; color: #e05c5c; margin-top: 8px; padding: 8px 12px; background: rgba(224,92,92,0.08); border: 1px solid rgba(224,92,92,0.2); border-radius: 8px; }
+    .verify-info { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+    /* ── Reviews section ── */
+    .reviews-summary { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .reviews-avg { font-family: var(--serif); font-size: 40px; font-weight: 700; color: var(--gold); line-height: 1; }
+    .reviews-stars { display: flex; gap: 3px; margin-bottom: 4px; }
+    .star-filled { color: var(--gold); font-size: 16px; }
+    .star-empty  { color: rgba(255,255,255,0.2); font-size: 16px; }
+    .reviews-count { font-size: 13px; color: var(--muted); }
+    .review-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+    .review-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .review-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .review-name { font-size: 13px; font-weight: 600; }
+    .review-date { font-size: 11px; color: var(--muted); margin-left: auto; }
+    .review-stars { display: flex; gap: 2px; margin-bottom: 6px; }
+    .review-comment { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.55; }
+    .no-reviews { font-size: 13px; color: var(--muted); padding: 8px 0; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1e1e1b; border: 1px solid var(--border); color: var(--white);
+      font-size: 13px; font-weight: 500; padding: 12px 22px; border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 999; transition: transform 0.25s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(74,222,128,0.4); color: #4ade80; }
+    .toast.error   { border-color: rgba(224,92,92,0.4);  color: #e05c5c; }
+
     @media (max-width: 700px) {
       :root { --sidebar-w: 0px; }
       .sidebar { transform: translateX(-100%); }
       .main { margin-left: 0; }
       .page-body { padding: 20px 16px; }
-      .field-grid { grid-template-columns: 1fr; }
+      .field-grid, .ef-grid { grid-template-columns: 1fr; }
+      .field.full, .ef-field.full { grid-column: 1; }
       .profile-header { flex-direction: column; text-align: center; }
     }
   </style>
@@ -152,6 +263,9 @@
     </div>
   </main>
 
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const token = localStorage.getItem('fa_token');
@@ -164,33 +278,44 @@
 
     function signOut() { localStorage.clear(); window.location.href = '/login.html'; }
 
-    function val(v, fallback = '—') {
-      return (v && String(v).trim()) ? v : fallback;
-    }
-    function emptyClass(v) {
-      return (v && String(v).trim()) ? '' : ' empty';
+    // Global state
+    let currentUser    = null;
+    let currentProfile = null;
+
+    /* ── Utilities ─────────────────────────────────────────── */
+    function val(v, fallback = '—') { return (v && String(v).trim()) ? v : fallback; }
+    function emptyClass(v) { return (v && String(v).trim()) ? '' : ' empty'; }
+
+    let toastTimer;
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { t.className = 'toast'; }, 3000);
     }
 
+    /* ── Load & Render ─────────────────────────────────────── */
     async function load() {
       try {
         const res  = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
         const data = await res.json();
+        currentUser    = data.user;
+        currentProfile = data.profile;
         render(data.user, data.profile);
-      } catch (e) {
+      } catch {
         document.getElementById('page-body').innerHTML =
           `<p style="color:var(--muted);padding:40px;">Could not load profile.</p>`;
       }
     }
 
     function render(user, profile) {
-      const role   = user.role;
+      const role     = user.role;
       const initials = user.fullName.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
 
-      // Update sidebar + badge
       document.getElementById('sidebar-role').textContent = role === 'mentor' ? 'Mentor' : 'Mentee';
       document.getElementById('role-badge').textContent   = role === 'mentor' ? 'Mentor' : 'Mentee';
 
-      // Inject role-appropriate sidebar nav
       const dashLink = role === 'mentor' ? 'dashboard-mentor.html' : 'dashboard-mentee.html';
       document.getElementById('sidebar-nav').innerHTML = role === 'mentor' ? `
         <div class="nav-section-label">Main</div>
@@ -201,76 +326,123 @@
         <a class="nav-item" href="chat.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Messages</a>
         <a class="nav-item" href="progress.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>My Progress</a>
         <div class="nav-section-label" style="margin-top:8px;">Settings</div>
-        <a class="nav-item active" href="profile.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>My Profile</a>
-        <a class="nav-item" href="profile.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>Availability</a>` : `
+        <a class="nav-item active" href="profile.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>My Profile</a>` : `
         <div class="nav-section-label">Main</div>
-        <a class="nav-item" href="${dashLink}">
-          <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
-          Dashboard
-        </a>
-        <a class="nav-item" href="find-mentor.html">
-          <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-          Find a Mentor
-        </a>
-        <a class="nav-item" href="calendar.html">
-          <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-          My Sessions
-        </a>
-        <a class="nav-item" href="chat.html">
-          <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-          Messages
-        </a>
-        <a class="nav-item" href="progress.html">
-          <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-          My Progress
-        </a>
+        <a class="nav-item" href="${dashLink}"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>Dashboard</a>
+        <a class="nav-item" href="find-mentor.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Find a Mentor</a>
+        <a class="nav-item" href="calendar.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>My Sessions</a>
+        <a class="nav-item" href="chat.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>Messages</a>
+        <a class="nav-item" href="progress.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>My Progress</a>
         <div class="nav-section-label" style="margin-top:8px;">Account</div>
-        <a class="nav-item active" href="profile.html">
-          <span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-          My Profile
-        </a>`;
+        <a class="nav-item active" href="profile.html"><span><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>My Profile</a>`;
 
-      // Avatar
       let avatarHtml = `<span>${initials}</span>`;
-      if (user.profilePicture) {
-        avatarHtml = `<img src="${user.profilePicture}" alt="${user.fullName}" />`;
-      }
+      if (user.profilePicture) avatarHtml = `<img src="${user.profilePicture}" alt="${user.fullName}" />`;
 
-      // Header tags
       const domain = profile?.domain || '';
       const exp    = role === 'mentee' ? profile?.expLevel : profile?.yearsExperience ? `${profile.yearsExperience} yrs exp` : '';
 
-      let sectionsHtml = '';
-
-      if (role === 'mentee') {
-        sectionsHtml = renderMentee(profile);
-      } else {
-        sectionsHtml = renderMentor(profile);
-      }
+      const sectionsHtml = role === 'mentee' ? renderMentee(profile) : renderMentor(profile);
 
       document.getElementById('page-body').innerHTML = `
-        <div class="profile-header">
+        <div class="profile-header" id="section-header">
           <div class="avatar-circle">${avatarHtml}</div>
           <div class="header-info">
-            <div class="header-name">${user.fullName}</div>
+            <div class="header-name" id="header-name-display">${user.fullName}</div>
             <div class="header-email">${user.email}</div>
             <div class="header-tags">
               <span class="tag role">${role === 'mentor' ? 'Mentor' : 'Mentee'}</span>
               ${domain ? `<span class="tag domain">${domain}</span>` : ''}
               ${exp    ? `<span class="tag exp">${exp}</span>` : ''}
+              ${role === 'mentor' && profile?.isVerified ? `<span class="tag" style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:#4ade80;">✓ Verified</span>` : ''}
+            </div>
+          </div>
+          <button class="edit-btn" onclick="editHeader()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+        </div>
+        ${sectionsHtml}
+        ${role === 'mentor' ? `<div class="section" id="section-reviews"><div class="section-header"><div class="section-title">Reviews &amp; Ratings</div></div><div id="reviews-body"><div style="color:var(--muted);font-size:13px;">Loading reviews…</div></div></div>` : ''}
+      `;
+
+      if (role === 'mentor') loadMentorReviews();
+    }
+
+    /* ── Header edit ───────────────────────────────────────── */
+    function editHeader() {
+      const sec = document.getElementById('section-header');
+      const cur = currentUser;
+      sec.innerHTML = `
+        <div class="header-info" style="flex:1;">
+          <div class="edit-form">
+            <div class="ef-grid">
+              <div class="ef-field full">
+                <label class="ef-label">Display Name</label>
+                <input class="ef-input" id="eh-name" type="text" value="${cur.fullName}" />
+              </div>
+              <div class="ef-field full">
+                <label class="ef-label">Profile Picture URL <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+                <input class="ef-input" id="eh-pic" type="url" placeholder="https://…" value="${cur.profilePicture || ''}" />
+              </div>
+            </div>
+            <div class="ef-actions">
+              <button class="ef-save-btn" id="eh-save-btn" onclick="saveHeader()">Save changes</button>
+              <button class="ef-cancel-btn" onclick="render(currentUser, currentProfile)">Cancel</button>
             </div>
           </div>
         </div>
-        ${sectionsHtml}
       `;
     }
 
+    async function saveHeader() {
+      const name = document.getElementById('eh-name').value.trim();
+      const pic  = document.getElementById('eh-pic').value.trim();
+      if (!name) { showToast('Name cannot be empty', 'error'); return; }
+      const btn = document.getElementById('eh-save-btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      await saveProfile({ fullName: name, profilePicture: pic || undefined });
+    }
+
+    /* ── Save to API ───────────────────────────────────────── */
+    async function saveProfile(profileFields) {
+      try {
+        const res  = await fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(profileFields),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          currentUser    = data.user    || currentUser;
+          currentProfile = data.profile || currentProfile;
+          // Update localStorage name if changed
+          if (data.user?.fullName) {
+            localStorage.setItem('fa_name', data.user.fullName);
+            document.getElementById('sidebar-name').textContent = data.user.fullName;
+          }
+          render(currentUser, currentProfile);
+          showToast('Profile updated', 'success');
+        } else {
+          showToast(data.message || 'Save failed', 'error');
+          // Re-enable any save button
+          document.querySelectorAll('.ef-save-btn').forEach(b => { b.disabled = false; b.textContent = 'Save changes'; });
+        }
+      } catch {
+        showToast('Network error. Try again.', 'error');
+        document.querySelectorAll('.ef-save-btn').forEach(b => { b.disabled = false; b.textContent = 'Save changes'; });
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       MENTEE RENDER + EDIT
+    ══════════════════════════════════════════════════════════ */
     function renderMentee(p) {
       if (!p) return '<p style="color:var(--muted);padding:16px;">No profile data found.</p>';
 
-      const topics     = p.topics || [];
-      const slots      = p.slots  || [];
-      const languages  = p.languages || [];
+      const topics    = p.topics    || [];
+      const slots     = p.slots     || [];
+      const languages = p.languages || [];
 
       const topicChips = topics.length
         ? topics.map(t => `<span class="topic-chip p${t.priority}">${t.name}</span>`).join('')
@@ -285,9 +457,15 @@
         : '<span style="color:var(--muted);font-size:13px;">Not specified</span>';
 
       return `
-        <div class="section">
-          <div class="section-title">Background</div>
-          <div class="field-grid">
+        <div class="section" id="section-mentee-bg">
+          <div class="section-header">
+            <div class="section-title">Background</div>
+            <button class="edit-btn" onclick="editMenteeBg()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          </div>
+          <div class="field-grid" id="mentee-bg-view">
             <div class="field"><span class="field-label">Role / Status</span><span class="field-value${emptyClass(p.roleStatus)}">${val(p.roleStatus)}</span></div>
             <div class="field"><span class="field-label">Organisation</span><span class="field-value${emptyClass(p.organisation)}">${val(p.organisation)}</span></div>
             <div class="field"><span class="field-label">Experience Level</span><span class="field-value${emptyClass(p.expLevel)}">${val(p.expLevel)}</span></div>
@@ -296,11 +474,17 @@
           </div>
         </div>
 
-        <div class="section">
-          <div class="section-title">Learning Goals</div>
+        <div class="section" id="section-mentee-goals">
+          <div class="section-header">
+            <div class="section-title">Learning Goals</div>
+            <button class="edit-btn" onclick="editMenteeGoals()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          </div>
           <div class="field-grid">
             <div class="field full">
-              <span class="field-label">Topics (colour = priority: blue high · gold mid · grey low)</span>
+              <span class="field-label">Topics (blue = high priority · gold = mid · grey = low)</span>
               <div style="margin-top:8px;">${topicChips}</div>
             </div>
             <div class="field full"><span class="field-label">Learning Description</span><span class="field-value${emptyClass(p.learningDescription)}">${val(p.learningDescription)}</span></div>
@@ -308,26 +492,240 @@
           </div>
         </div>
 
-        <div class="section">
-          <div class="section-title">Availability & Preferences</div>
+        <div class="section" id="section-mentee-avail">
+          <div class="section-header">
+            <div class="section-title">Availability &amp; Preferences</div>
+            <button class="edit-btn" onclick="editMenteeAvail()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          </div>
           <div class="field-grid">
             <div class="field"><span class="field-label">Session Format</span><span class="field-value${emptyClass(p.sessionFormat)}">${val(p.sessionFormat)}</span></div>
             <div class="field"><span class="field-label">Session Length</span><span class="field-value${emptyClass(p.sessionLength)}">${p.sessionLength ? p.sessionLength + ' min' : '—'}</span></div>
             <div class="field"><span class="field-label">Required Hours / Week</span><span class="field-value${emptyClass(p.requiredHours)}">${val(p.requiredHours)}</span></div>
             <div class="field"><span class="field-label">Timezone</span><span class="field-value${emptyClass(p.timezone)}">${val(p.timezone)}</span></div>
-            <div class="field full">
-              <span class="field-label">Available Slots</span>
-              <div class="slots-grid" style="margin-top:8px;">${slotChips}</div>
-            </div>
-            <div class="field full">
-              <span class="field-label">Preferred Languages</span>
-              <div class="lang-chips" style="margin-top:8px;">${langChips}</div>
-            </div>
+            <div class="field full"><span class="field-label">Available Slots</span><div class="slots-grid" style="margin-top:8px;">${slotChips}</div></div>
+            <div class="field full"><span class="field-label">Preferred Languages</span><div class="lang-chips" style="margin-top:8px;">${langChips}</div></div>
           </div>
         </div>
       `;
     }
 
+    /* ── Mentee Background edit ── */
+    function editMenteeBg() {
+      const p   = currentProfile || {};
+      const sec = document.getElementById('section-mentee-bg');
+      sec.querySelector('.section-header').nextElementSibling.outerHTML; // discard view
+      const view = sec.querySelector('#mentee-bg-view') || sec.querySelector('.field-grid');
+      view.outerHTML = `<div></div>`; // remove
+      sec.insertAdjacentHTML('beforeend', `
+        <div class="edit-form" id="ef-mentee-bg">
+          <div class="ef-grid">
+            <div class="ef-field">
+              <label class="ef-label">Role / Status</label>
+              <input class="ef-input" id="emb-roleStatus" type="text" value="${p.roleStatus || ''}" placeholder="e.g. Software Engineer" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Organisation</label>
+              <input class="ef-input" id="emb-org" type="text" value="${p.organisation || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Experience Level</label>
+              <select class="ef-select" id="emb-expLevel">
+                <option value="">— Select —</option>
+                ${['Student','Junior (0-2 yrs)','Mid (2-5 yrs)','Senior (5+ yrs)','Career changer'].map(o =>
+                  `<option value="${o}" ${p.expLevel === o ? 'selected' : ''}>${o}</option>`).join('')}
+              </select>
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Domain</label>
+              <input class="ef-input" id="emb-domain" type="text" value="${p.domain || ''}" placeholder="e.g. Technology" />
+            </div>
+            <div class="ef-field full">
+              <label class="ef-label">Bio</label>
+              <textarea class="ef-textarea" id="emb-bio" rows="3" placeholder="Tell mentors about yourself…">${p.bio || ''}</textarea>
+            </div>
+          </div>
+          <div class="ef-actions">
+            <button class="ef-save-btn" onclick="saveMenteeBg()">Save changes</button>
+            <button class="ef-cancel-btn" onclick="render(currentUser,currentProfile)">Cancel</button>
+          </div>
+        </div>
+      `);
+    }
+
+    async function saveMenteeBg() {
+      const fields = {
+        roleStatus:   document.getElementById('emb-roleStatus').value.trim(),
+        organisation: document.getElementById('emb-org').value.trim(),
+        expLevel:     document.getElementById('emb-expLevel').value,
+        domain:       document.getElementById('emb-domain').value.trim(),
+        bio:          document.getElementById('emb-bio').value.trim(),
+      };
+      await saveProfile(fields);
+    }
+
+    /* ── Mentee Learning Goals edit ── */
+    function editMenteeGoals() {
+      const p   = currentProfile || {};
+      const sec = document.getElementById('section-mentee-goals');
+      const view = sec.querySelector('.field-grid');
+      let topics = JSON.parse(JSON.stringify(p.topics || []));
+
+      function renderTopicTags() {
+        return topics.map((t, i) => `
+          <span class="ef-tag" style="${t.priority===1?'background:var(--accent-glow);border-color:var(--accent-border);color:var(--accent);':t.priority===2?'background:rgba(200,168,75,0.1);border-color:var(--gold-border);color:var(--gold);':''}">
+            ${t.name}
+            <button class="ef-tag-x" onclick="removeTopic(${i})">&times;</button>
+          </span>`).join('');
+      }
+
+      window._topicsRef = topics;
+      window.removeTopic = (i) => { topics.splice(i, 1); document.getElementById('eg-topic-tags').innerHTML = renderTopicTags(); };
+      window.addTopic = () => {
+        const nameEl = document.getElementById('eg-topic-input');
+        const prioEl = document.getElementById('eg-topic-prio');
+        const name = nameEl.value.trim();
+        if (!name) return;
+        topics.push({ name, priority: parseInt(prioEl.value) });
+        document.getElementById('eg-topic-tags').innerHTML = renderTopicTags();
+        nameEl.value = '';
+      };
+
+      view.outerHTML = `
+        <div class="edit-form" id="ef-mentee-goals">
+          <div class="ef-field full">
+            <label class="ef-label">Topics</label>
+            <div class="ef-tag-row" id="eg-topic-tags">${renderTopicTags()}</div>
+            <div class="ef-add-row">
+              <input class="ef-input" id="eg-topic-input" type="text" placeholder="Topic name" />
+              <select class="ef-select" id="eg-topic-prio" style="width:130px;">
+                <option value="1">High priority</option>
+                <option value="2">Mid priority</option>
+                <option value="3">Low priority</option>
+              </select>
+              <button class="ef-add-btn" onclick="addTopic()">+ Add</button>
+            </div>
+          </div>
+          <div class="ef-field full">
+            <label class="ef-label">Learning Description</label>
+            <textarea class="ef-textarea" id="eg-learnDesc" rows="3">${p.learningDescription || ''}</textarea>
+          </div>
+          <div class="ef-field full">
+            <label class="ef-label">Desired Outcome</label>
+            <textarea class="ef-textarea" id="eg-desiredOutcome" rows="3">${p.desiredOutcome || ''}</textarea>
+          </div>
+          <div class="ef-actions">
+            <button class="ef-save-btn" onclick="saveMenteeGoals()">Save changes</button>
+            <button class="ef-cancel-btn" onclick="render(currentUser,currentProfile)">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function saveMenteeGoals() {
+      await saveProfile({
+        topics:              window._topicsRef,
+        learningDescription: document.getElementById('eg-learnDesc').value.trim(),
+        desiredOutcome:      document.getElementById('eg-desiredOutcome').value.trim(),
+      });
+    }
+
+    /* ── Mentee Availability edit ── */
+    function editMenteeAvail() {
+      const p   = currentProfile || {};
+      const sec = document.getElementById('section-mentee-avail');
+      const view = sec.querySelector('.field-grid');
+      let slots     = JSON.parse(JSON.stringify(p.slots || []));
+      let languages = [...(p.languages || [])];
+      const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+      function renderSlotRows() {
+        return slots.map((s, i) => `
+          <div class="ef-slot-row">
+            <select onchange="slots[${i}].day=this.value">${DAYS.map(d=>`<option value="${d}" ${s.day===d?'selected':''}>${d}</option>`).join('')}</select>
+            <input type="time" value="${s.start}" onchange="slots[${i}].start=this.value" />
+            <span style="color:var(--muted);font-size:12px;">to</span>
+            <input type="time" value="${s.end}" onchange="slots[${i}].end=this.value" />
+            <button class="ef-slot-rm" onclick="removeSlot(${i})">&times;</button>
+          </div>`).join('');
+      }
+      function renderLangTags() {
+        return languages.map((l, i) => `
+          <span class="ef-tag">${l}<button class="ef-tag-x" onclick="removeLang(${i})">&times;</button></span>`).join('');
+      }
+
+      window._slotsRef     = slots;
+      window._languagesRef = languages;
+      window.removeSlot = (i) => { slots.splice(i, 1); document.getElementById('ea-slots').innerHTML = renderSlotRows(); };
+      window.addSlot    = ()  => { slots.push({ day:'Monday', start:'09:00', end:'11:00' }); document.getElementById('ea-slots').innerHTML = renderSlotRows(); };
+      window.removeLang = (i) => { languages.splice(i, 1); document.getElementById('ea-lang-tags').innerHTML = renderLangTags(); };
+      window.addLang    = ()  => {
+        const inp = document.getElementById('ea-lang-input');
+        const v = inp.value.trim();
+        if (v && !languages.includes(v)) { languages.push(v); document.getElementById('ea-lang-tags').innerHTML = renderLangTags(); }
+        inp.value = '';
+      };
+
+      view.outerHTML = `
+        <div class="edit-form" id="ef-mentee-avail">
+          <div class="ef-grid">
+            <div class="ef-field">
+              <label class="ef-label">Session Format</label>
+              <select class="ef-select" id="ea-format">
+                <option value="">— Select —</option>
+                ${['Video call','Audio only','Text / async'].map(o=>`<option value="${o}" ${p.sessionFormat===o?'selected':''}>${o}</option>`).join('')}
+              </select>
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Session Length (min)</label>
+              <input class="ef-input" id="ea-sessionLen" type="number" min="15" step="15" value="${p.sessionLength || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Required Hours / Week</label>
+              <input class="ef-input" id="ea-reqHours" type="number" min="1" max="40" value="${p.requiredHours || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Timezone</label>
+              <input class="ef-input" id="ea-timezone" type="text" value="${p.timezone || ''}" placeholder="e.g. Asia/Kolkata" />
+            </div>
+          </div>
+          <div class="ef-field full" style="margin-top:4px;">
+            <label class="ef-label" style="margin-bottom:8px;">Available Slots</label>
+            <div class="ef-slot-list" id="ea-slots">${renderSlotRows()}</div>
+            <button class="ef-add-btn" style="align-self:flex-start;" onclick="addSlot()">+ Add slot</button>
+          </div>
+          <div class="ef-field full">
+            <label class="ef-label">Preferred Languages</label>
+            <div class="ef-tag-row" id="ea-lang-tags">${renderLangTags()}</div>
+            <div class="ef-add-row">
+              <input class="ef-input" id="ea-lang-input" type="text" placeholder="Language" />
+              <button class="ef-add-btn" onclick="addLang()">+ Add</button>
+            </div>
+          </div>
+          <div class="ef-actions">
+            <button class="ef-save-btn" onclick="saveMenteeAvail()">Save changes</button>
+            <button class="ef-cancel-btn" onclick="render(currentUser,currentProfile)">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function saveMenteeAvail() {
+      await saveProfile({
+        sessionFormat:  document.getElementById('ea-format').value,
+        sessionLength:  parseInt(document.getElementById('ea-sessionLen').value) || undefined,
+        requiredHours:  parseInt(document.getElementById('ea-reqHours').value) || undefined,
+        timezone:       document.getElementById('ea-timezone').value.trim(),
+        slots:          window._slotsRef,
+        languages:      window._languagesRef,
+      });
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       MENTOR RENDER + EDIT
+    ══════════════════════════════════════════════════════════ */
     function renderMentor(p) {
       if (!p) return '<p style="color:var(--muted);padding:16px;">No profile data found.</p>';
 
@@ -336,16 +734,14 @@
       const languages = p.languages || [];
 
       const skillRows = skills.length ? `
-        <div class="skill-list">
-          ${skills.map(s => {
-            const pct = Math.round(((s.proficiency || 3) / 5) * 100);
-            return `<div class="skill-row">
-              <span class="skill-name">${s.name}</span>
-              <div class="skill-bar-track"><div class="skill-bar-fill" style="width:${pct}%;"></div></div>
-              <span class="skill-meta">Level ${s.proficiency || 3}/5${s.years ? ' · ' + s.years + ' yrs' : ''}</span>
-            </div>`;
-          }).join('')}
-        </div>` : '<span style="color:var(--muted);font-size:13px;">No skills added</span>';
+        <div class="skill-list">${skills.map(s => {
+          const pct = Math.round(((s.proficiency || 3) / 5) * 100);
+          return `<div class="skill-row">
+            <span class="skill-name">${s.name}</span>
+            <div class="skill-bar-track"><div class="skill-bar-fill" style="width:${pct}%;"></div></div>
+            <span class="skill-meta">Level ${s.proficiency || 3}/5${s.years ? ' · ' + s.years + ' yrs' : ''}</span>
+          </div>`;
+        }).join('')}</div>` : '<span style="color:var(--muted);font-size:13px;">No skills added</span>';
 
       const slotChips = slots.length
         ? slots.map(s => `<span class="slot-chip">${s.day} ${s.start}–${s.end}</span>`).join('')
@@ -356,44 +752,402 @@
         : '<span style="color:var(--muted);font-size:13px;">Not specified</span>';
 
       return `
-        <div class="section">
-          <div class="section-title">Professional Details</div>
+        <div class="section" id="section-mentor-pro">
+          <div class="section-header">
+            <div class="section-title">Professional Details</div>
+            <button class="edit-btn" onclick="editMentorPro()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          </div>
           <div class="field-grid">
             <div class="field"><span class="field-label">Job Title</span><span class="field-value${emptyClass(p.jobTitle)}">${val(p.jobTitle)}</span></div>
             <div class="field"><span class="field-label">Organisation</span><span class="field-value${emptyClass(p.organisation)}">${val(p.organisation)}</span></div>
             <div class="field"><span class="field-label">Years of Experience</span><span class="field-value${emptyClass(p.yearsExperience)}">${val(p.yearsExperience)}</span></div>
             <div class="field"><span class="field-label">Domain</span><span class="field-value${emptyClass(p.domain)}">${val(p.domain)}</span></div>
             <div class="field full"><span class="field-label">Bio</span><span class="field-value${emptyClass(p.bio)}">${val(p.bio)}</span></div>
-            ${p.linkedinUrl ? `<div class="field full"><span class="field-label">LinkedIn</span><a href="${p.linkedinUrl}" target="_blank" style="font-size:14px;color:var(--accent);">${p.linkedinUrl}</a></div>` : ''}
+            ${p.linkedinUrl ? `<div class="field full"><span class="field-label">LinkedIn</span><a href="${p.linkedinUrl}" target="_blank" style="font-size:14px;color:var(--accent);">${p.linkedinUrl}</a></div>` : '<div class="field full"><span class="field-label">LinkedIn</span><span class="field-value empty">Not provided</span></div>'}
           </div>
         </div>
 
-        <div class="section">
-          <div class="section-title">Skills & Expertise</div>
+        <div class="section" id="section-mentor-skills">
+          <div class="section-header">
+            <div class="section-title">Skills &amp; Expertise</div>
+            <button class="edit-btn" onclick="editMentorSkills()">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          </div>
           <div class="field-grid">
             <div class="field full" style="margin-bottom:16px;">${skillRows}</div>
             <div class="field full"><span class="field-label">Expertise Description</span><span class="field-value${emptyClass(p.expertiseDescription)}">${val(p.expertiseDescription)}</span></div>
           </div>
         </div>
 
-        <div class="section">
-          <div class="section-title">Availability & Preferences</div>
-          <div class="field-grid">
-            <div class="field"><span class="field-label">Max Mentees</span><span class="field-value">${p.maxMentees || '—'}</span></div>
-            <div class="field"><span class="field-label">Session Length</span><span class="field-value">${p.sessionLength ? p.sessionLength + ' min' : '—'}</span></div>
-            <div class="field"><span class="field-label">Hours / Week</span><span class="field-value${emptyClass(p.totalHours)}">${val(p.totalHours)}</span></div>
-            <div class="field"><span class="field-label">Timezone</span><span class="field-value${emptyClass(p.timezone)}">${val(p.timezone)}</span></div>
-            <div class="field full">
-              <span class="field-label">Available Slots</span>
-              <div class="slots-grid" style="margin-top:8px;">${slotChips}</div>
+        ${renderVerificationSection(p)}
+      `;
+    }
+
+    /* ── Verification section ─────────────────────────────── */
+    function renderVerificationSection(p) {
+      const status = p.verificationStatus || 'unverified';
+      const badgeMap = {
+        unverified: { label: 'Not Verified', icon: '○' },
+        pending:    { label: 'Pending Review', icon: '⏳' },
+        approved:   { label: 'Verified Mentor', icon: '✓' },
+        rejected:   { label: 'Verification Rejected', icon: '✕' },
+      };
+      const badge = badgeMap[status] || badgeMap.unverified;
+
+      const resumeInfo = p.resumeFileName
+        ? `<div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:10px;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span style="font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.resumeFileName}</span>
+            <span style="font-size:11px;color:var(--muted);">Current file</span>
+           </div>`
+        : '';
+
+      const noteHtml = (status === 'rejected' && p.verificationNote)
+        ? `<div class="verify-note">Admin note: ${p.verificationNote}</div>` : '';
+
+      const infoText = {
+        unverified: 'Upload your resume (PDF or DOCX) so an admin can verify your credentials. Verified mentors appear first in search results and are eligible for payments.',
+        pending:    'Your resume is under review. You can re-upload an updated file while waiting.',
+        approved:   'You are a verified mentor. You can re-upload your resume to update your credentials at any time.',
+        rejected:   'Your verification was rejected. Upload a new or updated resume and resubmit.',
+      }[status];
+
+      const btnLabel = status === 'unverified' ? 'Upload & Submit for Verification' : 'Re-upload & Resubmit';
+
+      return `
+        <div class="section" id="section-mentor-verify">
+          <div class="section-header">
+            <div class="section-title">Verification</div>
+            <span class="verify-badge ${status}">${badge.icon} ${badge.label}</span>
+          </div>
+          <p class="verify-info">${infoText}</p>
+          ${noteHtml}
+          ${resumeInfo}
+          <div style="margin-top:16px;">
+            <input type="file" id="resume-file-input" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="onResumeSelected(this)" />
+            <div class="resume-upload-area" id="resume-drop-area" onclick="document.getElementById('resume-file-input').click()" style="cursor:pointer;">
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--muted);margin-bottom:6px;display:block;margin-left:auto;margin-right:auto;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-size:13px;color:var(--muted);">Click to select a PDF or DOCX file</div>
+              <div class="resume-file-name" id="resume-chosen-name" style="margin-top:6px;"></div>
             </div>
-            <div class="field full">
-              <span class="field-label">Teaching Languages</span>
-              <div class="lang-chips" style="margin-top:8px;">${langChips}</div>
-            </div>
+            <button class="upload-btn" id="resume-upload-btn" onclick="uploadResume()" disabled style="margin-top:10px;width:100%;">${btnLabel}</button>
           </div>
         </div>
       `;
+    }
+
+    /* ── Resume upload logic ─────────────────────────────── */
+    let resumeBase64 = '';
+    let resumeFileName = '';
+
+    function onResumeSelected(input) {
+      const file = input.files[0];
+      if (!file) return;
+      resumeFileName = file.name;
+      document.getElementById('resume-chosen-name').textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resumeBase64 = e.target.result;
+        document.getElementById('resume-upload-btn').disabled = false;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadResume() {
+      if (!resumeBase64 || !resumeFileName) return;
+      const btn = document.getElementById('resume-upload-btn');
+      btn.disabled = true;
+      btn.textContent = 'Uploading…';
+      try {
+        const res = await fetch('/api/auth/upload-resume', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body:    JSON.stringify({ resumeBase64, resumeFileName }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message, 'success');
+          resumeBase64 = '';
+          resumeFileName = '';
+          await load(); // refresh profile
+        } else {
+          showToast(data.message || 'Upload failed', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Upload & Submit for Verification';
+        }
+      } catch {
+        showToast('Network error. Try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Upload & Submit for Verification';
+      }
+    }
+
+    /* ── Mentor Professional Details edit ── */
+    function editMentorPro() {
+      const p   = currentProfile || {};
+      const sec = document.getElementById('section-mentor-pro');
+      sec.querySelector('.field-grid').outerHTML = `
+        <div class="edit-form">
+          <div class="ef-grid">
+            <div class="ef-field">
+              <label class="ef-label">Job Title</label>
+              <input class="ef-input" id="ep-jobTitle" type="text" value="${p.jobTitle || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Organisation</label>
+              <input class="ef-input" id="ep-org" type="text" value="${p.organisation || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Years of Experience</label>
+              <input class="ef-input" id="ep-yrsExp" type="number" min="0" max="60" value="${p.yearsExperience || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Domain</label>
+              <input class="ef-input" id="ep-domain" type="text" value="${p.domain || ''}" placeholder="e.g. Technology" />
+            </div>
+            <div class="ef-field full">
+              <label class="ef-label">Bio</label>
+              <textarea class="ef-textarea" id="ep-bio" rows="3">${p.bio || ''}</textarea>
+            </div>
+            <div class="ef-field full">
+              <label class="ef-label">LinkedIn URL</label>
+              <input class="ef-input" id="ep-linkedin" type="url" value="${p.linkedinUrl || ''}" placeholder="https://linkedin.com/in/…" />
+            </div>
+          </div>
+          <div class="ef-actions">
+            <button class="ef-save-btn" onclick="saveMentorPro()">Save changes</button>
+            <button class="ef-cancel-btn" onclick="render(currentUser,currentProfile)">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function saveMentorPro() {
+      await saveProfile({
+        jobTitle:       document.getElementById('ep-jobTitle').value.trim(),
+        organisation:   document.getElementById('ep-org').value.trim(),
+        yearsExperience:parseInt(document.getElementById('ep-yrsExp').value) || undefined,
+        domain:         document.getElementById('ep-domain').value.trim(),
+        bio:            document.getElementById('ep-bio').value.trim(),
+        linkedinUrl:    document.getElementById('ep-linkedin').value.trim(),
+      });
+    }
+
+    /* ── Mentor Skills edit ── */
+    function editMentorSkills() {
+      const p   = currentProfile || {};
+      const sec = document.getElementById('section-mentor-skills');
+      let skills = JSON.parse(JSON.stringify(p.skills || []));
+
+      function renderSkillRows() {
+        return skills.map((s, i) => `
+          <div class="ef-skill-row">
+            <input class="ef-skill-name" type="text" value="${s.name}" placeholder="Skill name" onchange="skills[${i}].name=this.value" />
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <span class="ef-skill-label">Level</span>
+              <input class="ef-skill-lvl" type="number" min="1" max="5" value="${s.proficiency || 3}" onchange="skills[${i}].proficiency=+this.value" />
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <span class="ef-skill-label">Yrs</span>
+              <input class="ef-skill-yrs" type="number" min="0" max="50" value="${s.years || ''}" placeholder="—" onchange="skills[${i}].years=+this.value||undefined" />
+            </div>
+            <button class="ef-slot-rm" onclick="removeSkill(${i})">&times;</button>
+          </div>`).join('');
+      }
+
+      window._skillsRef = skills;
+      window.removeSkill = (i) => { skills.splice(i, 1); document.getElementById('es-skill-list').innerHTML = renderSkillRows(); };
+      window.addSkill    = ()  => {
+        const inp = document.getElementById('es-skill-input');
+        const v = inp.value.trim();
+        if (v) { skills.push({ name: v, proficiency: 3 }); document.getElementById('es-skill-list').innerHTML = renderSkillRows(); }
+        inp.value = '';
+      };
+
+      sec.querySelector('.field-grid').outerHTML = `
+        <div class="edit-form">
+          <div class="ef-field full">
+            <label class="ef-label">Skills</label>
+            <div class="ef-skill-list" id="es-skill-list">${renderSkillRows()}</div>
+            <div class="ef-add-row" style="margin-top:6px;">
+              <input class="ef-input" id="es-skill-input" type="text" placeholder="Skill name" />
+              <button class="ef-add-btn" onclick="addSkill()">+ Add skill</button>
+            </div>
+          </div>
+          <div class="ef-field full">
+            <label class="ef-label">Expertise Description</label>
+            <textarea class="ef-textarea" id="es-expertDesc" rows="3">${p.expertiseDescription || ''}</textarea>
+          </div>
+          <div class="ef-actions">
+            <button class="ef-save-btn" onclick="saveMentorSkills()">Save changes</button>
+            <button class="ef-cancel-btn" onclick="render(currentUser,currentProfile)">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function saveMentorSkills() {
+      await saveProfile({
+        skills:               window._skillsRef,
+        expertiseDescription: document.getElementById('es-expertDesc').value.trim(),
+      });
+    }
+
+    /* ── Mentor Availability edit ── */
+    function editMentorAvail() {
+      const p   = currentProfile || {};
+      const sec = document.getElementById('section-mentor-avail');
+      let slots     = JSON.parse(JSON.stringify(p.slots || []));
+      let languages = [...(p.languages || [])];
+      const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+      function renderSlotRows() {
+        return slots.map((s, i) => `
+          <div class="ef-slot-row">
+            <select onchange="mrSlots[${i}].day=this.value">${DAYS.map(d=>`<option value="${d}" ${s.day===d?'selected':''}>${d}</option>`).join('')}</select>
+            <input type="time" value="${s.start}" onchange="mrSlots[${i}].start=this.value" />
+            <span style="color:var(--muted);font-size:12px;">to</span>
+            <input type="time" value="${s.end}" onchange="mrSlots[${i}].end=this.value" />
+            <button class="ef-slot-rm" onclick="removeMrSlot(${i})">&times;</button>
+          </div>`).join('');
+      }
+      function renderLangTags() {
+        return languages.map((l, i) => `
+          <span class="ef-tag">${l}<button class="ef-tag-x" onclick="removeMrLang(${i})">&times;</button></span>`).join('');
+      }
+
+      window.mrSlots      = slots;
+      window.mrLanguages  = languages;
+      window.removeMrSlot = (i) => { slots.splice(i, 1); document.getElementById('mr-slots').innerHTML = renderSlotRows(); };
+      window.addMrSlot    = ()  => { slots.push({ day:'Monday', start:'09:00', end:'11:00' }); document.getElementById('mr-slots').innerHTML = renderSlotRows(); };
+      window.removeMrLang = (i) => { languages.splice(i, 1); document.getElementById('mr-lang-tags').innerHTML = renderLangTags(); };
+      window.addMrLang    = ()  => {
+        const inp = document.getElementById('mr-lang-input');
+        const v = inp.value.trim();
+        if (v && !languages.includes(v)) { languages.push(v); document.getElementById('mr-lang-tags').innerHTML = renderLangTags(); }
+        inp.value = '';
+      };
+
+      sec.querySelector('.field-grid').outerHTML = `
+        <div class="edit-form">
+          <div class="ef-grid">
+            <div class="ef-field">
+              <label class="ef-label">Max Mentees</label>
+              <input class="ef-input" id="mr-maxMentees" type="number" min="1" max="20" value="${p.maxMentees || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Session Length (min)</label>
+              <input class="ef-input" id="mr-sessionLen" type="number" min="15" step="15" value="${p.sessionLength || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Hours / Week</label>
+              <input class="ef-input" id="mr-totalHours" type="number" min="1" max="40" value="${p.totalHours || ''}" />
+            </div>
+            <div class="ef-field">
+              <label class="ef-label">Timezone</label>
+              <input class="ef-input" id="mr-timezone" type="text" value="${p.timezone || ''}" placeholder="e.g. Asia/Kolkata" />
+            </div>
+          </div>
+          <div class="ef-field full" style="margin-top:4px;">
+            <label class="ef-label" style="margin-bottom:8px;">Available Slots</label>
+            <div class="ef-slot-list" id="mr-slots">${renderSlotRows()}</div>
+            <button class="ef-add-btn" style="align-self:flex-start;margin-top:6px;" onclick="addMrSlot()">+ Add slot</button>
+          </div>
+          <div class="ef-field full">
+            <label class="ef-label">Teaching Languages</label>
+            <div class="ef-tag-row" id="mr-lang-tags">${renderLangTags()}</div>
+            <div class="ef-add-row">
+              <input class="ef-input" id="mr-lang-input" type="text" placeholder="Language" />
+              <button class="ef-add-btn" onclick="addMrLang()">+ Add</button>
+            </div>
+          </div>
+          <div class="ef-actions">
+            <button class="ef-save-btn" onclick="saveMentorAvail()">Save changes</button>
+            <button class="ef-cancel-btn" onclick="render(currentUser,currentProfile)">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function saveMentorAvail() {
+      await saveProfile({
+        maxMentees:   parseInt(document.getElementById('mr-maxMentees').value) || undefined,
+        sessionLength:parseInt(document.getElementById('mr-sessionLen').value) || undefined,
+        totalHours:   parseInt(document.getElementById('mr-totalHours').value) || undefined,
+        timezone:     document.getElementById('mr-timezone').value.trim(),
+        slots:        window.mrSlots,
+        languages:    window.mrLanguages,
+      });
+    }
+
+    async function loadMentorReviews() {
+      const container = document.getElementById('reviews-body');
+      if (!container) return;
+      try {
+        const res  = await fetch('/api/connect/mentor-reviews', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) { container.innerHTML = '<div class="no-reviews">Could not load reviews.</div>'; return; }
+
+        const { reviews, avg, count } = data;
+
+        function starsHtml(rating, cls = 'review-stars') {
+          return `<div class="${cls}">${[1,2,3,4,5].map(i =>
+            `<span class="${i <= rating ? 'star-filled' : 'star-empty'}">★</span>`
+          ).join('')}</div>`;
+        }
+
+        if (!count) {
+          container.innerHTML = '<div class="no-reviews">No reviews yet. Reviews appear here after mentees complete a session with you.</div>';
+          return;
+        }
+
+        const GRADIENTS = [
+          'linear-gradient(135deg,#5e6ad2,#4a54b8)',
+          'linear-gradient(135deg,#c8a84b,#a8882b)',
+          'linear-gradient(135deg,#34d399,#059669)',
+          'linear-gradient(135deg,#fb923c,#ea580c)',
+          'linear-gradient(135deg,#f472b6,#db2777)',
+        ];
+
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        container.innerHTML = `
+          <div class="reviews-summary">
+            <div class="reviews-avg">${avg.toFixed(1)}</div>
+            <div>
+              ${starsHtml(Math.round(avg), 'reviews-stars')}
+              <div class="reviews-count">${count} review${count !== 1 ? 's' : ''} from mentees</div>
+            </div>
+          </div>
+          ${reviews.map((r, i) => {
+            const name = r.from?.fullName || 'Mentee';
+            const init = name.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+            const grad = GRADIENTS[i % GRADIENTS.length];
+            const d    = new Date(r.createdAt);
+            const date = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+            return `
+              <div class="review-card">
+                <div class="review-header">
+                  <div class="review-avatar" style="background:${grad};">${init}</div>
+                  <div class="review-name">${name}</div>
+                  <div class="review-date">${date}</div>
+                </div>
+                ${starsHtml(r.rating)}
+                ${r.comment ? `<div class="review-comment">"${r.comment}"</div>` : ''}
+              </div>`;
+          }).join('')}
+        `;
+      } catch {
+        const container2 = document.getElementById('reviews-body');
+        if (container2) container2.innerHTML = '<div class="no-reviews">Could not load reviews.</div>';
+      }
     }
 
     load();

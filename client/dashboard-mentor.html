@@ -348,6 +348,68 @@
     .activity-text { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
     .activity-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
+    /* ─── Session join banner (peer entered session room) ───── */
+    .session-join-banner {
+      display: none;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(135deg, rgba(74,222,128,0.12), rgba(74,222,128,0.04));
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      animation: fadeInDown 0.35s ease;
+    }
+    .session-join-banner.show { display: flex; }
+    @keyframes fadeInDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .sjb-pulse { width: 10px; height: 10px; border-radius: 50%; background: #4ade80; flex-shrink: 0; animation: blink-sm 1s ease-in-out infinite; }
+    @keyframes blink-sm { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+    .sjb-text { flex: 1; font-size: 14px; color: rgba(255,255,255,0.9); line-height: 1.5; }
+    .sjb-text strong { color: #4ade80; }
+    .sjb-join-btn { background: #4ade80; color: var(--black); font-size: 13px; font-weight: 700; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; text-decoration: none; white-space: nowrap; transition: background 0.15s; }
+    .sjb-join-btn:hover { background: #22c55e; }
+    .sjb-dismiss { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 18px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; transition: color 0.2s; }
+    .sjb-dismiss:hover { color: var(--white); }
+    /* Live state for connection card join button */
+    .btn-join-session.live { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.4); color: #4ade80; }
+
+    /* ─── Verification result banner (admin decision) ───────── */
+    .verif-result-banner {
+      display: none; align-items: flex-start; gap: 14px;
+      border-radius: var(--radius); padding: 16px 18px;
+      animation: fadeInDown 0.35s ease;
+    }
+    .verif-result-banner.show { display: flex; }
+    .verif-result-banner.approved {
+      background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3);
+    }
+    .verif-result-banner.rejected {
+      background: rgba(224,92,92,0.1); border: 1px solid rgba(224,92,92,0.3);
+    }
+    .vrb-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .vrb-body { flex: 1; font-size: 14px; line-height: 1.6; }
+    .vrb-body strong { display: block; font-size: 15px; margin-bottom: 3px; }
+    .vrb-body.approved strong { color: #4ade80; }
+    .vrb-body.rejected strong { color: #e05c5c; }
+    .vrb-note { margin-top: 6px; font-size: 13px; color: rgba(255,255,255,0.6); font-style: italic; }
+    .vrb-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 2px 6px; border-radius: 4px; transition: color 0.2s; flex-shrink: 0; }
+    .vrb-dismiss:hover { color: var(--white); }
+
+    /* ─── Verification notice banner ────────────────────────── */
+    .verify-notice {
+      display: none;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(135deg, rgba(200,168,75,0.12), rgba(200,168,75,0.04));
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+    }
+    .verify-notice.show { display: flex; }
+    .verify-notice-text { flex: 1; font-size: 14px; color: rgba(255,255,255,0.85); line-height: 1.55; }
+    .verify-notice-text a { color: var(--gold); font-weight: 600; text-decoration: underline; }
+    .verify-notice-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; transition: color 0.2s; flex-shrink: 0; }
+    .verify-notice-dismiss:hover { color: var(--white); }
+
     /* ─── Profile completion card ────────────────────────────── */
     .profile-card {
       background: linear-gradient(135deg, rgba(200,168,75,0.12), rgba(200,168,75,0.04));
@@ -495,10 +557,6 @@
         <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
         My Profile
       </a>
-      <a class="nav-item" href="profile.html">
-        <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>
-        Availability
-      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -523,15 +581,40 @@
       <div class="topbar-title">Good morning, <span id="topbar-name">Mentor</span> 👋</div>
       <div class="topbar-actions">
         <span class="badge-gold">Mentor</span>
-        <div class="btn-icon" title="Notifications">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span class="notif-dot"></span>
-        </div>
       </div>
     </header>
 
     <!-- Page content -->
     <div class="page-body">
+
+      <!-- Session peer-joined banner (shown when a mentee enters session.html) -->
+      <div class="session-join-banner" id="session-join-banner">
+        <div class="sjb-pulse"></div>
+        <div class="sjb-text" id="sjb-text">Your mentee has joined the session!</div>
+        <a class="sjb-join-btn" id="sjb-join-btn" href="#">Join Now →</a>
+        <button class="sjb-dismiss" id="sjb-dismiss" onclick="dismissSessionBanner()">✕</button>
+      </div>
+
+      <!-- Verification result banner (shown after admin decision) -->
+      <div class="verif-result-banner" id="verif-result-banner">
+        <div class="vrb-icon" id="vrb-icon">✓</div>
+        <div class="vrb-body" id="vrb-body">
+          <strong id="vrb-title"></strong>
+          <span id="vrb-message"></span>
+          <div class="vrb-note" id="vrb-note" style="display:none;"></div>
+        </div>
+        <button class="vrb-dismiss" onclick="document.getElementById('verif-result-banner').classList.remove('show')">✕</button>
+      </div>
+
+      <!-- Verification earnings notice (shown only if not verified) -->
+      <div class="verify-notice" id="verify-notice">
+        <svg width="20" height="20" fill="none" stroke="var(--gold)" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="verify-notice-text">
+          <strong style="color:var(--gold);">Earn from sessions — get verified first.</strong><br>
+          To receive payments for your sessions, your account must be verified by an admin. <a href="profile.html">Upload your resume in your Profile</a> to submit for verification.
+        </div>
+        <button class="verify-notice-dismiss" onclick="document.getElementById('verify-notice').style.display='none'" title="Dismiss">✕</button>
+      </div>
 
       <!-- Stats -->
       <div class="stats-row">
@@ -601,14 +684,13 @@
 
           <!-- Profile completion -->
           <div class="profile-card">
-            <div class="pct">75%</div>
-            <p>Profile completeness — add availability slots to improve match quality.</p>
-            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:75%;"></div></div>
+            <div class="pct">100%</div>
+            <p>Profile complete — you're ready to mentor!</p>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%;"></div></div>
             <div class="profile-items">
               <div class="profile-item"><span class="check">✓</span> Basic info</div>
               <div class="profile-item"><span class="check">✓</span> Professional background</div>
               <div class="profile-item"><span class="check">✓</span> Skills &amp; expertise</div>
-              <div class="profile-item"><span class="cross">○</span> Availability slots</div>
             </div>
           </div>
 
@@ -716,6 +798,8 @@
     const role  = localStorage.getItem('fa_role');
     if (!token) {
       window.location.href = '/login.html';
+    } else if (role === 'admin') {
+      window.location.href = '/admin.html';
     } else if (role && role !== 'mentor') {
       window.location.href = '/dashboard-mentee.html';
     }
@@ -726,6 +810,10 @@
     document.getElementById('topbar-name').textContent    = storedName.split(' ')[0];
     document.getElementById('sidebar-name').textContent   = storedName;
     document.getElementById('sidebar-avatar').textContent = initials;
+
+    /* ── Session peer presence map ─────────────────────── */
+    // requestId → { userName, userRole } — populated by socket events
+    const sessionPeerMap = {};
 
     /* ── Gradient colours for avatars ───────────────────── */
     const GRADIENTS = [
@@ -771,16 +859,19 @@
       container.innerHTML = connections.map((c, i) => {
         const av   = c.menteeName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
         const grad = GRADIENTS[i % GRADIENTS.length];
+        const isLive = sessionPeerMap[c.requestId];
+        const btnClass = isLive ? 'btn-join-session live' : 'btn-join-session';
+        const btnLabel = isLive
+          ? `<div class="live-dot-sm" style="background:#4ade80;"></div>${sessionPeerMap[c.requestId].userName} is waiting — Join!`
+          : `<div class="live-dot-sm"></div>Join Session`;
         return `
-          <div class="connection-item">
+          <div class="connection-item" data-request-id="${c.requestId}">
             <div class="conn-avatar" style="background:${grad};">${av}</div>
             <div class="conn-details">
               <div class="conn-name">${c.menteeName}</div>
               <div class="conn-doubt">${c.doubt}</div>
             </div>
-            <a class="btn-join-session" href="session.html?requestId=${c.requestId}">
-              <div class="live-dot-sm"></div>Join Session
-            </a>
+            <a class="${btnClass}" href="session.html?requestId=${c.requestId}">${btnLabel}</a>
           </div>`;
       }).join('');
     }
@@ -819,12 +910,16 @@
       container.innerHTML = requests.map((r, i) => {
         const av = r.menteeName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
         const grad = GRADIENTS[i % GRADIENTS.length];
+        const langChips = (r.languages || []).map(l =>
+          `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;">${l}</span>`
+        ).join('');
         return `
           <div class="request-item" data-request-id="${r.requestId}">
             <div class="req-avatar" style="background:${grad};">${av}</div>
             <div class="req-details">
               <div class="req-name">${r.menteeName}</div>
               <div class="req-goal">${r.doubt}</div>
+              ${langChips ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${langChips}</div>` : ''}
             </div>
             <div class="req-meta">
               <div class="req-time">${timeAgo(r.sentAt)}</div>
@@ -1032,6 +1127,49 @@
       }, 5000);
     }
 
+    /* ── Rich "new request" notification popup ───────────── */
+    function showRequestToast(data) {
+      if (!data) return;
+      const langs = (data.languages || []);
+      const langHtml = langs.length
+        ? langs.map(l => `<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:rgba(200,168,75,0.15);border:1px solid rgba(200,168,75,0.35);color:#c8a84b;">${l}</span>`).join('')
+        : '<span style="font-size:11px;color:rgba(255,255,255,0.35);">Not specified</span>';
+
+      const t = document.createElement('div');
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '28px', right: '28px',
+        background: '#1a1a17', border: '1px solid rgba(255,255,255,0.1)',
+        borderLeft: '3px solid var(--gold)',
+        color: 'var(--white)', fontSize: '13px',
+        padding: '16px 18px', borderRadius: '10px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        zIndex: '9999', opacity: '0',
+        transition: 'opacity 0.3s, transform 0.3s',
+        transform: 'translateY(10px)',
+        display: 'flex', flexDirection: 'column', gap: '10px',
+        maxWidth: '300px', minWidth: '260px',
+      });
+      t.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.5px;">New Request</span>
+          <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;line-height:1;padding:0;">&times;</button>
+        </div>
+        <div style="font-weight:600;font-size:14px;">${data.menteeName || 'A mentee'}</div>
+        <div style="background:rgba(255,255,255,0.04);border-left:2px solid rgba(255,255,255,0.15);padding:8px 10px;border-radius:4px;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5;font-style:italic;">"${data.doubt || 'No doubt specified'}"</div>
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.35);margin-bottom:5px;">Speaks</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${langHtml}</div>
+        </div>
+      `;
+      document.body.appendChild(t);
+      requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; });
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(10px)';
+        setTimeout(() => t.remove(), 300);
+      }, 8000);
+    }
+
     /* ── Sign out ───────────────────────────────────────── */
     function signOut() {
       localStorage.removeItem('fa_token');
@@ -1136,10 +1274,57 @@
         </div>`).join('');
     }
 
+    /* ── Session join banner helpers ────────────────────── */
+    function showSessionBanner(requestId, userName) {
+      document.getElementById('sjb-text').innerHTML =
+        `<strong>${userName}</strong> has joined the session and is waiting for you!`;
+      document.getElementById('sjb-join-btn').href = `session.html?requestId=${requestId}`;
+      document.getElementById('session-join-banner').classList.add('show');
+    }
+    function hideSessionBanner() {
+      document.getElementById('session-join-banner').classList.remove('show');
+    }
+    function dismissSessionBanner() {
+      hideSessionBanner();
+    }
+
+    /* ── Update a single connection card's join button ── */
+    function updateConnCard(requestId, isLive, userName) {
+      const card = document.querySelector(`.connection-item[data-request-id="${requestId}"]`);
+      if (!card) return;
+      const btn = card.querySelector('.btn-join-session');
+      if (!btn) return;
+      if (isLive) {
+        btn.innerHTML = `<div class="live-dot-sm" style="background:#4ade80;"></div>${userName} is waiting — Join!`;
+        btn.classList.add('live');
+      } else {
+        btn.innerHTML = `<div class="live-dot-sm"></div>Join Session`;
+        btn.classList.remove('live');
+      }
+    }
+
     /* ── Socket.io — real-time events ───────────────────── */
     (function initSocket() {
       if (typeof io === 'undefined') return;
       const socket = io({ auth: { token } });
+
+      // Mentee entered session.html for one of our active connections
+      socket.on('session_peer_joined', (data) => {
+        sessionPeerMap[data.requestId] = data;
+        updateConnCard(data.requestId, true, data.userName);
+        showSessionBanner(data.requestId, data.userName);
+      });
+
+      // Mentee left session.html
+      socket.on('session_peer_left', (data) => {
+        delete sessionPeerMap[data.requestId];
+        updateConnCard(data.requestId, false);
+        // Hide banner only if it was showing for this session
+        const banner = document.getElementById('session-join-banner');
+        const link   = document.getElementById('sjb-join-btn');
+        if (link.href.includes(data.requestId)) hideSessionBanner();
+      });
+
       socket.on('session_confirmed', (data) => {
         showToastWithLink(
           `${data.confirmerName} confirmed your session!`,
@@ -1151,9 +1336,69 @@
         loadConnections();
         loadSessions();
       });
-      socket.on('new_request', () => {
+      socket.on('new_request', (data) => {
         loadRequests();
+        showRequestToast(data);
       });
+
+      // Admin verified or rejected this mentor's resume
+      socket.on('verification_update', (data) => {
+        const isApproved = data.status === 'approved';
+        // Hide the "upload resume to earn" notice if now approved
+        if (isApproved) {
+          document.getElementById('verify-notice').classList.remove('show');
+        }
+        // Show a prominent banner
+        showVerificationResult(isApproved, data.note);
+      });
+    })();
+
+    /* ── Show admin verification decision banner ────────── */
+    function showVerificationResult(isApproved, note) {
+      const banner = document.getElementById('verif-result-banner');
+      const body   = document.getElementById('vrb-body');
+      const icon   = document.getElementById('vrb-icon');
+      const title  = document.getElementById('vrb-title');
+      const msg    = document.getElementById('vrb-message');
+      const noteEl = document.getElementById('vrb-note');
+
+      banner.classList.remove('approved', 'rejected');
+      body.classList.remove('approved', 'rejected');
+
+      if (isApproved) {
+        banner.classList.add('approved');
+        body.classList.add('approved');
+        icon.textContent  = '✓';
+        title.textContent = 'Your profile has been verified!';
+        msg.textContent   = 'You are now a verified mentor and can earn from sessions.';
+      } else {
+        banner.classList.add('rejected');
+        body.classList.add('rejected');
+        icon.textContent  = '✕';
+        title.textContent = 'Verification rejected';
+        msg.textContent   = 'Your resume was reviewed but your verification was not approved.';
+      }
+
+      if (note) {
+        noteEl.textContent     = `Admin note: "${note}"`;
+        noteEl.style.display   = 'block';
+      } else {
+        noteEl.style.display   = 'none';
+      }
+
+      banner.classList.add('show');
+      banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    /* ── Check verification status → show earnings notice ── */
+    (async function checkVerification() {
+      try {
+        const res  = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+        if (res.ok && !data.profile?.isVerified) {
+          document.getElementById('verify-notice').classList.add('show');
+        }
+      } catch (_) {}
     })();
 
     loadRequests();
