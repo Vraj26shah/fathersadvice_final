@@ -60,6 +60,32 @@ app.get('/api/config', (_req, res) => {
   res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || '' });
 });
 
+// ── Temporary Google token inspector (no verification, safe to call) ──
+app.post('/api/debug/token', (req, res) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) return res.status(400).json({ message: 'idToken required' });
+    const parts = idToken.split('.');
+    if (parts.length !== 3) return res.status(400).json({ message: 'Not a JWT (wrong segments)' });
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'));
+    const now = Math.floor(Date.now() / 1000);
+    const serverClientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+    res.json({
+      iss:        payload.iss,
+      aud:        payload.aud,
+      email:      payload.email,
+      exp:        payload.exp,
+      iat:        payload.iat,
+      serverNow:  now,
+      expired:    payload.exp < now,
+      audMatch:   payload.aud === serverClientId,
+      serverCid:  serverClientId,
+    });
+  } catch (e) {
+    res.status(400).json({ message: 'Could not decode token: ' + e.message });
+  }
+});
+
 // ── Fallback ────────────────────────────────────────────────────
 app.get('*', (_req, res) => {
   res.sendFile(path.join(CLIENT_DIR, 'index.html'));
