@@ -8,13 +8,16 @@ const onlineUsers = new Map();
 let _io = null;
 
 export function setupSocket(httpServer) {
+  const allowedOrigins = [
+    'http://localhost:5000',
+    'http://localhost:5173',
+    'http://localhost:4173',
+    process.env.APP_URL,
+  ].filter(Boolean);
+
   _io = new Server(httpServer, {
     cors: {
-      origin: [
-        'http://localhost:5000',
-        'http://localhost:5173',
-        'http://localhost:4173',
-      ],
+      origin: allowedOrigins,
       credentials: true,
     },
   });
@@ -144,8 +147,88 @@ export function setupSocket(httpServer) {
       socket.leave(`webrtc-${connectionId}`);
     });
 
-    socket.on('disconnect', () => {
+    // ── Session presence (join / leave) ──────────────────
+    // When a user opens session.html, they announce their presence.
+    // We look up the connection to find the other participant and emit
+    // directly to their socket so the dashboard receives it in real-time.
+    socket.on('announce_session_presence', async ({ requestId }) => {
+      if (!requestId) return;
+      // Track which sessions this socket is present in (for disconnect cleanup)
+      if (!socket._sessionRooms) socket._sessionRooms = new Set();
+      socket._sessionRooms.add(requestId);
+
+      try {
+        const conn = await ConnectionRequest.findById(requestId)
+          .select('mentor mentee')
+          .lean();
+        if (!conn) return;
+
+        const otherUserId = conn.mentor.toString() === uid
+          ? conn.mentee.toString()
+          : conn.mentor.toString();
+
+        const otherSid = onlineUsers.get(otherUserId);
+        if (otherSid) {
+          _io.to(otherSid).emit('session_peer_joined', {
+            requestId,
+            userName: socket.userName,
+            userRole: socket.userRole,
+          });
+        }
+      } catch (err) {
+        console.error('announce_session_presence error:', err.message);
+      }
+    });
+
+    socket.on('leave_session_presence', async ({ requestId }) => {
+      if (!requestId) return;
+      socket._sessionRooms?.delete(requestId);
+
+      try {
+        const conn = await ConnectionRequest.findById(requestId)
+          .select('mentor mentee')
+          .lean();
+        if (!conn) return;
+
+        const otherUserId = conn.mentor.toString() === uid
+          ? conn.mentee.toString()
+          : conn.mentor.toString();
+
+        const otherSid = onlineUsers.get(otherUserId);
+        if (otherSid) {
+          _io.to(otherSid).emit('session_peer_left', {
+            requestId,
+            userName: socket.userName,
+          });
+        }
+      } catch (err) {
+        console.error('leave_session_presence error:', err.message);
+      }
+    });
+
+    socket.on('disconnect', async () => {
       onlineUsers.delete(uid);
+      // Notify the other participant for every active session presence
+      if (socket._sessionRooms && socket._sessionRooms.size > 0) {
+        for (const requestId of socket._sessionRooms) {
+          try {
+            const conn = await ConnectionRequest.findById(requestId)
+              .select('mentor mentee')
+              .lean();
+            if (!conn) continue;
+            const otherUserId = conn.mentor.toString() === uid
+              ? conn.mentee.toString()
+              : conn.mentor.toString();
+            const otherSid = onlineUsers.get(otherUserId);
+            if (otherSid) {
+              _io.to(otherSid).emit('session_peer_left', {
+                requestId,
+                userName: socket.userName,
+              });
+            }
+          } catch (_) {}
+        }
+      }
       console.log(`  ↓ Socket: ${socket.userName || uid} offline`);
     });
   });

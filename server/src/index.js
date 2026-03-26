@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.js';
 import connectRoutes from './routes/connect.js';
 import sessionsRoutes from './routes/sessions.js';
 import chatRoutes    from './routes/chat.js';
+import adminRoutes   from './routes/admin.js';
 
 dotenv.config();
 
@@ -27,15 +28,18 @@ const server = http.createServer(app);
 setupSocket(server);
 
 // ── Middleware ──────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5000',
+  'http://localhost:5173',
+  'http://localhost:4173',
+  process.env.APP_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    'http://localhost:5000',
-    'http://localhost:5173',
-    'http://localhost:4173',
-  ],
+  origin: allowedOrigins,
   credentials: true,
 }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '20mb' }));
 
 // ── Static files ────────────────────────────────────────────────
 app.use(express.static(CLIENT_DIR));
@@ -44,10 +48,16 @@ app.use(express.static(CLIENT_DIR));
 app.use('/api/auth',     authRoutes);
 app.use('/api/connect',  connectRoutes);
 app.use('/api/sessions', sessionsRoutes);
-app.use('/api/chat',    chatRoutes);
+app.use('/api/chat',     chatRoutes);
+app.use('/api/admin',    adminRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'OK', message: "Father's Advice API is running" });
+});
+
+// Expose public config to the frontend (no secrets)
+app.get('/api/config', (_req, res) => {
+  res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || '' });
 });
 
 // ── Fallback ────────────────────────────────────────────────────

@@ -29,4 +29,12 @@ const requireRole = (role) => (req, res, next) => {
   next();
 };
 
-export { protect, requireRole };
+// Allow only admins
+const requireAdmin = (req, res, next) => {
+  if (!req.user?.isAdmin) {
+    return res.status(403).json({ message: 'Admin access required.' });
+  }
+  next();
+};
+
+export { protect, requireRole, requireAdmin };

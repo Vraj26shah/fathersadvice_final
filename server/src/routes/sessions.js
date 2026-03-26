@@ -249,7 +249,7 @@ router.get('/calendar', async (req, res) => {
     const sessions = await ScheduledSession.find({
       [field]:       req.user._id,
       scheduledTime: { $gte: start, $lte: end },
-      status:        { $ne: 'cancelled' },
+      status:        { $in: ['proposed', 'confirmed'] },
     })
       .populate('mentor', 'fullName')
       .populate('mentee', 'fullName')

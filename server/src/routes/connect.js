@@ -3,6 +3,8 @@ import User from '../models/User.js';
 import MentorProfile from '../models/MentorProfile.js';
 import MenteeProfile from '../models/MenteeProfile.js';
 import ConnectionRequest from '../models/ConnectionRequest.js';
+import ScheduledSession from '../models/ScheduledSession.js';
+import Feedback from '../models/Feedback.js';
 import { protect } from '../middleware/auth.js';
 import { getIO, onlineUsers } from '../socket.js';
 import { sendMail, emailAccepted } from '../utils/email.js';
@@ -115,8 +117,8 @@ function computeAvailability(mentorProfile, menteeProfile) {
 }
 
 // W_ij = 0.5·E_ij + 0.3·A_ij + 0.2·R_ij  (R_ij = 0.7 neutral, no ratings yet)
-// MAX_W = 0.5·1 + 0.3·1 + 0.2·0.7 = 0.94 — normalise so a perfect mentor scores 100%
-const MAX_W = 0.5 + 0.3 + 0.2 * 0.7; // 0.94
+// MAX_W normalised so a perfect mentor (E=1, A=1, R=1) scores 100%
+const MAX_W = 0.5 + 0.3 + 0.2; // 1.0
 
 // L_ij — language compatibility: 1 if shared language, 0.5 if no data, 0 if no match
 function computeLanguageMatch(mentorLangs = [], menteeLangs = []) {
@@ -125,15 +127,16 @@ function computeLanguageMatch(mentorLangs = [], menteeLangs = []) {
   return mentorLangs.some(l => menteeSet.has(l.toLowerCase().trim())) ? 1 : 0;
 }
 
-function computeMatchScore(mentorProfile, menteeProfile) {
+// R defaults to 0.7 (neutral) when no feedback exists yet
+function computeMatchScore(mentorProfile, menteeProfile, R = 0.7) {
   const E = computeExpertise(mentorProfile, menteeProfile);
   const A = computeAvailability(mentorProfile, menteeProfile);
-  const R = 0.7; // neutral — no feedback data yet
   const W = 0.5 * E + 0.3 * A + 0.2 * R;
   return {
     matchScore:        Math.round((W / MAX_W) * 100),  // normalised 0–100
     expertiseScore:    Math.round(E * 100),
     availabilityScore: Math.round(A * 100),
+    ratingScore:       Math.round(R * 100),
   };
 }
 
@@ -164,9 +167,20 @@ router.get('/mentors', async (req, res) => {
     const reqDetailMap = {};
     myRequests.forEach(r => { reqDetailMap[r.mentor.toString()] = { status: r.status, requestId: r._id.toString() }; });
 
+    // Aggregate average feedback ratings for each mentor (R_ij)
+    const mentorUserIds = profiles.map(p => p.user._id);
+    const ratingAgg = await Feedback.aggregate([
+      { $match: { to: { $in: mentorUserIds }, fromRole: 'mentee' } },
+      { $group: { _id: '$to', avgRating: { $avg: '$rating' }, count: { $sum: 1 } } },
+    ]);
+    const ratingMap = {};
+    ratingAgg.forEach(r => { ratingMap[r._id.toString()] = r.avgRating / 5; }); // normalise to 0–1
+
     const mentors = profiles.map(p => {
+      // R_ij: use real avg rating if ≥1 review exists, else neutral 0.7
+      const R = ratingMap[p.user._id.toString()] ?? 0.7;
       const scores = menteeProfile
-        ? computeMatchScore(p, menteeProfile)
+        ? computeMatchScore(p, menteeProfile, R)
         : { matchScore: 0, expertiseScore: 0, availabilityScore: 50 };
       const L = computeLanguageMatch(p.languages, menteeProfile?.languages);
       // matchScore: 85% algorithm score + 15% language compatibility
@@ -190,13 +204,18 @@ router.get('/mentors', async (req, res) => {
         expertiseScore:    scores.expertiseScore,
         availabilityScore: scores.availabilityScore,
         languageMatch:     L === 1 ? 'full' : L === 0 ? 'none' : 'unknown',
+        isVerified:        p.isVerified || false,
+        verificationStatus: p.verificationStatus || 'unverified',
+        ratingScore:       scores.ratingScore ?? 70,
       };
     });
 
-    // Sort by match score descending; accepted connections always show first
+    // Sort: accepted first → verified before unverified → by match score
     mentors.sort((a, b) => {
       if (a.requestStatus === 'accepted' && b.requestStatus !== 'accepted') return -1;
       if (b.requestStatus === 'accepted' && a.requestStatus !== 'accepted') return  1;
+      if (a.isVerified && !b.isVerified) return -1;
+      if (b.isVerified && !a.isVerified) return  1;
       return b.matchScore - a.matchScore;
     });
 
@@ -312,6 +331,21 @@ router.post('/request', async (req, res) => {
       doubt:  doubt.trim(),
     });
 
+    // Notify mentor in real-time with mentee details
+    const menteeProfile = await MenteeProfile.findOne({ user: req.user._id })
+      .select('languages')
+      .lean();
+    const io = getIO();
+    const mentorIdStr = mentorId.toString();
+    if (io && onlineUsers.has(mentorIdStr)) {
+      io.to(onlineUsers.get(mentorIdStr)).emit('new_request', {
+        requestId:  request._id.toString(),
+        menteeName: req.user.fullName,
+        doubt:      doubt.trim(),
+        languages:  menteeProfile?.languages || [],
+      });
+    }
+
     res.status(201).json({ message: 'Request sent successfully.', requestId: request._id });
   } catch (err) {
     console.error('POST /request error:', err);
@@ -337,14 +371,26 @@ router.get('/requests', async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const result = requests.map(r => ({
-      requestId:  r._id,
-      menteeId:   r.mentee._id,
-      menteeName: r.mentee.fullName,
-      menteeAvatar: r.mentee.profilePicture,
-      doubt:      r.doubt,
-      sentAt:     r.createdAt,
-    }));
+    // Fetch mentee profiles for languages
+    const menteeIds = requests.map(r => r.mentee._id);
+    const menteeProfiles = await MenteeProfile.find({ user: { $in: menteeIds } })
+      .select('user languages')
+      .lean();
+    const menteeProfileMap = {};
+    menteeProfiles.forEach(p => { menteeProfileMap[p.user.toString()] = p; });
+
+    const result = requests.map(r => {
+      const mp = menteeProfileMap[r.mentee._id.toString()] || {};
+      return {
+        requestId:    r._id,
+        menteeId:     r.mentee._id,
+        menteeName:   r.mentee.fullName,
+        menteeAvatar: r.mentee.profilePicture,
+        doubt:        r.doubt,
+        languages:    mp.languages || [],
+        sentAt:       r.createdAt,
+      };
+    });
 
     res.json({ requests: result });
   } catch (err) {
@@ -383,14 +429,23 @@ router.post('/accept/:requestId', async (req, res) => {
     const menteeIdStr = request.mentee.toString();
     const menteeOnline = onlineUsers.has(menteeIdStr);
 
+    // Fetch mentor profile for enriched notification payload
+    const mentorProfile = await MentorProfile.findOne({ user: req.user._id })
+      .select('isVerified domain languages')
+      .lean();
+
     // ── Real-time: if mentee is online, push notification immediately ──
     const io = getIO();
     if (io && menteeOnline) {
       io.to(onlineUsers.get(menteeIdStr)).emit('request_accepted', {
-        mentorName: req.user.fullName,
-        requestId:  request._id.toString(),
+        mentorName:  req.user.fullName,
+        requestId:   request._id.toString(),
         roomUrl,
         sessionUrl,
+        isVerified:  mentorProfile?.isVerified  || false,
+        domain:      mentorProfile?.domain      || '',
+        languages:   mentorProfile?.languages   || [],
+        doubt:       request.doubt,
       });
     }
 
@@ -691,15 +746,19 @@ router.post('/ai-score', async (req, res) => {
         availabilityScore: Math.round(baseA * 100),
         subjectScores:     subScores,
         languageMatch:     L === 1 ? 'full' : L === 0 ? 'none' : 'unknown',
+        isVerified:        p.isVerified || false,
+        verificationStatus: p.verificationStatus || 'unverified',
         _sortW:            W,
         aiPowered:         true,
       };
     });
 
-    // Sort: accepted first, then by W_ij (which weighs both expertise + availability)
+    // Sort: accepted first → verified before unverified → by W_ij score
     mentors.sort((a, b) => {
       if (a.requestStatus === 'accepted' && b.requestStatus !== 'accepted') return -1;
       if (b.requestStatus === 'accepted' && a.requestStatus !== 'accepted') return  1;
+      if (a.isVerified && !b.isVerified) return -1;
+      if (b.isVerified && !a.isVerified) return  1;
       return b._sortW - a._sortW;
     });
 
@@ -741,6 +800,12 @@ router.get('/session/:requestId', async (req, res) => {
     const roomName  = `FathersAdvice-${req.params.requestId}`;
     const roomUrl   = `https://meet.jit.si/${roomName}`;
 
+    // Find the latest confirmed (or proposed) session for this connection
+    const latestSession = await ScheduledSession.findOne({
+      request: req.params.requestId,
+      status:  { $in: ['confirmed', 'proposed'] },
+    }).sort({ scheduledTime: -1 }).lean();
+
     res.json({
       roomUrl,
       roomName,
@@ -748,9 +813,70 @@ router.get('/session/:requestId', async (req, res) => {
       menteeName: request.mentee.fullName,
       doubt:      request.doubt,
       requestId:  request._id,
+      sessionId:  latestSession?._id || null,
     });
   } catch (err) {
     console.error('GET /session error:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// DELETE /api/connect/:requestId
+// Either party calls this after a session ends to reset the connection.
+// Deletes the ConnectionRequest + all related ScheduledSessions.
+// Feedback records are kept for history.
+// ─────────────────────────────────────────────────────────────────
+router.delete('/:requestId', async (req, res) => {
+  try {
+    const conn = await ConnectionRequest.findOne({
+      _id: req.params.requestId,
+      $or: [{ mentor: req.user._id }, { mentee: req.user._id }],
+    });
+    if (!conn) return res.status(404).json({ message: 'Connection not found.' });
+
+    const mentorId = conn.mentor.toString();
+    const menteeId = conn.mentee.toString();
+
+    await ScheduledSession.deleteMany({ request: conn._id });
+    await conn.deleteOne();
+
+    // Notify both parties so their open pages update in real-time
+    const io = getIO();
+    const payload = { mentorUserId: mentorId, menteeUserId: menteeId };
+    [mentorId, menteeId].forEach(uid => {
+      const sid = onlineUsers.get(uid);
+      if (sid) io.to(sid).emit('connection_reset', payload);
+    });
+
+    res.json({ message: 'Connection reset. Both parties can connect again.' });
+  } catch (err) {
+    console.error('DELETE /connect error:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// GET /api/connect/mentor-reviews
+// Returns feedback received by the logged-in mentor, with averages.
+// ─────────────────────────────────────────────────────────────────
+router.get('/mentor-reviews', async (req, res) => {
+  try {
+    if (req.user.role !== 'mentor') {
+      return res.status(403).json({ message: 'Only mentors can view their reviews.' });
+    }
+    const reviews = await Feedback.find({ to: req.user._id, fromRole: 'mentee' })
+      .populate('from', 'fullName profilePicture')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const avg = reviews.length
+      ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
+      : null;
+
+    res.json({ reviews, avg, count: reviews.length });
+  } catch (err) {
+    console.error('GET /mentor-reviews error:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 });

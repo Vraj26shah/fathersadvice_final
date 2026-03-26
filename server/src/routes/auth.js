@@ -1,5 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import MentorProfile from '../models/MentorProfile.js';
 import MenteeProfile from '../models/MenteeProfile.js';
@@ -7,6 +8,8 @@ import ConnectionRequest from '../models/ConnectionRequest.js';
 import Feedback from '../models/Feedback.js';
 import { protect } from '../middleware/auth.js';
 import { sendMail, emailOtpVerification } from '../utils/email.js';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // In-memory OTP store: email → { otp, expiresAt, verified }
 const otpStore = new Map();
@@ -30,6 +33,7 @@ const sendAuth = (res, statusCode, user, profileData = {}) => {
       email:    user.email,
       role:     user.role,
       profilePicture: user.profilePicture,
+      isAdmin:  user.isAdmin || false,
       ...profileData,
     },
   });
@@ -222,6 +226,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
+    // Block admin from password login
+    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase();
+    if (email.toLowerCase() === adminEmail) {
+      return res.status(403).json({ message: 'Admin account must sign in with Google.' });
+    }
+
     // Find user and verify password
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user || !(await user.comparePassword(password))) {
@@ -232,6 +242,69 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('login error:', err);
     res.status(500).json({ message: 'Server error — please try again.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// POST /api/auth/google  — verify Google id_token, log in user
+// Admin email → auto-create/find admin account, bypass signup requirement
+// Regular email → must have an existing account
+// ─────────────────────────────────────────────────────────────────
+router.post('/google', async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) return res.status(400).json({ message: 'Google token is required.' });
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const { email, name, sub: googleId, picture } = ticket.getPayload();
+    const normalizedEmail = email.toLowerCase();
+    const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase();
+
+    let user = await User.findOne({ $or: [{ googleId }, { email: normalizedEmail }] });
+
+    if (normalizedEmail === adminEmail) {
+      // Admin path — create the admin user on first login if needed
+      if (!user) {
+        user = await User.create({
+          fullName: name || 'Admin',
+          email:    normalizedEmail,
+          googleId,
+          role:     'admin',
+          isAdmin:  true,
+          profilePicture: picture || null,
+        });
+      } else {
+        // Ensure existing record has admin flags and correct role set
+        let dirty = false;
+        if (!user.isAdmin)         { user.isAdmin  = true;    dirty = true; }
+        if (user.role !== 'admin') { user.role     = 'admin'; dirty = true; }
+        if (!user.googleId)        { user.googleId = googleId; dirty = true; }
+        if (!user.profilePicture && picture) { user.profilePicture = picture; dirty = true; }
+        if (dirty) await user.save();
+      }
+      return sendAuth(res, 200, user);
+    }
+
+    // Regular user — must have signed up first
+    if (!user) {
+      return res.status(404).json({
+        message: 'No account found for this Google account. Please sign up first.',
+      });
+    }
+
+    // Attach googleId + picture on first Google login
+    let dirty = false;
+    if (!user.googleId)                      { user.googleId = googleId; dirty = true; }
+    if (!user.profilePicture && picture)     { user.profilePicture = picture; dirty = true; }
+    if (dirty) await user.save();
+
+    sendAuth(res, 200, user);
+  } catch (err) {
+    console.error('google auth error:', err.message);
+    res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
   }
 });
 
@@ -256,6 +329,7 @@ router.get('/me', protect, async (req, res) => {
         email:    user.email,
         role:     user.role,
         profilePicture: user.profilePicture,
+        isAdmin:  user.isAdmin || false,
       },
       profile,
     });
@@ -325,7 +399,7 @@ router.put('/profile', protect, async (req, res) => {
     if (req.user.role === 'mentor') {
       const allowed = ['jobTitle','organisation','yearsExperience','linkedinUrl','bio',
                        'domain','skills','expertiseDescription','slots','timezone',
-                       'maxMentees','totalHours','sessionLength','languages'];
+                       'maxMentees','totalHours','sessionLength','languages','isActive'];
       const update = {};
       allowed.forEach(k => { if (profileData[k] !== undefined) update[k] = profileData[k]; });
       await MentorProfile.findOneAndUpdate({ user: uid }, update, { new: true });
@@ -353,6 +427,38 @@ router.put('/profile', protect, async (req, res) => {
     });
   } catch (err) {
     console.error('profile update error:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// POST /api/auth/upload-resume  — mentor uploads resume (base64 PDF/DOCX)
+// ─────────────────────────────────────────────────────────────────
+router.post('/upload-resume', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'mentor') {
+      return res.status(403).json({ message: 'Only mentors can upload a resume.' });
+    }
+    const { resumeBase64, resumeFileName } = req.body;
+    if (!resumeBase64 || !resumeFileName) {
+      return res.status(400).json({ message: 'Resume file and filename are required.' });
+    }
+
+    await MentorProfile.findOneAndUpdate(
+      { user: req.user._id },
+      {
+        resumeBase64,
+        resumeFileName,
+        resumeUploadedAt:   new Date(),
+        verificationStatus: 'pending',
+        isVerified:         false,
+        verificationNote:   '',
+      }
+    );
+
+    res.json({ message: 'Resume uploaded. Your profile is now pending admin verification.' });
+  } catch (err) {
+    console.error('upload-resume error:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 });

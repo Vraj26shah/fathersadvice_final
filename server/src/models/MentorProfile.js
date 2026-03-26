@@ -52,6 +52,18 @@ const mentorProfileSchema = new mongoose.Schema(
 
     // Matching status
     isActive: { type: Boolean, default: true },
+
+    // ── Resume & Verification ──────────────────────────────────
+    resumeBase64:       { type: String, default: '' },
+    resumeFileName:     { type: String, default: '' },
+    resumeUploadedAt:   { type: Date,   default: null },
+    verificationStatus: {
+      type:    String,
+      enum:    ['unverified', 'pending', 'approved', 'rejected'],
+      default: 'unverified',
+    },
+    isVerified:         { type: Boolean, default: false },
+    verificationNote:   { type: String, default: '' },
   },
   { timestamps: true }
 );
