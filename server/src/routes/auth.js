@@ -53,11 +53,20 @@ router.post('/send-otp', async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore.set(email.toLowerCase(), { otp, expiresAt: Date.now() + 10 * 60 * 1000, verified: false });
 
+    // In dev mode, skip email entirely and return OTP in the response
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`  [DEV] OTP for ${email}: ${otp}`);
+      return res.json({ message: 'Dev mode: OTP generated.', devOtp: otp });
+    }
+
+    // Production: send email
     await sendMail({ to: email, subject: "Your Father's Advice verification code", html: emailOtpVerification({ otp }) });
     res.json({ message: 'Verification code sent to your email.' });
   } catch (err) {
     console.error('send-otp error:', err);
-    res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
+    const emailAddr = req.body?.email;
+    if (emailAddr) otpStore.delete(emailAddr.toLowerCase());
+    res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
   }
 });
 

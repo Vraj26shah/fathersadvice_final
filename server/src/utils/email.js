@@ -3,11 +3,14 @@ import nodemailer from 'nodemailer';
 // Lazily create transporter so missing config doesn't crash at startup
 function getTransporter() {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: (process.env.EMAIL_USER || '').trim(),
+      pass: (process.env.EMAIL_PASS || '').replace(/\s/g, ''), // strip spaces (Google shows them grouped)
     },
+    tls: { rejectUnauthorized: false },
   });
 }
 
@@ -15,10 +18,12 @@ function getTransporter() {
  * Send an email.  No-ops if EMAIL_USER is not configured.
  */
 export async function sendMail({ to, subject, html }) {
-  const user = process.env.EMAIL_USER;
-  if (!user || user === 'your-email@gmail.com') {
-    console.log(`  ✉  [Email not configured — skipped]  To: ${to}  |  ${subject}`);
-    return { skipped: true };
+  const user = (process.env.EMAIL_USER || '').trim();
+  const pass = (process.env.EMAIL_PASS || '').replace(/\s/g, '');
+  if (!user || !pass || user === 'your-email@gmail.com') {
+    const err = new Error('EMAIL_USER or EMAIL_PASS is not configured in environment variables.');
+    console.error('  ✉  ' + err.message);
+    throw err;
   }
   try {
     const info = await getTransporter().sendMail({
@@ -30,8 +35,11 @@ export async function sendMail({ to, subject, html }) {
     console.log(`  ✉  Email sent to ${to}: ${info.messageId}`);
     return info;
   } catch (err) {
-    console.error(`  ✉  Email failed to ${to}:`, err.message);
-    return { error: err.message };
+    console.error(`  ✉  Email failed to ${to}:`);
+    console.error(`     Code: ${err.code}`);
+    console.error(`     Message: ${err.message}`);
+    if (err.responseCode) console.error(`     SMTP Response: ${err.responseCode} ${err.response}`);
+    throw err;
   }
 }
 
