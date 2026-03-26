@@ -1530,31 +1530,48 @@
     /* ── OTP functions ─────────────────────────────────────────── */
 
     async function sendOtp() {
-      const email = val('email');
-      const overlay = document.getElementById('otp-overlay');
-      const errEl   = document.getElementById('otp-err');
-      const subEl   = document.getElementById('otp-sub');
+      const email     = val('email');
+      const overlay   = document.getElementById('otp-overlay');
+      const errEl     = document.getElementById('otp-err');
+      const subEl     = document.getElementById('otp-sub');
+      const verifyBtn = document.getElementById('otp-verify-btn');
+      const boxes     = document.querySelectorAll('.otp-box');
 
-      subEl.innerHTML = `We sent a 6-digit code to <strong>${email}</strong>`;
-      errEl.textContent = '';
-      document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('error'); });
-
-      // Show overlay immediately
+      errEl.textContent  = '';
+      errEl.style.color  = '#e05c5c';
+      boxes.forEach(b => { b.value = ''; b.classList.remove('error'); });
+      subEl.innerHTML    = `Sending code to <strong>${email}</strong>…`;
+      verifyBtn.disabled = true;
       overlay.classList.remove('hidden');
-      document.getElementById('otp-verify-btn').disabled = false;
 
       try {
         const res  = await fetch('/api/auth/send-otp', {
-          method: 'POST',
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
+          body:    JSON.stringify({ email }),
         });
         const data = await res.json();
         if (!res.ok) {
-          errEl.textContent = data.message || 'Failed to send code.';
+          errEl.textContent  = data.message || 'Failed to send code.';
+          subEl.innerHTML    = `Could not send to <strong>${email}</strong> — fix the issue and resend.`;
+          verifyBtn.disabled = false;
+          return;
+        }
+        subEl.innerHTML    = `We sent a 6-digit code to <strong>${email}</strong>`;
+        verifyBtn.disabled = false;
+        // Dev mode: auto-fill OTP boxes so you can verify without email
+        if (data.devOtp) {
+          data.devOtp.split('').forEach((d, i) => { if (boxes[i]) boxes[i].value = d; });
+          errEl.style.color  = '#4ade80';
+          errEl.textContent  = '⚡ Dev mode — OTP auto-filled, click Verify';
+          boxes[5] && boxes[5].focus();
+        } else {
+          boxes[0] && boxes[0].focus();
         }
       } catch {
-        errEl.textContent = 'Network error. Please try again.';
+        errEl.textContent  = 'Network error — is the server running?';
+        subEl.innerHTML    = `Could not reach server`;
+        verifyBtn.disabled = false;
       }
     }
 
@@ -1602,31 +1619,56 @@
       }
     }
 
-    /* OTP input auto-advance */
-    document.querySelectorAll('.otp-box').forEach((box, i, arr) => {
-      box.addEventListener('input', () => {
-        box.value = box.value.replace(/\D/g, '').slice(-1);
-        if (box.value && i < arr.length - 1) arr[i + 1].focus();
-      });
-      box.addEventListener('keydown', e => {
-        if (e.key === 'Backspace' && !box.value && i > 0) arr[i - 1].focus();
-      });
-      box.addEventListener('paste', e => {
-        e.preventDefault();
-        const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-        digits.split('').forEach((d, j) => { if (arr[j]) arr[j].value = d; });
-        if (arr[Math.min(digits.length, 5)]) arr[Math.min(digits.length, 5)].focus();
-      });
+    // OTP box auto-advance — use event delegation so it works even though
+    // the overlay HTML is rendered after this script block
+    document.addEventListener('input', e => {
+      if (!e.target.classList.contains('otp-box')) return;
+      const box   = e.target;
+      const boxes = Array.from(document.querySelectorAll('.otp-box'));
+      const i     = boxes.indexOf(box);
+      box.value   = box.value.replace(/\D/g, '').slice(-1);
+      if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+    });
+    document.addEventListener('keydown', e => {
+      if (!e.target.classList.contains('otp-box')) return;
+      const box   = e.target;
+      const boxes = Array.from(document.querySelectorAll('.otp-box'));
+      const i     = boxes.indexOf(box);
+      if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+    });
+    document.addEventListener('paste', e => {
+      if (!e.target.classList.contains('otp-box')) return;
+      e.preventDefault();
+      const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+      const boxes  = Array.from(document.querySelectorAll('.otp-box'));
+      boxes.forEach(b => b.value = '');
+      digits.split('').forEach((d, j) => { if (boxes[j]) boxes[j].value = d; });
+      const next = boxes[Math.min(digits.length, 5)];
+      if (next) next.focus();
     });
 
-    document.getElementById('otp-verify-btn').addEventListener('click', verifyOtp);
-    document.getElementById('otp-resend-btn').addEventListener('click', async () => {
-      document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('error'); });
-      document.getElementById('otp-err').textContent = '';
-      await sendOtp();
-    });
-    document.getElementById('otp-back-btn').addEventListener('click', () => {
-      document.getElementById('otp-overlay').classList.add('hidden');
+    // Button clicks — delegated so they work even though the overlay HTML
+    // is after this script block (getElementById would return null otherwise)
+    document.addEventListener('click', async e => {
+      const id = e.target.id;
+
+      if (id === 'otp-verify-btn') {
+        verifyOtp();
+        return;
+      }
+
+      if (id === 'otp-resend-btn') {
+        document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('error'); });
+        const errEl = document.getElementById('otp-err');
+        errEl.textContent = '';
+        errEl.style.color = '#e05c5c';
+        await sendOtp();
+        return;
+      }
+
+      if (id === 'otp-back-btn') {
+        document.getElementById('otp-overlay').classList.add('hidden');
+      }
     });
 
   </script>

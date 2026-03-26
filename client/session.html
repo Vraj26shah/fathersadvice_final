@@ -380,8 +380,9 @@
       <div class="spinner"></div>
       <h3 id="vc-wait-title">Waiting for the other participant</h3>
       <p id="vc-wait-msg">Your camera is ready. The call connects automatically when they join.</p>
-      <!-- Debug status — visible so you can see exactly what's happening -->
-      <p id="vc-debug" style="font-size:11px;color:rgba(255,255,255,0.28);margin-top:4px;"></p>
+      <p id="vc-debug" style="display:none;"></p>
+      <!-- Let user leave the waiting room without ending the session -->
+      <a id="vc-back-link" href="#" style="margin-top:18px;font-size:13px;color:rgba(255,255,255,0.35);text-decoration:none;border:1px solid rgba(255,255,255,0.12);padding:7px 18px;border-radius:8px;transition:color .15s,border-color .15s;" onmouseover="this.style.color='rgba(255,255,255,0.7)';this.style.borderColor='rgba(255,255,255,0.3)';" onmouseout="this.style.color='rgba(255,255,255,0.35)';this.style.borderColor='rgba(255,255,255,0.12)';">← Back to Dashboard</a>
     </div>
 
     <!-- Error -->
@@ -571,8 +572,9 @@ const requestId    = params.get('requestId');
 const connectionId = params.get('connectionId') || requestId;
 
 const dashLink = role === 'mentor' ? 'dashboard-mentor.html' : 'dashboard-mentee.html';
-document.getElementById('logo-link').href = dashLink;
-document.getElementById('back-btn').href  = dashLink;
+document.getElementById('logo-link').href  = dashLink;
+document.getElementById('back-btn').href   = dashLink;
+document.getElementById('vc-back-link').href = dashLink;
 
 let roomUrl    = '';
 let socket     = null;
@@ -697,11 +699,35 @@ function showVcError(msg) {
   showOverlay('vc-error');
 }
 
-/* ── Debug status (visible on screen + console) ── */
+/* ── Debug status (console only in production) ── */
 function setDebug(msg) {
-  console.log('[WebRTC]', msg);
-  const el = document.getElementById('vc-debug');
-  if (el) el.textContent = msg;
+  if (window.location.hostname === 'localhost') {
+    console.log('[WebRTC]', msg);
+    const el = document.getElementById('vc-debug');
+    if (el) el.textContent = msg;
+  }
+}
+
+/* ── Fully release camera, mic, screen and peer connection ── */
+function releaseAllMedia() {
+  // Stop screen share first
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+  // Stop camera / mic tracks
+  if (localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
+  // Clear video element srcObjects — this is what turns off the browser camera indicator
+  const localVid  = document.getElementById('local-video');
+  const remoteVid = document.getElementById('remote-video');
+  if (localVid)  { localVid.srcObject  = null; localVid.style.display  = 'none'; }
+  if (remoteVid) { remoteVid.srcObject = null; remoteVid.style.display = 'none'; }
+  // Close peer connection
+  if (pc) { try { pc.close(); } catch (_) {} pc = null; }
+  callLive = false;
 }
 
 /* ── Camera/mic with auto-retry (fixes page-refresh camera lock) ── */
@@ -990,6 +1016,17 @@ function initSocket(connId) {
     document.getElementById('vc-wait-title').textContent = 'Participant left';
     document.getElementById('vc-wait-msg').textContent   = 'Waiting for them to rejoin…';
     showOverlay('vc-waiting');
+  });
+
+  /* ── Peer formally ended the session — release media and show feedback for this side too ── */
+  socket.on('session_ended_by_peer', () => {
+    stopScreenShare();
+    releaseAllMedia();
+    showEndedScreen();
+    document.getElementById('live-badge').style.display = 'none';
+    document.getElementById('end-btn').style.display    = 'none';
+    document.getElementById('fb-peer-name').textContent = fbPeerName || 'your partner';
+    document.getElementById('fb-overlay').classList.remove('hidden');
   });
 
   /* ── Chat ── */
@@ -1350,20 +1387,21 @@ function switchTab(tab) {
    End session
 ══════════════════════════════════════════════════════════════ */
 async function endSession() {
+  // Stop screen share before full cleanup so track replacement is safe
   stopScreenShare();
-  if (localStream)  { localStream.getTracks().forEach(t => t.stop());  localStream  = null; }
-  if (pc)           { try { pc.close(); } catch {} pc = null; }
-  callLive = false;
+  // Release camera, mic, and peer connection — clears browser camera indicator
+  releaseAllMedia();
 
   // Notify the other peer and leave rooms
   if (socket) {
     const connId = connectionId || requestId;
-    socket.emit('webrtc_leave',            { connectionId: connId });
-    socket.emit('leave_chat_room',         { connectionId: connId });
-    socket.emit('leave_session_presence',  { requestId: requestId || connId });
+    socket.emit('webrtc_leave',           { connectionId: connId });
+    socket.emit('leave_chat_room',        { connectionId: connId });
+    socket.emit('leave_session_presence', { requestId: requestId || connId });
+    socket.emit('session_ended_notify',   { requestId: requestId || connId });
   }
 
-  // Mark the scheduled session as completed (removes it from calendar)
+  // Mark the scheduled session as completed
   if (currentSessionId) {
     try {
       await fetch(`/api/sessions/complete/${currentSessionId}`, {
@@ -1373,13 +1411,10 @@ async function endSession() {
     } catch { /* silent — don't block UI */ }
   }
 
-  // Replace the video area with a "session ended" screen
   showEndedScreen();
-
   document.getElementById('live-badge').style.display = 'none';
   document.getElementById('end-btn').style.display    = 'none';
 
-  // Always show feedback popup when session is ended manually
   document.getElementById('fb-peer-name').textContent = fbPeerName || 'your partner';
   document.getElementById('fb-overlay').classList.remove('hidden');
 }
@@ -1474,12 +1509,17 @@ document.querySelector('[data-tab="whiteboard"]').addEventListener('click', () =
   setTimeout(resizeCanvas, 60);
 });
 
-// Announce presence leave when tab closes / navigates away
-window.addEventListener('beforeunload', () => {
+// Release camera/mic and notify peer when tab closes or user navigates away
+window.addEventListener('pagehide', () => {
+  releaseAllMedia();
   if (socket) {
     const connId = connectionId || requestId;
     socket.emit('leave_session_presence', { requestId: requestId || connId });
+    socket.emit('webrtc_leave',           { connectionId: connId });
   }
+});
+window.addEventListener('beforeunload', () => {
+  releaseAllMedia();
 });
 
 /* ═══════════════════════════════════════════════════════════
