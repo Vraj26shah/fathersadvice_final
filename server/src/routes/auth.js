@@ -324,7 +324,7 @@ router.post('/google', async (req, res) => {
 
     sendAuth(res, 200, user);
   } catch (err) {
-    console.error('google auth unexpected error:', err.message);
+    console.error('google auth unexpected error:', err.stack || err);
     res.status(500).json({ message: 'Server error during Google sign-in. Please try again.' });
   }
 });
