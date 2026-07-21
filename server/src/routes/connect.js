@@ -450,15 +450,20 @@ router.post('/accept/:requestId', async (req, res) => {
     }
 
     // ── Email: always send (as a fallback / confirmation) ──────────────
-    await sendMail({
-      to:      mentee.email,
-      subject: `🎉 ${req.user.fullName} accepted your mentorship request!`,
-      html:    emailAccepted({
-        menteeName: mentee.fullName,
-        mentorName: req.user.fullName,
-        sessionUrl,
-      }),
-    });
+    // Non-fatal: the request is already accepted in the DB, so an email failure must not fail the request.
+    try {
+      await sendMail({
+        to:      mentee.email,
+        subject: `🎉 ${req.user.fullName} accepted your mentorship request!`,
+        html:    emailAccepted({
+          menteeName: mentee.fullName,
+          mentorName: req.user.fullName,
+          sessionUrl,
+        }),
+      });
+    } catch (mailErr) {
+      console.error('POST /accept email error:', mailErr.message);
+    }
 
     res.json({
       message:      'Request accepted.',
@@ -670,6 +675,15 @@ router.post('/ai-score', async (req, res) => {
     const reqDetailMap = {};
     myRequests.forEach(r => { reqDetailMap[r.mentor.toString()] = { status: r.status, requestId: r._id.toString() }; });
 
+    // Real average feedback ratings (R_ij) — same source of truth as GET /mentors
+    const mentorUserIds = profiles.map(p => p.user._id);
+    const ratingAgg = await Feedback.aggregate([
+      { $match: { to: { $in: mentorUserIds }, fromRole: 'mentee' } },
+      { $group: { _id: '$to', avgRating: { $avg: '$rating' } } },
+    ]);
+    const ratingMap = {};
+    ratingAgg.forEach(r => { ratingMap[r._id.toString()] = r.avgRating / 5; });
+
     const summaries = profiles.map(p => ({
       id:        p.user._id.toString(),
       name:      p.user.fullName,
@@ -724,7 +738,7 @@ router.post('/ai-score', async (req, res) => {
       const aiE          = weightedSum / (totalRel * 100);  // 0–1
 
       const baseA   = menteeProfile ? computeAvailability(p, menteeProfile) : 0.5;
-      const R       = 0.7;
+      const R       = ratingMap[mid] ?? 0.7;
       const W       = 0.5 * aiE + 0.3 * baseA + 0.2 * R;  // W_ij for sort tiebreak
       const reqInfo = reqDetailMap[mid] || null;
 
@@ -744,6 +758,7 @@ router.post('/ai-score', async (req, res) => {
         matchScore:        subjectAvg,                       // avg of all subject %
         expertiseScore:    Math.round(aiE * 100),            // relevance-weighted
         availabilityScore: Math.round(baseA * 100),
+        ratingScore:       Math.round(R * 100),
         subjectScores:     subScores,
         languageMatch:     L === 1 ? 'full' : L === 0 ? 'none' : 'unknown',
         isVerified:        p.isVerified || false,
@@ -753,12 +768,14 @@ router.post('/ai-score', async (req, res) => {
       };
     });
 
-    // Sort: accepted first → verified before unverified → by W_ij score
+    // Sort: accepted first → verified before unverified → by displayed match score,
+    // with W_ij (relevance-weighted expertise + availability + rating) as a tiebreaker.
     mentors.sort((a, b) => {
       if (a.requestStatus === 'accepted' && b.requestStatus !== 'accepted') return -1;
       if (b.requestStatus === 'accepted' && a.requestStatus !== 'accepted') return  1;
       if (a.isVerified && !b.isVerified) return -1;
       if (b.isVerified && !a.isVerified) return  1;
+      if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
       return b._sortW - a._sortW;
     });
 

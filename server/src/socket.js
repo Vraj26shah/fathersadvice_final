@@ -30,14 +30,18 @@ export function setupSocket(httpServer) {
   });
 
   // Authenticate every socket connection with the JWT token
-  _io.use((socket, next) => {
+  // Note: the JWT only carries { id } (see auth.js signToken), so role/name
+  // must be looked up from the DB — they are not present on the decoded token.
+  _io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('Authentication required'));
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select('fullName role').lean();
+      if (!user) return next(new Error('User not found'));
       socket.userId   = decoded.id;
-      socket.userRole = decoded.role;
-      socket.userName = decoded.name || decoded.fullName;
+      socket.userRole = user.role;
+      socket.userName = user.fullName;
       next();
     } catch {
       next(new Error('Invalid token'));

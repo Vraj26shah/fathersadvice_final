@@ -89,18 +89,23 @@ router.post('/propose', async (req, res) => {
     }
 
     // Also send email (regardless of online status — as a reminder)
-    await sendMail({
-      to:      recipient.email,
-      subject: `📅 Session scheduled by ${proposer.fullName}`,
-      html:    emailSessionScheduled({
-        recipientName: recipient.fullName,
-        proposerName:  proposer.fullName,
-        proposerRole:  req.user.role,
-        scheduledTime: timeStr,
-        sessionUrl,
-        notes:         session.notes,
-      }),
-    });
+    // Non-fatal: the session is already created, so an email failure must not fail the request.
+    try {
+      await sendMail({
+        to:      recipient.email,
+        subject: `📅 Session scheduled by ${proposer.fullName}`,
+        html:    emailSessionScheduled({
+          recipientName: recipient.fullName,
+          proposerName:  proposer.fullName,
+          proposerRole:  req.user.role,
+          scheduledTime: timeStr,
+          sessionUrl,
+          notes:         session.notes,
+        }),
+      });
+    } catch (mailErr) {
+      console.error('POST /sessions/propose email error:', mailErr.message);
+    }
 
     res.status(201).json({ message: 'Session proposed.', session });
   } catch (err) {
@@ -149,19 +154,23 @@ router.post('/confirm/:sessionId', async (req, res) => {
       });
     }
 
-    // Email both parties
-    await Promise.all([
-      sendMail({
-        to:      session.mentor.email,
-        subject: '✅ Session confirmed — Father\'s Advice',
-        html:    emailSessionConfirmed({ recipientName: session.mentor.fullName, otherName: session.mentee.fullName, scheduledTime: timeStr, sessionUrl }),
-      }),
-      sendMail({
-        to:      session.mentee.email,
-        subject: '✅ Session confirmed — Father\'s Advice',
-        html:    emailSessionConfirmed({ recipientName: session.mentee.fullName, otherName: session.mentor.fullName, scheduledTime: timeStr, sessionUrl }),
-      }),
-    ]);
+    // Email both parties — non-fatal: the session is already confirmed in the DB.
+    try {
+      await Promise.all([
+        sendMail({
+          to:      session.mentor.email,
+          subject: '✅ Session confirmed — Father\'s Advice',
+          html:    emailSessionConfirmed({ recipientName: session.mentor.fullName, otherName: session.mentee.fullName, scheduledTime: timeStr, sessionUrl }),
+        }),
+        sendMail({
+          to:      session.mentee.email,
+          subject: '✅ Session confirmed — Father\'s Advice',
+          html:    emailSessionConfirmed({ recipientName: session.mentee.fullName, otherName: session.mentor.fullName, scheduledTime: timeStr, sessionUrl }),
+        }),
+      ]);
+    } catch (mailErr) {
+      console.error('POST /sessions/confirm email error:', mailErr.message);
+    }
 
     res.json({ message: 'Session confirmed.', session });
   } catch (err) {
@@ -256,15 +265,16 @@ router.get('/calendar', async (req, res) => {
       .sort({ scheduledTime: 1 })
       .lean();
 
-    // Also return active count per request so the frontend can show the limit
+    // Also return active count per request so the frontend can show the limit.
+    // Batched into a single aggregation instead of one query per unique request.
+    const requestIds = [...new Map(sessions.map(s => [s.request.toString(), s.request])).values()];
     const activeCounts = {};
-    for (const s of sessions) {
-      const rid = s.request.toString();
-      if (!activeCounts[rid]) {
-        activeCounts[rid] = await ScheduledSession.countDocuments({
-          request: rid, status: { $in: ['proposed', 'confirmed'] },
-        });
-      }
+    if (requestIds.length) {
+      const counts = await ScheduledSession.aggregate([
+        { $match: { request: { $in: requestIds }, status: { $in: ['proposed', 'confirmed'] } } },
+        { $group: { _id: '$request', count: { $sum: 1 } } },
+      ]);
+      counts.forEach(c => { activeCounts[c._id.toString()] = c.count; });
     }
 
     res.json({ sessions, activeCounts });

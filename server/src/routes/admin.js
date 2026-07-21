@@ -19,6 +19,9 @@ router.post('/create-admin', async (req, res) => {
     if (!ADMIN_SECRET) {
       return res.status(500).json({ message: 'ADMIN_SECRET not configured on server.' });
     }
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required.' });
+    }
     if (secret !== ADMIN_SECRET) {
       return res.status(403).json({ message: 'Invalid admin secret.' });
     }

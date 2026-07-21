@@ -1076,7 +1076,8 @@ async function loadChatHistory(connId) {
       headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!res.ok) return;
-    const msgs = await res.json();
+    const data = await res.json();
+    const msgs = data.messages || [];
     const container = document.getElementById('chat-messages');
     container.innerHTML = '';
     msgs.forEach(m => appendMessage({

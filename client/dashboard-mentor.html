@@ -51,7 +51,20 @@
       position: fixed;
       top: 0; left: 0;
       z-index: 100;
+      transition: transform 0.25s ease;
     }
+    .menu-toggle {
+      display: none;
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--white); cursor: pointer;
+      align-items: center; justify-content: center;
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99;
+    }
+    .sidebar-backdrop.show { display: block; }
 
     .sidebar-logo {
       padding: 28px 24px 24px;
@@ -502,9 +515,10 @@
       .stats-row { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 700px) {
-      :root { --sidebar-w: 0px; }
       .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
       .main { margin-left: 0; }
+      .menu-toggle { display: flex; }
       .stats-row { grid-template-columns: 1fr 1fr; }
       .page-body { padding: 20px 16px; }
     }
@@ -513,6 +527,8 @@
 <body>
 
   <!-- ═══ Sidebar ═══════════════════════════════════════════ -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">
@@ -535,7 +551,7 @@
         <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
         Find a Mentee
       </a>
-      <a class="nav-item" href="#" onclick="showSection('requests')">
+      <a class="nav-item" href="#requests">
         <span class="icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
         Mentee Requests
         <span style="margin-left:auto;background:var(--gold);color:var(--black);font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;" id="req-badge">3</span>
@@ -578,7 +594,12 @@
 
     <!-- Topbar -->
     <header class="topbar">
-      <div class="topbar-title">Good morning, <span id="topbar-name">Mentor</span> 👋</div>
+      <div class="topbar-title" style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle" onclick="toggleSidebar()" aria-label="Open menu">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span>Good morning, <span id="topbar-name">Mentor</span> 👋</span>
+      </div>
       <div class="topbar-actions">
         <span class="badge-gold">Mentor</span>
       </div>
@@ -647,7 +668,7 @@
         <div style="display:flex;flex-direction:column;gap:20px;">
 
           <!-- Pending Requests -->
-          <div class="card">
+          <div class="card" id="requests">
             <div class="card-header">
               <div class="card-title">Pending Requests</div>
             </div>
@@ -815,6 +836,16 @@
     // requestId → { userName, userRole } — populated by socket events
     const sessionPeerMap = {};
 
+    /* ── Escape HTML (user-supplied text must never go raw into innerHTML) ── */
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     /* ── Gradient colours for avatars ───────────────────── */
     const GRADIENTS = [
       'linear-gradient(135deg,#818cf8,#6366f1)',
@@ -862,14 +893,14 @@
         const isLive = sessionPeerMap[c.requestId];
         const btnClass = isLive ? 'btn-join-session live' : 'btn-join-session';
         const btnLabel = isLive
-          ? `<div class="live-dot-sm" style="background:#4ade80;"></div>${sessionPeerMap[c.requestId].userName} is waiting — Join!`
+          ? `<div class="live-dot-sm" style="background:#4ade80;"></div>${esc(sessionPeerMap[c.requestId].userName)} is waiting — Join!`
           : `<div class="live-dot-sm"></div>Join Session`;
         return `
           <div class="connection-item" data-request-id="${c.requestId}">
-            <div class="conn-avatar" style="background:${grad};">${av}</div>
+            <div class="conn-avatar" style="background:${grad};">${esc(av)}</div>
             <div class="conn-details">
-              <div class="conn-name">${c.menteeName}</div>
-              <div class="conn-doubt">${c.doubt}</div>
+              <div class="conn-name">${esc(c.menteeName)}</div>
+              <div class="conn-doubt">${esc(c.doubt)}</div>
             </div>
             <a class="${btnClass}" href="session.html?requestId=${c.requestId}">${btnLabel}</a>
           </div>`;
@@ -911,14 +942,14 @@
         const av = r.menteeName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
         const grad = GRADIENTS[i % GRADIENTS.length];
         const langChips = (r.languages || []).map(l =>
-          `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;">${l}</span>`
+          `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;">${esc(l)}</span>`
         ).join('');
         return `
           <div class="request-item" data-request-id="${r.requestId}">
-            <div class="req-avatar" style="background:${grad};">${av}</div>
+            <div class="req-avatar" style="background:${grad};">${esc(av)}</div>
             <div class="req-details">
-              <div class="req-name">${r.menteeName}</div>
-              <div class="req-goal">${r.doubt}</div>
+              <div class="req-name">${esc(r.menteeName)}</div>
+              <div class="req-goal">${esc(r.doubt)}</div>
               ${langChips ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${langChips}</div>` : ''}
             </div>
             <div class="req-meta">
@@ -953,15 +984,19 @@
 
     async function declineRequest(item) {
       const requestId = item.dataset.requestId;
-      item.style.transition = 'opacity 0.3s, transform 0.3s';
-      item.style.opacity = '0';
-      item.style.transform = 'translateX(20px)';
       try {
-        await fetch(`/api/connect/decline/${requestId}`, {
+        const res = await fetch(`/api/connect/decline/${requestId}`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
         });
-      } catch (_) { /* ignore network errors for optimistic UI */ }
+        if (!res.ok) throw new Error('Failed to decline request.');
+      } catch (_) {
+        alert('Could not decline this request. Please try again.');
+        return;
+      }
+      item.style.transition = 'opacity 0.3s, transform 0.3s';
+      item.style.opacity = '0';
+      item.style.transform = 'translateX(20px)';
       setTimeout(() => {
         item.remove();
         updateBadge(document.querySelectorAll('.request-item').length);
@@ -1132,7 +1167,7 @@
       if (!data) return;
       const langs = (data.languages || []);
       const langHtml = langs.length
-        ? langs.map(l => `<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:rgba(200,168,75,0.15);border:1px solid rgba(200,168,75,0.35);color:#c8a84b;">${l}</span>`).join('')
+        ? langs.map(l => `<span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:rgba(200,168,75,0.15);border:1px solid rgba(200,168,75,0.35);color:#c8a84b;">${esc(l)}</span>`).join('')
         : '<span style="font-size:11px;color:rgba(255,255,255,0.35);">Not specified</span>';
 
       const t = document.createElement('div');
@@ -1154,8 +1189,8 @@
           <span style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.5px;">New Request</span>
           <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;cursor:pointer;line-height:1;padding:0;">&times;</button>
         </div>
-        <div style="font-weight:600;font-size:14px;">${data.menteeName || 'A mentee'}</div>
-        <div style="background:rgba(255,255,255,0.04);border-left:2px solid rgba(255,255,255,0.15);padding:8px 10px;border-radius:4px;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5;font-style:italic;">"${data.doubt || 'No doubt specified'}"</div>
+        <div style="font-weight:600;font-size:14px;">${esc(data.menteeName || 'A mentee')}</div>
+        <div style="background:rgba(255,255,255,0.04);border-left:2px solid rgba(255,255,255,0.15);padding:8px 10px;border-radius:4px;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5;font-style:italic;">"${esc(data.doubt || 'No doubt specified')}"</div>
         <div>
           <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.35);margin-bottom:5px;">Speaks</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px;">${langHtml}</div>
@@ -1172,10 +1207,18 @@
 
     /* ── Sign out ───────────────────────────────────────── */
     function signOut() {
-      localStorage.removeItem('fa_token');
-      localStorage.removeItem('fa_role');
-      localStorage.removeItem('fa_name');
+      localStorage.clear();
       window.location.href = '/login.html';
+    }
+
+    /* ── Mobile sidebar toggle ─────────────────────────────── */
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById('sidebar-backdrop').classList.toggle('show');
+    }
+    function closeSidebar() {
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('show');
     }
 
     /* ── Load scheduled sessions ─────────────────────────── */
@@ -1218,7 +1261,7 @@
               <div class="mon">${MONTHS[d.getMonth()]}</div>
             </div>
             <div class="schedule-info">
-              <div class="schedule-name">1:1 with ${other}</div>
+              <div class="schedule-name">1:1 with ${esc(other)}</div>
               <div class="schedule-time">${d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} · ${s.durationMins || 60} min</div>
             </div>
             <span class="schedule-badge ${badgeClass}">${badgeText}</span>
@@ -1249,7 +1292,7 @@
       const events = [];
 
       sessions.forEach(s => {
-        const other = s.mentee?.fullName || s.mentor?.fullName || 'Someone';
+        const other = esc(s.mentee?.fullName || s.mentor?.fullName || 'Someone');
         if (s.status === 'confirmed') {
           events.push({ text: `<strong>${other}</strong> confirmed a session`, time: new Date(s.updatedAt || s.scheduledTime), dot: 'green' });
         } else if (s.status === 'completed') {
@@ -1277,7 +1320,7 @@
     /* ── Session join banner helpers ────────────────────── */
     function showSessionBanner(requestId, userName) {
       document.getElementById('sjb-text').innerHTML =
-        `<strong>${userName}</strong> has joined the session and is waiting for you!`;
+        `<strong>${esc(userName)}</strong> has joined the session and is waiting for you!`;
       document.getElementById('sjb-join-btn').href = `session.html?requestId=${requestId}`;
       document.getElementById('session-join-banner').classList.add('show');
     }
@@ -1295,7 +1338,7 @@
       const btn = card.querySelector('.btn-join-session');
       if (!btn) return;
       if (isLive) {
-        btn.innerHTML = `<div class="live-dot-sm" style="background:#4ade80;"></div>${userName} is waiting — Join!`;
+        btn.innerHTML = `<div class="live-dot-sm" style="background:#4ade80;"></div>${esc(userName)} is waiting — Join!`;
         btn.classList.add('live');
       } else {
         btn.innerHTML = `<div class="live-dot-sm"></div>Join Session`;
@@ -1339,6 +1382,12 @@
       socket.on('new_request', (data) => {
         loadRequests();
         showRequestToast(data);
+      });
+
+      // A connection was reset (either party ended + gave feedback) — refresh lists
+      socket.on('connection_reset', () => {
+        loadConnections();
+        loadRequests();
       });
 
       // Admin verified or rejected this mentor's resume

@@ -53,7 +53,20 @@
       position: fixed;
       top: 0; left: 0;
       z-index: 100;
+      transition: transform 0.25s ease;
     }
+    .menu-toggle {
+      display: none;
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--white); cursor: pointer;
+      align-items: center; justify-content: center;
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99;
+    }
+    .sidebar-backdrop.show { display: block; }
 
     .sidebar-logo {
       padding: 28px 24px 24px;
@@ -328,15 +341,19 @@
     @media (max-width: 1100px) { .two-col { grid-template-columns: 1fr; } }
     @media (max-width: 900px)  { .stats-row { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 700px)  {
-      :root { --sidebar-w: 0px; }
       .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
       .main { margin-left: 0; }
+      .menu-toggle { display: flex; }
       .page-body { padding: 20px 16px; }
       .welcome-card { flex-direction: column; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Mobile sidebar backdrop -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
   <!-- ═══ Sidebar ═══════════════════════════════════════════ -->
   <aside class="sidebar">
@@ -418,7 +435,12 @@
 
     <!-- Topbar -->
     <header class="topbar">
-      <div class="topbar-title">Welcome, <span id="topbar-name">Mentee</span></div>
+      <div class="topbar-title" style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle" onclick="toggleSidebar()" aria-label="Open menu">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span>Welcome, <span id="topbar-name">Mentee</span></span>
+      </div>
       <div class="topbar-actions">
         <span class="badge-accent">Mentee</span>
       </div>
@@ -621,7 +643,17 @@
       'linear-gradient(135deg,#38bdf8,#0284c7)',
     ];
 
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     /* ── Load real mentors from API ─────────────────────── */
+    let allMentorsData = [];
     async function loadMentors() {
       try {
         const res = await fetch('/api/connect/mentors', {
@@ -629,6 +661,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
+        allMentorsData = data.mentors || [];
         renderMentors(data.mentors);
       } catch (err) {
         document.getElementById('mentors-list').innerHTML =
@@ -650,7 +683,7 @@
       container.innerHTML = mentors.map((m, i) => {
         const initials = m.fullName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
         const grad = GRADIENTS[i % GRADIENTS.length];
-        const topSkills = (m.skills || []).slice(0, 3).map(s => `<span class="skill-chip">${s.name || s}</span>`).join('');
+        const topSkills = (m.skills || []).slice(0, 3).map(s => `<span class="skill-chip">${esc(s.name || s)}</span>`).join('');
         const statusAttr = m.requestStatus ? `data-status="${m.requestStatus}"` : '';
 
         const scoreHtml = `
@@ -669,7 +702,7 @@
         } else if (m.requestStatus === 'pending') {
           btnHtml = `<button class="btn-request" disabled style="opacity:0.6;">Requested</button>`;
         } else {
-          btnHtml = `<button class="btn-request" onclick="openConnectModal('${m.mentorId}','${m.fullName.replace(/'/g,"\\'")}',this)">Connect</button>`;
+          btnHtml = `<button class="btn-request" onclick="openConnectModal('${m.mentorId}',this)">Connect</button>`;
         }
 
         const verifiedBadge = m.isVerified
@@ -678,10 +711,10 @@
 
         return `
           <div class="mentor-match" data-mentor-id="${m.mentorId}" data-request-id="${m.requestId || ''}" ${statusAttr}>
-            <div class="mentor-pic" style="background:${grad};">${initials}</div>
+            <div class="mentor-pic" style="background:${grad};">${esc(initials)}</div>
             <div class="mentor-details">
-              <div class="mentor-name">${m.fullName}${verifiedBadge}</div>
-              <div class="mentor-title">${[m.jobTitle, m.organisation].filter(Boolean).join(' — ')}${m.yearsExperience ? ` · ${m.yearsExperience} yrs exp` : ''}</div>
+              <div class="mentor-name">${esc(m.fullName)}${verifiedBadge}</div>
+              <div class="mentor-title">${esc([m.jobTitle, m.organisation].filter(Boolean).join(' — '))}${m.yearsExperience ? ` · ${esc(m.yearsExperience)} yrs exp` : ''}</div>
               <div class="mentor-skills">${topSkills}</div>
             </div>
             <div class="mentor-score-wrap">${scoreHtml}${btnHtml}</div>
@@ -694,7 +727,8 @@
     let pendingMentorName = null;
     let pendingBtn        = null;
 
-    function openConnectModal(mentorId, name, btn) {
+    function openConnectModal(mentorId, btn) {
+      const name = allMentorsData.find(m => m.mentorId === mentorId)?.fullName || '';
       pendingMentorId   = mentorId;
       pendingMentorName = name;
       pendingBtn        = btn;
@@ -779,10 +813,18 @@
 
     /* ── Sign out ───────────────────────────────────────── */
     function signOut() {
-      localStorage.removeItem('fa_token');
-      localStorage.removeItem('fa_role');
-      localStorage.removeItem('fa_name');
+      localStorage.clear();
       window.location.href = '/login.html';
+    }
+
+    /* ── Mobile sidebar toggle ─────────────────────────────── */
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById('sidebar-backdrop').classList.toggle('show');
+    }
+    function closeSidebar() {
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('show');
     }
 
     /* ── Request-accepted notification modal ────────────── */
@@ -804,7 +846,7 @@
       const langContainer = document.getElementById('an-languages');
       const langs = data.languages || [];
       langContainer.innerHTML = langs.length
-        ? langs.map(l => `<span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;">${l}</span>`).join('')
+        ? langs.map(l => `<span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;">${esc(l)}</span>`).join('')
         : '<span style="font-size:12px;color:rgba(255,255,255,0.3);">Not specified</span>';
 
       document.getElementById('an-doubt').textContent = data.doubt || 'Your request';
@@ -821,10 +863,10 @@
     function showSchedModal(data) {
       pendingSessionId = data.sessionId;
       document.getElementById('sched-notify-body').innerHTML = `
-        <strong>${data.proposerName}</strong> (your mentor) proposed:<br>
-        🗓 <strong>${data.scheduledTime}</strong><br>
-        ⏱ ${data.durationMins} minutes
-        ${data.notes ? `<br>📝 ${data.notes}` : ''}`;
+        <strong>${esc(data.proposerName)}</strong> (your mentor) proposed:<br>
+        🗓 <strong>${esc(data.scheduledTime)}</strong><br>
+        ⏱ ${esc(data.durationMins)} minutes
+        ${data.notes ? `<br>📝 ${esc(data.notes)}` : ''}`;
       document.getElementById('sched-notify-modal').classList.add('open');
     }
     function closeSchedModal() {
@@ -903,7 +945,7 @@
               <div class="mon">${_MONTHS[d.getMonth()]}</div>
             </div>
             <div class="schedule-info">
-              <div class="schedule-name">1:1 with ${other}</div>
+              <div class="schedule-name">1:1 with ${esc(other)}</div>
               <div class="schedule-time">${d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} · ${s.durationMins || 60} min</div>
             </div>
             <span class="schedule-badge ${badgeClass}">${badgeText}</span>
@@ -930,7 +972,7 @@
       if (!container) return;
       const events = [];
       _allSessions.forEach(s => {
-        const other = s.mentor?.fullName || 'Your mentor';
+        const other = esc(s.mentor?.fullName || 'Your mentor');
         if (s.status === 'confirmed') {
           events.push({ text: `Session with <strong>${other}</strong> confirmed`, time: new Date(s.updatedAt || s.scheduledTime), dot: 'green' });
         } else if (s.status === 'completed') {
@@ -975,7 +1017,7 @@
 
     function showSessionBanner(requestId, userName) {
       document.getElementById('sjb-text').innerHTML =
-        `<strong>${userName}</strong> (your mentor) has joined the session and is waiting for you!`;
+        `<strong>${esc(userName)}</strong> (your mentor) has joined the session and is waiting for you!`;
       document.getElementById('sjb-join-btn').href = `session.html?requestId=${requestId}`;
       document.getElementById('session-join-banner').classList.add('show');
     }
@@ -1025,8 +1067,7 @@
           const btn = document.createElement('button');
           btn.className = 'btn-request';
           btn.textContent = 'Connect';
-          const mentorName = card.querySelector('.mentor-name')?.childNodes[0]?.textContent?.trim() || '';
-          btn.onclick = () => openConnectModal(mentorUserId, mentorName, btn);
+          btn.onclick = () => openConnectModal(mentorUserId, btn);
           wrap.appendChild(btn);
         }
       });

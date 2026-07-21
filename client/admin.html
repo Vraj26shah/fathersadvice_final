@@ -34,7 +34,20 @@
     body { font-family: var(--sans); background: var(--black); color: var(--white); min-height: 100vh; display: flex; }
 
     /* Sidebar */
-    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.25s ease; }
+    .menu-toggle { display: none; width: 36px; height: 36px; flex-shrink: 0; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; color: var(--white); cursor: pointer; align-items: center; justify-content: center; }
+    .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99; }
+    .sidebar-backdrop.show { display: block; }
+    @media (max-width: 700px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .menu-toggle { display: flex; }
+      .page-body { padding: 20px 16px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .table-header, .mentor-row { grid-template-columns: 2fr 1fr 1fr 80px; }
+      .table-header > div:nth-child(2), .mentor-row > div:nth-child(2) { display: none; }
+    }
     .sidebar-logo { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
     .logo-mark { width: 36px; height: 36px; background: var(--white); border: 1.5px solid var(--gold-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .logo-mark-text { font-family: var(--serif); font-size: 11px; font-weight: 700; color: var(--black); letter-spacing: -1px; }
@@ -137,6 +150,8 @@
 </head>
 <body>
 
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-logo">
@@ -167,7 +182,12 @@
   <!-- Main -->
   <main class="main">
     <header class="topbar">
-      <div class="topbar-title">Mentor Verification</div>
+      <div class="topbar-title" style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle" onclick="toggleSidebar()" aria-label="Open menu">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span>Mentor Verification</span>
+      </div>
       <span class="badge-admin">Admin</span>
     </header>
 
@@ -206,6 +226,24 @@
     document.getElementById('sidebar-avatar').textContent = storedName[0].toUpperCase();
 
     function signOut() { localStorage.clear(); window.location.href = '/login.html'; }
+
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById('sidebar-backdrop').classList.toggle('show');
+    }
+    function closeSidebar() {
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('show');
+    }
+
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
     let allMentors = [];
     let activeFilter = 'all';
@@ -323,19 +361,19 @@
             return `
               <div class="mentor-row">
                 <div class="mentor-row-name">
-                  <div class="mentor-avatar" style="background:${grad};">${init}</div>
+                  <div class="mentor-avatar" style="background:${grad};">${esc(init)}</div>
                   <div>
-                    <div class="mentor-name-text">${m.fullName}</div>
-                    <div class="mentor-email-text">${m.email}</div>
+                    <div class="mentor-name-text">${esc(m.fullName)}</div>
+                    <div class="mentor-email-text">${esc(m.email)}</div>
                   </div>
                 </div>
-                <div class="mentor-job">${[m.jobTitle, m.organisation].filter(Boolean).join(' — ') || '—'}</div>
+                <div class="mentor-job">${esc([m.jobTitle, m.organisation].filter(Boolean).join(' — ') || '—')}</div>
                 <div><span class="status-badge ${m.verificationStatus}">${badge}</span></div>
                 <div>${m.hasResume
-                  ? `<span class="resume-link" onclick="openModal('${m.profileId}','${m.fullName.replace(/'/g,"\\'")}','${(m.jobTitle||'').replace(/'/g,"\\'")}','${(m.organisation||'').replace(/'/g,"\\'")}')">View Resume</span>`
+                  ? `<span class="resume-link" onclick="openModal('${m.profileId}')">View Resume</span>`
                   : `<span class="no-resume">None</span>`}</div>
                 <div>
-                  <button class="action-btn" onclick="openModal('${m.profileId}','${m.fullName.replace(/'/g,"\\'")}','${(m.jobTitle||'').replace(/'/g,"\\'")}','${(m.organisation||'').replace(/'/g,"\\'")}')">Review</button>
+                  <button class="action-btn" onclick="openModal('${m.profileId}')">Review</button>
                 </div>
               </div>`;
           }).join('')}
@@ -349,10 +387,11 @@
     }
 
     /* ── Modal ────────────────────────────────────────────── */
-    async function openModal(profileId, name, jobTitle, org) {
+    async function openModal(profileId) {
+      const m = allMentors.find(x => x.profileId === profileId);
       activeMentorProfileId = profileId;
-      document.getElementById('modal-mentor-name').textContent = name;
-      document.getElementById('modal-mentor-meta').textContent = [jobTitle, org].filter(Boolean).join(' — ') || 'No title provided';
+      document.getElementById('modal-mentor-name').textContent = m?.fullName || '';
+      document.getElementById('modal-mentor-meta').textContent = [m?.jobTitle, m?.organisation].filter(Boolean).join(' — ') || 'No title provided';
       document.getElementById('modal-note').value = '';
       document.getElementById('modal-resume-area').innerHTML = '<div class="resume-loading">Loading resume…</div>';
       document.getElementById('btn-approve').disabled = false;
@@ -375,18 +414,18 @@
         if (isPDF) {
           document.getElementById('modal-resume-area').innerHTML = `
             <iframe class="resume-preview-frame" src="${resumeBase64}" title="Resume"></iframe>
-            <a class="download-link" href="${resumeBase64}" download="${resumeFileName}">
+            <a class="download-link" href="${resumeBase64}" download="${esc(resumeFileName)}">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download ${resumeFileName}
+              Download ${esc(resumeFileName)}
             </a>`;
         } else {
           document.getElementById('modal-resume-area').innerHTML = `
             <div class="resume-loading" style="color:rgba(255,255,255,0.7);">
               Preview not available for .doc/.docx files.
             </div>
-            <a class="download-link" href="${resumeBase64}" download="${resumeFileName}">
+            <a class="download-link" href="${resumeBase64}" download="${esc(resumeFileName)}">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download ${resumeFileName}
+              Download ${esc(resumeFileName)}
             </a>`;
         }
       } catch {

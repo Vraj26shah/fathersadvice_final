@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Find a Mentor — Father's Advice</title>
+  <title>Mentee Registration — Father's Advice</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
 
@@ -1094,7 +1094,7 @@
         ok = require('email', 'email-error', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) && ok;
         ok = require('password', 'password-error', v => v.length >= 8) && ok;
         const pw = val('password'), cpw = val('confirm-password');
-        if (pw && cpw && pw !== cpw) { showError('confirm-password', 'confirm-password-error'); ok = false; }
+        if (!cpw || pw !== cpw) { showError('confirm-password', 'confirm-password-error'); ok = false; }
       }
 
       if (step === 2) {
@@ -1238,11 +1238,19 @@
       renderTopicRows();
     }
 
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
     function renderTopicRows() {
       const container = document.getElementById('topic-rows');
       container.innerHTML = menteeData.topics.map((topic, i) => `
         <div class="topic-row">
-          <span class="topic-row-name" title="${topic.name}">${topic.name}</span>
+          <span class="topic-row-name" title="${esc(topic.name)}">${esc(topic.name)}</span>
           <div class="priority-group">
             <span class="priority-label">Priority</span>
             <div class="priority-btns">
@@ -1271,7 +1279,7 @@
 
     function addLanguage(name) {
       const trimmed = name.trim();
-      if (!trimmed || menteeData.languages.includes(trimmed.toLowerCase())) return;
+      if (!trimmed || menteeData.languages.some(l => l.toLowerCase() === trimmed.toLowerCase())) return;
       menteeData.languages.push(trimmed);
       renderLangTags();
       document.getElementById('lang-input').value = '';
@@ -1395,6 +1403,11 @@
         });
         const data = await res.json();
         if (!res.ok) {
+          if (res.status === 409) {
+            // Account already exists — send them to sign in instead of letting them retry here.
+            window.location.href = `login.html?email=${encodeURIComponent(email)}&existing=1`;
+            return;
+          }
           errEl.textContent  = data.message || 'Failed to send code.';
           subEl.innerHTML    = `Could not send to <strong>${email}</strong> — fix the issue and resend.`;
           verifyBtn.disabled = false;

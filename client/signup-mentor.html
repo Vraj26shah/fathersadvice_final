@@ -1231,7 +1231,7 @@
         ok = require('email', 'email-error', v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) && ok;
         ok = require('password', 'password-error', v => v.length >= 8) && ok;
         const pw = val('password'), cpw = val('confirm-password');
-        if (pw && cpw && pw !== cpw) {
+        if (!cpw || pw !== cpw) {
           showError('confirm-password', 'confirm-password-error'); ok = false;
         }
       }
@@ -1383,11 +1383,19 @@
       renderSkillRows();
     }
 
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
     function renderSkillRows() {
       const container = document.getElementById('skill-rows');
       container.innerHTML = mentorData.skills.map((skill, i) => `
         <div class="skill-row">
-          <span class="skill-row-name" title="${skill.name}">${skill.name}</span>
+          <span class="skill-row-name" title="${esc(skill.name)}">${esc(skill.name)}</span>
           <div class="slider-group">
             <span class="slider-label">Proficiency</span>
             <input type="range" min="1" max="5" value="${skill.proficiency}"
@@ -1424,7 +1432,7 @@
 
     function addLanguage(name) {
       const trimmed = name.trim();
-      if (!trimmed || mentorData.languages.includes(trimmed.toLowerCase())) return;
+      if (!trimmed || mentorData.languages.some(l => l.toLowerCase() === trimmed.toLowerCase())) return;
       mentorData.languages.push(trimmed);
       renderLangTags();
       document.getElementById('lang-input').value = '';
@@ -1436,7 +1444,7 @@
     function renderLangTags() {
       document.getElementById('lang-tags').innerHTML = mentorData.languages.map((l, i) => `
         <div class="tag-chip">
-          ${l}
+          ${esc(l)}
           <button class="tag-chip-remove" onclick="removeLanguage(${i})">&times;</button>
         </div>
       `).join('');
@@ -1552,6 +1560,11 @@
         });
         const data = await res.json();
         if (!res.ok) {
+          if (res.status === 409) {
+            // Account already exists — send them to sign in instead of letting them retry here.
+            window.location.href = `login.html?email=${encodeURIComponent(email)}&existing=1`;
+            return;
+          }
           errEl.textContent  = data.message || 'Failed to send code.';
           subEl.innerHTML    = `Could not send to <strong>${email}</strong> — fix the issue and resend.`;
           verifyBtn.disabled = false;

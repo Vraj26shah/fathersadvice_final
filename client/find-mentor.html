@@ -37,7 +37,10 @@
     body { font-family: var(--sans); background: var(--black); color: var(--white); min-height: 100vh; display: flex; }
 
     /* ── Sidebar ── */
-    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.25s ease; }
+    .menu-toggle { display: none; width: 36px; height: 36px; flex-shrink: 0; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; color: var(--white); cursor: pointer; align-items: center; justify-content: center; }
+    .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99; }
+    .sidebar-backdrop.show { display: block; }
     .sidebar-logo { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
     .logo-mark { width: 36px; height: 36px; background: var(--white); border: 1.5px solid var(--gold-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .logo-mark-text { font-family: var(--serif); font-size: 11px; font-weight: 700; color: var(--black); letter-spacing: -1px; }
@@ -168,9 +171,10 @@
     .subject-mini-val { width: 26px; font-size: 9px; color: var(--muted); text-align: right; }
 
     @media (max-width: 700px) {
-      :root { --sidebar-w: 0px; }
       .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
       .main { margin-left: 0; }
+      .menu-toggle { display: flex; }
       .page-body { padding: 20px 16px; }
       .mentor-card { flex-direction: column; }
       .mentor-score-col { flex-direction: row; align-items: center; width: 100%; min-width: 0; }
@@ -179,6 +183,8 @@
   </style>
 </head>
 <body>
+
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
   <!-- ═══ Sidebar ═══════════════════════════════════════════ -->
   <aside class="sidebar">
@@ -231,7 +237,12 @@
   <!-- ═══ Main ═══════════════════════════════════════════════ -->
   <main class="main">
     <header class="topbar">
-      <div class="topbar-title">Find a Mentor</div>
+      <div class="topbar-title" style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle" onclick="toggleSidebar()" aria-label="Open menu">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span>Find a Mentor</span>
+      </div>
       <div class="topbar-actions">
         <span class="badge-accent">Mentee</span>
       </div>
@@ -304,6 +315,16 @@
     document.getElementById('sidebar-name').textContent   = storedName;
     document.getElementById('sidebar-avatar').textContent = initials;
 
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    let currentMentors = [];
+
     const GRADIENTS = [
       'linear-gradient(135deg,#c8a84b,#a8882b)',
       'linear-gradient(135deg,#818cf8,#6366f1)',
@@ -367,6 +388,7 @@
 
     /* ── Render ─────────────────────────────────────────── */
     function renderMentors(mentors, opts = {}) {
+      currentMentors = mentors;
       if (!mentors.length) {
         showGrid('<div class="state-empty"><div class="icon">😔</div><h3>No mentors found</h3><p>No active mentors match right now. Check back soon.</p></div>');
         document.getElementById('results-header').style.display = 'none';
@@ -382,10 +404,10 @@
       showGrid(mentors.map((m, i) => {
         const init = m.fullName.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
         const grad = GRADIENTS[i % GRADIENTS.length];
-        const topSkills = (m.skills || []).slice(0, 4).map(s => `<span class="skill-chip">${s.name || s}</span>`).join('');
+        const topSkills = (m.skills || []).slice(0, 4).map(s => `<span class="skill-chip">${esc(s.name || s)}</span>`).join('');
         const langIcon = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`;
-        const langChips = (m.languages || []).map(l => `<span class="lang-chip">${langIcon}${l}</span>`).join('');
-        const bioText   = (m.bio || '').trim();
+        const langChips = (m.languages || []).map(l => `<span class="lang-chip">${langIcon}${esc(l)}</span>`).join('');
+        const bioText   = esc((m.bio || '').trim());
         const isConnected = m.requestStatus === 'accepted';
         rank++;
 
@@ -397,8 +419,7 @@
         } else if (m.requestStatus === 'pending') {
           actionHtml = `<button class="btn-connect" disabled>Requested</button>`;
         } else {
-          const safeDoubt = (opts.doubt || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-          actionHtml = `<button class="btn-connect" onclick="openModal('${m.mentorId}','${m.fullName.replace(/'/g,"\\'")}','${safeDoubt}')">Connect</button>`;
+          actionHtml = `<button class="btn-connect" onclick="openModal('${m.mentorId}')">Connect</button>`;
         }
 
         const scoreColor = m.matchScore >= 70 ? '#4ade80' : m.matchScore >= 40 ? '#5e6ad2' : '#c8a84b';
@@ -413,7 +434,7 @@
                 const score = m.subjectScores[s.name] ?? 0;
                 return `<div class="subject-row">
                   <div class="subject-row-header">
-                    <span>${s.name}</span>
+                    <span>${esc(s.name)}</span>
                     <span style="color:var(--accent);">${score}%</span>
                   </div>
                   <div class="subject-mini-bar">
@@ -438,10 +459,10 @@
         return `
           <div class="mentor-card ${isConnected ? 'connected' : ''}" data-mentor-id="${m.mentorId}" data-request-id="${m.requestId || ''}">
             ${rankBadge}
-            <div class="mentor-pic" style="background:${grad};">${init}</div>
+            <div class="mentor-pic" style="background:${grad};">${esc(init)}</div>
             <div class="mentor-info">
-              <div class="mentor-name">${m.fullName}${verifiedBadge}</div>
-              <div class="mentor-title">${[m.jobTitle, m.organisation].filter(Boolean).join(' — ')}${m.yearsExperience ? ` · ${m.yearsExperience} yrs` : ''}</div>
+              <div class="mentor-name">${esc(m.fullName)}${verifiedBadge}</div>
+              <div class="mentor-title">${esc([m.jobTitle, m.organisation].filter(Boolean).join(' — '))}${m.yearsExperience ? ` · ${esc(m.yearsExperience)} yrs` : ''}</div>
               ${bioText ? `<div class="mentor-bio">${bioText}</div>` : ''}
               <div class="mentor-skills">${topSkills}</div>
               ${langChips ? `<div class="mentor-langs">${langChips}</div>` : ''}
@@ -478,10 +499,11 @@
     }
 
     /* ── Connect modal ──────────────────────────────────── */
-    function openModal(mentorId, name, prefillDoubt) {
+    function openModal(mentorId) {
+      const name = currentMentors.find(m => m.mentorId === mentorId)?.fullName || '';
       pendingMentorId = mentorId;
       document.getElementById('modal-mentor-name').textContent = name;
-      document.getElementById('modal-doubt').value = prefillDoubt || document.getElementById('doubt-input').value || '';
+      document.getElementById('modal-doubt').value = document.getElementById('doubt-input').value || '';
       document.getElementById('modal-error').style.display = 'none';
       document.getElementById('connect-modal').classList.add('open');
     }
@@ -587,9 +609,8 @@
         if (!scoreCol.querySelector('.btn-connect')) {
           const btn = document.createElement('button');
           btn.className = 'btn-connect';
-          const mentorName = card.querySelector('.mentor-name')?.textContent?.replace(/[✓○].*/, '').trim() || '';
           btn.textContent = 'Connect';
-          btn.onclick = () => openModal(mentorUserId, mentorName, '');
+          btn.onclick = () => openModal(mentorUserId);
           scoreCol.appendChild(btn);
         }
       });
@@ -605,7 +626,7 @@
         // Flash a prominent banner
         const banner = document.createElement('div');
         banner.innerHTML = `
-          <span>🎉 <strong>${data.mentorName}</strong> accepted your request!</span>
+          <span>🎉 <strong>${esc(data.mentorName)}</strong> accepted your request!</span>
           <a href="session.html?requestId=${data.requestId}"
              style="background:#fff;color:#4a54b8;padding:6px 14px;border-radius:6px;font-weight:700;text-decoration:none;white-space:nowrap;font-size:13px;">
             Join Session →
@@ -624,10 +645,17 @@
 
     /* ── Sign out ───────────────────────────────────────── */
     function signOut() {
-      localStorage.removeItem('fa_token');
-      localStorage.removeItem('fa_role');
-      localStorage.removeItem('fa_name');
+      localStorage.clear();
       window.location.href = '/login.html';
+    }
+
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById('sidebar-backdrop').classList.toggle('show');
+    }
+    function closeSidebar() {
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('show');
     }
   </script>
 </body>

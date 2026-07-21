@@ -34,7 +34,10 @@
     body { font-family: var(--sans); background: var(--black); color: var(--white); min-height: 100vh; display: flex; }
 
     /* ── Sidebar ── */
-    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.25s ease; }
+    .menu-toggle { display: none; width: 36px; height: 36px; flex-shrink: 0; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; color: var(--white); cursor: pointer; align-items: center; justify-content: center; }
+    .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 99; }
+    .sidebar-backdrop.show { display: block; }
     .sidebar-logo { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
     .logo-mark { width: 36px; height: 36px; background: var(--white); border: 1.5px solid var(--gold-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .logo-mark-text { font-family: var(--serif); font-size: 11px; font-weight: 700; color: var(--black); letter-spacing: -1px; }
@@ -144,14 +147,17 @@
       .detail-panel { position: static; }
     }
     @media (max-width: 700px) {
-      :root { --sidebar-w: 0px; }
       .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
       .main { margin-left: 0; }
+      .menu-toggle { display: flex; }
       .page-body { padding: 16px; }
     }
   </style>
 </head>
 <body>
+
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
   <!-- ═══ Sidebar ══════════════════════════════════════════ -->
   <aside class="sidebar">
@@ -177,7 +183,12 @@
   <!-- ═══ Main ════════════════════════════════════════════ -->
   <main class="main">
     <header class="topbar">
-      <div class="topbar-title">My Sessions</div>
+      <div class="topbar-title" style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-toggle" id="menu-toggle" onclick="toggleSidebar()" aria-label="Open menu">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span>My Sessions</span>
+      </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span id="session-count-badge" style="font-size:12px;color:var(--muted);"></span>
         <span class="badge-role" id="role-badge">—</span>
@@ -440,8 +451,8 @@
           <div class="session-card ${s.status}" id="sc-${s._id}">
             <div class="sc-time">${time}</div>
             <div class="sc-dur">${s.durationMins} min</div>
-            <div class="sc-who">${otherRole}: <strong>${other || '—'}</strong></div>
-            ${s.notes ? `<div class="sc-notes">${s.notes}</div>` : ''}
+            <div class="sc-who">${otherRole}: <strong>${esc(other || '—')}</strong></div>
+            ${s.notes ? `<div class="sc-notes">${esc(s.notes)}</div>` : ''}
             <div class="sc-status ${s.status}">
               ${s.status === 'confirmed' ? '● Confirmed' : s.status === 'proposed' ? '◌ Proposed' : '✓ Completed'}
             </div>
@@ -496,6 +507,15 @@
         upcoming ? `${upcoming} upcoming` : '';
     }
 
+    /* ── Escape HTML ─────────────────────────────────────── */
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
     /* ── Toast ───────────────────────────────────────────── */
     function showToast(msg) {
       const t = document.createElement('div');
@@ -525,8 +545,18 @@
 
     /* ── Sign out ────────────────────────────────────────── */
     function signOut() {
-      ['fa_token','fa_role','fa_name'].forEach(k => localStorage.removeItem(k));
+      localStorage.clear();
       window.location.href = '/login.html';
+    }
+
+    /* ── Mobile sidebar toggle ─────────────────────────────── */
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById('sidebar-backdrop').classList.toggle('show');
+    }
+    function closeSidebar() {
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('show');
     }
 
     /* ── Init ────────────────────────────────────────────── */

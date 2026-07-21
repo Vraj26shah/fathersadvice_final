@@ -52,38 +52,12 @@ app.use('/api/chat',     chatRoutes);
 app.use('/api/admin',    adminRoutes);
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'OK', message: "Father's Advice API is running", v: 'v4-tokeninfo' });
+  res.json({ status: 'OK', message: "Father's Advice API is running" });
 });
 
 // Expose public config to the frontend (no secrets)
 app.get('/api/config', (_req, res) => {
   res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || '' });
-});
-
-// ── Temporary Google token inspector (no verification, safe to call) ──
-app.post('/api/debug/token', (req, res) => {
-  try {
-    const { idToken } = req.body;
-    if (!idToken) return res.status(400).json({ message: 'idToken required' });
-    const parts = idToken.split('.');
-    if (parts.length !== 3) return res.status(400).json({ message: 'Not a JWT (wrong segments)' });
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'));
-    const now = Math.floor(Date.now() / 1000);
-    const serverClientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
-    res.json({
-      iss:        payload.iss,
-      aud:        payload.aud,
-      email:      payload.email,
-      exp:        payload.exp,
-      iat:        payload.iat,
-      serverNow:  now,
-      expired:    payload.exp < now,
-      audMatch:   payload.aud === serverClientId,
-      serverCid:  serverClientId,
-    });
-  } catch (e) {
-    res.status(400).json({ message: 'Could not decode token: ' + e.message });
-  }
 });
 
 // ── Fallback ────────────────────────────────────────────────────

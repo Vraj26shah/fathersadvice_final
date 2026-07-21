@@ -77,7 +77,7 @@ router.post('/verify-otp', (req, res) => {
   const record = otpStore.get(email.toLowerCase());
   if (!record)                       return res.status(400).json({ message: 'No OTP found for this email. Please request a new code.' });
   if (Date.now() > record.expiresAt) { otpStore.delete(email.toLowerCase()); return res.status(400).json({ message: 'Code has expired. Please request a new one.' }); }
-  if (record.otp !== otp.trim())     return res.status(400).json({ message: 'Incorrect code. Please try again.' });
+  if (record.otp !== String(otp).trim()) return res.status(400).json({ message: 'Incorrect code. Please try again.' });
 
   otpStore.set(email.toLowerCase(), { ...record, verified: true });
   res.json({ verified: true, message: 'Email verified successfully.' });
@@ -149,6 +149,7 @@ router.post('/register/mentor', async (req, res) => {
     otpStore.delete(email.toLowerCase()); // clean up
     sendAuth(res, 201, user);
   } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ message: 'An account with this email already exists.' });
     console.error('register/mentor error:', err);
     res.status(500).json({ message: 'Server error — please try again.' });
   }
@@ -216,6 +217,7 @@ router.post('/register/mentee', async (req, res) => {
     otpStore.delete(email.toLowerCase()); // clean up
     sendAuth(res, 201, user);
   } catch (err) {
+    if (err.code === 11000) return res.status(409).json({ message: 'An account with this email already exists.' });
     console.error('register/mentee error:', err);
     res.status(500).json({ message: 'Server error — please try again.' });
   }
@@ -269,19 +271,13 @@ router.post('/google', async (req, res) => {
 
     if (tokenInfo.error) {
       console.error('Google tokeninfo rejected token:', tokenInfo.error, tokenInfo.error_description);
-      return res.status(401).json({
-        message: 'Google sign-in failed. Please try again.',
-        _debug: `tokeninfo_error: ${JSON.stringify(tokenInfo.error)} | ${tokenInfo.error_description || ''}`,
-      });
+      return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     if (tokenInfo.aud !== clientId) {
       console.error('Token audience mismatch:', tokenInfo.aud, '!==', clientId);
-      return res.status(401).json({
-        message: 'Google sign-in failed. Please try again.',
-        _debug: `aud_mismatch: token_aud=${tokenInfo.aud} server_id=${clientId}`,
-      });
+      return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
     }
 
     const { email, name, sub: googleId, picture } = tokenInfo;
