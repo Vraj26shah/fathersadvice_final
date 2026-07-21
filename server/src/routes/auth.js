@@ -53,17 +53,27 @@ router.post('/send-otp', async (req, res) => {
     // Send a real email whenever credentials are actually configured — regardless of
     // NODE_ENV, which can be misconfigured or unset on a given deploy. Only fall back
     // to returning the OTP directly when there is genuinely no way to email it.
-    const user = (process.env.EMAIL_USER || '').trim();
-    const pass = (process.env.EMAIL_PASS || '').trim();
-    const emailConfigured = !!user && !!pass && user !== 'your-email@gmail.com';
+    const emailConfigured = !!(process.env.RESEND_API_KEY || '').trim();
 
     if (!emailConfigured) {
-      console.log(`  [DEV] EMAIL_USER/EMAIL_PASS not configured — OTP for ${email}: ${otp}`);
+      console.log(`  [DEV] RESEND_API_KEY not configured — OTP for ${email}: ${otp}`);
       return res.json({ message: 'Dev mode: OTP generated.', devOtp: otp });
     }
 
-    await sendMail({ to: email, subject: "Your Father's Advice verification code", html: emailOtpVerification({ otp }) });
-    res.json({ message: 'Verification code sent to your email.' });
+    try {
+      await sendMail({ to: email, subject: "Your Father's Advice verification code", html: emailOtpVerification({ otp }) });
+      return res.json({ message: 'Verification code sent to your email.' });
+    } catch (sendErr) {
+      // Resend's test mode (no verified domain yet) rejects most recipients — either with
+      // "only your own address" or "invalid `to` field" for reserved domains like
+      // example.com. Fall back to returning the OTP directly instead of failing the signup
+      // flow. This stops being hit once a domain is verified in Resend.
+      if (sendErr.code === 'validation_error') {
+        console.log(`  [DEV FALLBACK] Resend test-mode restriction — OTP for ${email}: ${otp}`);
+        return res.json({ message: 'Dev mode: OTP generated.', devOtp: otp });
+      }
+      throw sendErr;
+    }
   } catch (err) {
     console.error('send-otp error:', err);
     const emailAddr = req.body?.email;

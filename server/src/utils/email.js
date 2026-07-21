@@ -1,52 +1,36 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-// Lazily create transporter so missing config doesn't crash at startup
-function getTransporter() {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: (process.env.EMAIL_USER || '').trim(),
-      pass: (process.env.EMAIL_PASS || '').replace(/\s/g, ''), // strip spaces (Google shows them grouped)
-    },
-    tls: { rejectUnauthorized: false },
-    // Fail fast instead of hanging indefinitely if the host blocks/throttles
-    // outbound SMTP — without these a stuck connection can hang the whole
-    // request (and the OTP screen) with no visible error at all.
-    connectionTimeout: 10000,
-    greetingTimeout:   10000,
-    socketTimeout:      15000,
-  });
+// Render (and most PaaS hosts) block outbound SMTP ports, so raw SMTP to
+// smtp.gmail.com times out there even though it works locally. Resend sends
+// over HTTPS instead, which isn't blocked.
+let resendClient = null;
+function getResendClient() {
+  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
+  return resendClient;
 }
 
 /**
- * Send an email.  No-ops if EMAIL_USER is not configured.
+ * Send an email via the Resend HTTP API. Throws if RESEND_API_KEY is not configured.
  */
 export async function sendMail({ to, subject, html }) {
-  const user = (process.env.EMAIL_USER || '').trim();
-  const pass = (process.env.EMAIL_PASS || '').replace(/\s/g, '');
-  if (!user || !pass || user === 'your-email@gmail.com') {
-    const err = new Error('EMAIL_USER or EMAIL_PASS is not configured in environment variables.');
+  const apiKey = (process.env.RESEND_API_KEY || '').trim();
+  if (!apiKey) {
+    const err = new Error('RESEND_API_KEY is not configured in environment variables.');
     console.error('  ✉  ' + err.message);
     throw err;
   }
-  try {
-    const info = await getTransporter().sendMail({
-      from:    `"Father's Advice" <${user}>`,
-      to,
-      subject,
-      html,
-    });
-    console.log(`  ✉  Email sent to ${to}: ${info.messageId}`);
-    return info;
-  } catch (err) {
+  const from = process.env.EMAIL_FROM || "Father's Advice <onboarding@resend.dev>";
+  const { data, error } = await getResendClient().emails.send({ from, to, subject, html });
+  if (error) {
     console.error(`  ✉  Email failed to ${to}:`);
-    console.error(`     Code: ${err.code}`);
-    console.error(`     Message: ${err.message}`);
-    if (err.responseCode) console.error(`     SMTP Response: ${err.responseCode} ${err.response}`);
+    console.error(`     Name: ${error.name}`);
+    console.error(`     Message: ${error.message}`);
+    const err = new Error(error.message || 'Failed to send email.');
+    err.code = error.name;
     throw err;
   }
+  console.log(`  ✉  Email sent to ${to}: ${data.id}`);
+  return data;
 }
 
 // ── Email templates ──────────────────────────────────────────────
