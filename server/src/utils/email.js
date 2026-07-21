@@ -11,6 +11,12 @@ function getTransporter() {
       pass: (process.env.EMAIL_PASS || '').replace(/\s/g, ''), // strip spaces (Google shows them grouped)
     },
     tls: { rejectUnauthorized: false },
+    // Fail fast instead of hanging indefinitely if the host blocks/throttles
+    // outbound SMTP — without these a stuck connection can hang the whole
+    // request (and the OTP screen) with no visible error at all.
+    connectionTimeout: 10000,
+    greetingTimeout:   10000,
+    socketTimeout:      15000,
   });
 }
 
