@@ -71,7 +71,12 @@ router.post('/send-otp', async (req, res) => {
     console.error('send-otp error:', err);
     const emailAddr = String(req.body?.email || '').trim().toLowerCase();
     if (emailAddr) await EmailVerification.deleteOne({ email: emailAddr });
-    res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
+    const reason = err.code === 'EAUTH'
+      ? 'Email service authentication failed. Please contact support.'
+      : err.code === 'ETIMEDOUT' || err.code === 'ECONNECTION'
+        ? 'Email service is temporarily unreachable. Please try again shortly.'
+        : 'Failed to send verification email. Please try again.';
+    res.status(500).json({ message: reason });
   }
 });
 

@@ -7,13 +7,14 @@ import nodemailer from 'nodemailer';
 // deliberately uses Gmail SMTP per product decision; if OTP emails stop
 // arriving specifically in the production deploy (but work locally), that's
 // the first thing to check.
-let transporter = null;
-function getTransporter() {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
+const transporters = new Map();
+function getTransporter(port = 465) {
+  if (!transporters.has(port)) {
+    transporters.set(port, nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port,
+      secure: port === 465,
+      requireTLS: port === 587,
       auth: {
         user: (process.env.GMAIL_USER || '').trim(),
         pass: (process.env.GMAIL_APP_PASSWORD || '').replace(/\s/g, ''),
@@ -21,9 +22,9 @@ function getTransporter() {
       connectionTimeout: 15000,
       greetingTimeout: 15000,
       socketTimeout: 20000,
-    });
+    }));
   }
-  return transporter;
+  return transporters.get(port);
 }
 
 export function isEmailConfigured() {
@@ -36,8 +37,14 @@ export async function verifyEmailTransport() {
     return false;
   }
   try {
-    await getTransporter().verify();
-    console.log('  [Email] Gmail SMTP connection verified.');
+    try {
+      await getTransporter(465).verify();
+      console.log('  [Email] Gmail SMTP connection verified on port 465.');
+    } catch (primaryError) {
+      console.warn(`  [Email] Gmail SMTP port 465 unavailable: ${primaryError.message}. Trying port 587.`);
+      await getTransporter(587).verify();
+      console.log('  [Email] Gmail SMTP connection verified on port 587.');
+    }
     return true;
   } catch (error) {
     console.error(`  [Email] Gmail SMTP verification failed: ${error.message}`);
@@ -58,7 +65,15 @@ export async function sendMail({ to, subject, html }) {
   }
   const from = (process.env.EMAIL_FROM || `Father's Advice <${user}>`).trim();
   try {
-    const info = await getTransporter().sendMail({ from, to, subject, html });
+    let info;
+    try {
+      info = await getTransporter(465).sendMail({ from, to, subject, html });
+    } catch (primaryError) {
+      // Some hosting networks permit submission on 587 but not implicit TLS on
+      // 465. Gmail supports both, so retry once before reporting a failure.
+      console.warn(`  [Email] Gmail SMTP port 465 failed: ${primaryError.message}. Retrying port 587.`);
+      info = await getTransporter(587).sendMail({ from, to, subject, html });
+    }
     console.log(`  ✉  Email sent to ${to}: ${info.messageId}`);
     return info;
   } catch (error) {
