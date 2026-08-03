@@ -1,0 +1,13 @@
+/* Shared safeguards for every public and portal page. Page-specific layout
+   breakpoints remain in each page's own stylesheet. */
+html { overflow-x: hidden; }
+body { min-width: 0; overflow-x: hidden; }
+img, video, canvas, svg { max-width: 100%; }
+input, select, textarea, button { max-width: 100%; }
+
+@media (max-width: 700px) {
+  body { overflow-wrap: anywhere; }
+  .top-bar, .topbar, .nav { max-width: 100%; }
+  .page-body, .page, .content { min-width: 0; }
+  .table-wrap, .table-container, .mentor-list, .sessions-list { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}

@@ -37,13 +37,15 @@ export async function verifyEmailTransport() {
     return false;
   }
   try {
+    const primaryPort = process.env.NODE_ENV === 'production' ? 587 : 465;
+    const fallbackPort = primaryPort === 465 ? 587 : 465;
     try {
-      await getTransporter(465).verify();
-      console.log('  [Email] Gmail SMTP connection verified on port 465.');
+      await getTransporter(primaryPort).verify();
+      console.log(`  [Email] Gmail SMTP connection verified on port ${primaryPort}.`);
     } catch (primaryError) {
-      console.warn(`  [Email] Gmail SMTP port 465 unavailable: ${primaryError.message}. Trying port 587.`);
-      await getTransporter(587).verify();
-      console.log('  [Email] Gmail SMTP connection verified on port 587.');
+      console.warn(`  [Email] Gmail SMTP port ${primaryPort} unavailable: ${primaryError.message}. Trying port ${fallbackPort}.`);
+      await getTransporter(fallbackPort).verify();
+      console.log(`  [Email] Gmail SMTP connection verified on port ${fallbackPort}.`);
     }
     return true;
   } catch (error) {
@@ -65,14 +67,16 @@ export async function sendMail({ to, subject, html }) {
   }
   const from = (process.env.EMAIL_FROM || `Father's Advice <${user}>`).trim();
   try {
+    const primaryPort = process.env.NODE_ENV === 'production' ? 587 : 465;
+    const fallbackPort = primaryPort === 465 ? 587 : 465;
     let info;
     try {
-      info = await getTransporter(465).sendMail({ from, to, subject, html });
+      info = await getTransporter(primaryPort).sendMail({ from, to, subject, html });
     } catch (primaryError) {
       // Some hosting networks permit submission on 587 but not implicit TLS on
       // 465. Gmail supports both, so retry once before reporting a failure.
-      console.warn(`  [Email] Gmail SMTP port 465 failed: ${primaryError.message}. Retrying port 587.`);
-      info = await getTransporter(587).sendMail({ from, to, subject, html });
+      console.warn(`  [Email] Gmail SMTP port ${primaryPort} failed: ${primaryError.message}. Retrying port ${fallbackPort}.`);
+      info = await getTransporter(fallbackPort).sendMail({ from, to, subject, html });
     }
     console.log(`  ✉  Email sent to ${to}: ${info.messageId}`);
     return info;

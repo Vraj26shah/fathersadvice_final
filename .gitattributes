@@ -1,0 +1,7 @@
+# Keep repository source files in LF format on every platform. This prevents
+# Windows Git from repeatedly reporting LF-to-CRLF conversion warnings.
+* text=auto eol=lf
+
+# Windows command scripts, if added later, should retain their native format.
+*.bat text eol=crlf
+*.cmd text eol=crlf

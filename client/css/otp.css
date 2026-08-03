@@ -20,3 +20,19 @@
 .otp-resend-btn:disabled { color:rgba(240,237,230,0.3); cursor:not-allowed; }
 .otp-back-btn { background:none;border:none;color:rgba(240,237,230,0.35);font-size:12px;cursor:pointer;margin-top:4px; }
 .otp-back-btn:hover { color:rgba(240,237,230,0.65); }
+
+/* Keep the six inputs and all actions usable on narrow mobile screens. */
+@media (max-width: 480px) {
+  .otp-overlay { padding: 12px; align-items: flex-start; overflow-y: auto; }
+  .otp-card { padding: 28px 16px; margin: auto 0; }
+  .otp-boxes { gap: 6px; }
+  .otp-box { width: min(12vw, 42px); height: 50px; font-size: 20px; }
+  .otp-title { font-size: 20px; }
+  .otp-sub { margin-bottom: 22px; }
+  .otp-verify-btn { min-height: 48px; }
+}
+
+@media (max-width: 340px) {
+  .otp-boxes { gap: 4px; }
+  .otp-box { width: 36px; height: 46px; }
+}
