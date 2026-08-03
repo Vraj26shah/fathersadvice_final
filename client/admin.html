@@ -219,7 +219,12 @@
 
   <script>
     const token = localStorage.getItem('fa_token');
-    if (!token) window.location.href = '/login.html';
+    const role  = localStorage.getItem('fa_role');
+    if (!token) {
+      window.location.href = '/login.html';
+    } else if (role !== 'admin') {
+      window.location.href = role === 'mentor' ? '/dashboard-mentor.html' : '/dashboard-mentee.html';
+    }
 
     const storedName = localStorage.getItem('fa_name') || 'Admin';
     document.getElementById('sidebar-name').textContent   = storedName;

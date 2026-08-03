@@ -50,30 +50,18 @@ router.post('/send-otp', async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     otpStore.set(email.toLowerCase(), { otp, expiresAt: Date.now() + 10 * 60 * 1000, verified: false });
 
-    // Send a real email whenever credentials are actually configured — regardless of
-    // NODE_ENV, which can be misconfigured or unset on a given deploy. Only fall back
-    // to returning the OTP directly when there is genuinely no way to email it.
-    const emailConfigured = !!(process.env.RESEND_API_KEY || '').trim();
-
+    // The OTP is never returned in the response — it only ever reaches the
+    // user via the email itself. If sending isn't configured or fails, that's
+    // a genuine error, not a reason to hand the code to the client instead.
+    const emailConfigured = !!(process.env.GMAIL_USER || '').trim() && !!(process.env.GMAIL_APP_PASSWORD || '').trim();
     if (!emailConfigured) {
-      console.log(`  [DEV] RESEND_API_KEY not configured — OTP for ${email}: ${otp}`);
-      return res.json({ message: 'Dev mode: OTP generated.', devOtp: otp });
+      console.error(`  [OTP] GMAIL_USER / GMAIL_APP_PASSWORD not configured — could not send OTP to ${email}`);
+      otpStore.delete(email.toLowerCase());
+      return res.status(500).json({ message: 'Email verification is not available right now. Please try again later.' });
     }
 
-    try {
-      await sendMail({ to: email, subject: "Your Father's Advice verification code", html: emailOtpVerification({ otp }) });
-      return res.json({ message: 'Verification code sent to your email.' });
-    } catch (sendErr) {
-      // Resend's test mode (no verified domain yet) rejects most recipients — either with
-      // "only your own address" or "invalid `to` field" for reserved domains like
-      // example.com. Fall back to returning the OTP directly instead of failing the signup
-      // flow. This stops being hit once a domain is verified in Resend.
-      if (sendErr.code === 'validation_error') {
-        console.log(`  [DEV FALLBACK] Resend test-mode restriction — OTP for ${email}: ${otp}`);
-        return res.json({ message: 'Dev mode: OTP generated.', devOtp: otp });
-      }
-      throw sendErr;
-    }
+    await sendMail({ to: email, subject: "Your Father's Advice verification code", html: emailOtpVerification({ otp }) });
+    return res.json({ message: 'Verification code sent to your email.' });
   } catch (err) {
     console.error('send-otp error:', err);
     const emailAddr = req.body?.email;

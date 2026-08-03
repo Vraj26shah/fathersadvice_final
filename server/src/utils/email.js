@@ -1,36 +1,48 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-// Render (and most PaaS hosts) block outbound SMTP ports, so raw SMTP to
-// smtp.gmail.com times out there even though it works locally. Resend sends
-// over HTTPS instead, which isn't blocked.
-let resendClient = null;
-function getResendClient() {
-  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
-  return resendClient;
+// Sends via Gmail SMTP using an App Password. Note: some PaaS hosts (Render
+// included, per prior notes in this file) have been known to block outbound
+// SMTP ports, which raw SMTP depends on regardless of auth method — HTTPS-based
+// providers (Resend, SendGrid, etc.) don't have that exposure. This project
+// deliberately uses Gmail SMTP per product decision; if OTP emails stop
+// arriving specifically in the production deploy (but work locally), that's
+// the first thing to check.
+let transporter = null;
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+  }
+  return transporter;
 }
 
 /**
- * Send an email via the Resend HTTP API. Throws if RESEND_API_KEY is not configured.
+ * Send an email via Gmail SMTP. Throws if GMAIL_USER/GMAIL_APP_PASSWORD are not configured.
  */
 export async function sendMail({ to, subject, html }) {
-  const apiKey = (process.env.RESEND_API_KEY || '').trim();
-  if (!apiKey) {
-    const err = new Error('RESEND_API_KEY is not configured in environment variables.');
+  const user = (process.env.GMAIL_USER || '').trim();
+  const pass = (process.env.GMAIL_APP_PASSWORD || '').trim();
+  if (!user || !pass) {
+    const err = new Error('GMAIL_USER / GMAIL_APP_PASSWORD are not configured in environment variables.');
     console.error('  ✉  ' + err.message);
     throw err;
   }
-  const from = process.env.EMAIL_FROM || "Father's Advice <onboarding@resend.dev>";
-  const { data, error } = await getResendClient().emails.send({ from, to, subject, html });
-  if (error) {
-    console.error(`  ✉  Email failed to ${to}:`);
-    console.error(`     Name: ${error.name}`);
-    console.error(`     Message: ${error.message}`);
+  const from = process.env.EMAIL_FROM || `Father's Advice <${user}>`;
+  try {
+    const info = await getTransporter().sendMail({ from, to, subject, html });
+    console.log(`  ✉  Email sent to ${to}: ${info.messageId}`);
+    return info;
+  } catch (error) {
+    console.error(`  ✉  Email failed to ${to}: ${error.message}`);
     const err = new Error(error.message || 'Failed to send email.');
-    err.code = error.name;
+    err.code = error.code;
     throw err;
   }
-  console.log(`  ✉  Email sent to ${to}: ${data.id}`);
-  return data;
 }
 
 // ── Email templates ──────────────────────────────────────────────

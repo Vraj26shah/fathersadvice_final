@@ -207,47 +207,54 @@ export function setupSocket(httpServer) {
 
         const otherSid = onlineUsers.get(otherUserId);
 
+        // Real-time notification if we believe they're online right now...
         if (otherSid) {
-          // Other party is online — notify them instantly
           _io.to(otherSid).emit('session_peer_joined', {
             requestId,
             userName: socket.userName,
             userRole: socket.userRole,
           });
-        } else {
-          // Other party is offline — send them an email
-          try {
-            const otherUser = await User.findById(otherUserId).select('email fullName').lean();
-            if (otherUser?.email) {
-              const joinerRole = socket.userRole === 'mentor' ? 'Mentor' : 'Mentee';
-              const sessionUrl = `${process.env.APP_URL || 'http://localhost:5000'}/session.html?requestId=${requestId}`;
-              await sendMail({
-                to:      otherUser.email,
-                subject: `${socket.userName} has joined your session room`,
-                html: `
-                  <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#0a0a08;color:#fff;border-radius:12px;">
-                    <h2 style="color:#4ade80;font-family:Georgia,serif;margin-bottom:8px;">🟢 Your ${joinerRole} is in the session room!</h2>
-                    <p style="color:#ccc;">Hi <strong style="color:#fff;">${otherUser.fullName}</strong>,</p>
-                    <p style="color:#ccc;">
-                      <strong style="color:#fff;">${socket.userName}</strong> has joined the session room and is waiting for you.
-                    </p>
-                    <div style="margin:28px 0;">
-                      <a href="${sessionUrl}"
-                         style="background:#4ade80;color:#000;padding:13px 28px;border-radius:8px;
-                                text-decoration:none;display:inline-block;font-weight:700;font-size:15px;">
-                        Join Session Now →
-                      </a>
-                    </div>
-                    <p style="color:#666;font-size:12px;">If you can't join right now, they'll wait in the session room.</p>
-                    <hr style="border:none;border-top:1px solid #222;margin:24px 0;" />
-                    <p style="color:#444;font-size:11px;">Father's Advice — Mentorship Platform</p>
-                  </div>`,
-              });
-              console.log(`  ✉  Session join email sent to ${otherUser.email} (peer offline)`);
-            }
-          } catch (mailErr) {
-            console.error('  ✉  Session join email failed:', mailErr.message);
+        }
+
+        // ...and always email them too. `onlineUsers` is an in-memory socket
+        // presence map — it resets on server restart, doesn't confirm the
+        // other person is actually on session.html (vs. some other tab), and
+        // can go stale if a connection drops without a clean disconnect. If
+        // sending the email were conditional on that heuristic, a stale/wrong
+        // "online" read would mean the other person gets notified through
+        // neither channel. Email is the reliable guarantee; the socket event
+        // is just a bonus instant notice on top of it.
+        try {
+          const otherUser = await User.findById(otherUserId).select('email fullName').lean();
+          if (otherUser?.email) {
+            const joinerRole = socket.userRole === 'mentor' ? 'Mentor' : 'Mentee';
+            const sessionUrl = `${process.env.APP_URL || 'http://localhost:5000'}/session.html?requestId=${requestId}`;
+            await sendMail({
+              to:      otherUser.email,
+              subject: `${socket.userName} has joined your session room`,
+              html: `
+                <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#0a0a08;color:#fff;border-radius:12px;">
+                  <h2 style="color:#4ade80;font-family:Georgia,serif;margin-bottom:8px;">🟢 Your ${joinerRole} is in the session room!</h2>
+                  <p style="color:#ccc;">Hi <strong style="color:#fff;">${otherUser.fullName}</strong>,</p>
+                  <p style="color:#ccc;">
+                    <strong style="color:#fff;">${socket.userName}</strong> has joined the session room and is waiting for you.
+                  </p>
+                  <div style="margin:28px 0;">
+                    <a href="${sessionUrl}"
+                       style="background:#4ade80;color:#000;padding:13px 28px;border-radius:8px;
+                              text-decoration:none;display:inline-block;font-weight:700;font-size:15px;">
+                      Join Session Now →
+                    </a>
+                  </div>
+                  <p style="color:#666;font-size:12px;">If you can't join right now, they'll wait in the session room.</p>
+                  <hr style="border:none;border-top:1px solid #222;margin:24px 0;" />
+                  <p style="color:#444;font-size:11px;">Father's Advice — Mentorship Platform</p>
+                </div>`,
+            });
+            console.log(`  ✉  Session join email sent to ${otherUser.email}${otherSid ? ' (also notified live)' : ' (peer offline)'}`);
           }
+        } catch (mailErr) {
+          console.error('  ✉  Session join email failed:', mailErr.message);
         }
       } catch (err) {
         console.error('announce_session_presence error:', err.message);

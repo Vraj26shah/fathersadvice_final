@@ -625,8 +625,10 @@
     (function() {
       const t = localStorage.getItem('fa_token');
       const r = localStorage.getItem('fa_role');
-      if (t && r === 'mentor')  window.location.replace('dashboard-mentor.html');
-      else if (t && r === 'mentee') window.location.replace('dashboard-mentee.html');
+      if (!t) return;
+      if (r === 'admin')       window.location.replace('admin.html');
+      else if (r === 'mentor') window.location.replace('dashboard-mentor.html');
+      else if (r === 'mentee') window.location.replace('dashboard-mentee.html');
     })();
 
     // ── Prefill email when redirected here from signup (account already exists) ──
