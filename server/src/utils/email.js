@@ -11,14 +11,38 @@ let transporter = null;
 function getTransporter() {
   if (!transporter) {
     transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
+        user: (process.env.GMAIL_USER || '').trim(),
+        pass: (process.env.GMAIL_APP_PASSWORD || '').replace(/\s/g, ''),
       },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
     });
   }
   return transporter;
+}
+
+export function isEmailConfigured() {
+  return Boolean((process.env.GMAIL_USER || '').trim() && (process.env.GMAIL_APP_PASSWORD || '').replace(/\s/g, ''));
+}
+
+export async function verifyEmailTransport() {
+  if (!isEmailConfigured()) {
+    console.error('  [Email] GMAIL_USER or GMAIL_APP_PASSWORD is missing. OTP email is disabled.');
+    return false;
+  }
+  try {
+    await getTransporter().verify();
+    console.log('  [Email] Gmail SMTP connection verified.');
+    return true;
+  } catch (error) {
+    console.error(`  [Email] Gmail SMTP verification failed: ${error.message}`);
+    return false;
+  }
 }
 
 /**
@@ -26,13 +50,13 @@ function getTransporter() {
  */
 export async function sendMail({ to, subject, html }) {
   const user = (process.env.GMAIL_USER || '').trim();
-  const pass = (process.env.GMAIL_APP_PASSWORD || '').trim();
+  const pass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s/g, '');
   if (!user || !pass) {
     const err = new Error('GMAIL_USER / GMAIL_APP_PASSWORD are not configured in environment variables.');
     console.error('  ✉  ' + err.message);
     throw err;
   }
-  const from = process.env.EMAIL_FROM || `Father's Advice <${user}>`;
+  const from = (process.env.EMAIL_FROM || `Father's Advice <${user}>`).trim();
   try {
     const info = await getTransporter().sendMail({ from, to, subject, html });
     console.log(`  ✉  Email sent to ${to}: ${info.messageId}`);

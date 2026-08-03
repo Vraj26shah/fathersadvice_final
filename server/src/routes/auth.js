@@ -1,15 +1,16 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User from '../models/User.js';
+import EmailVerification from '../models/EmailVerification.js';
 import MentorProfile from '../models/MentorProfile.js';
 import MenteeProfile from '../models/MenteeProfile.js';
 import ConnectionRequest from '../models/ConnectionRequest.js';
 import Feedback from '../models/Feedback.js';
 import { protect } from '../middleware/auth.js';
-import { sendMail, emailOtpVerification } from '../utils/email.js';
+import { sendMail, emailOtpVerification, isEmailConfigured } from '../utils/email.js';
 
 // In-memory OTP store: email → { otp, expiresAt, verified }
-const otpStore = new Map();
 
 const router = express.Router();
 
@@ -41,22 +42,26 @@ const sendAuth = (res, statusCode, user, profileData = {}) => {
 // ─────────────────────────────────────────────────────────────────
 router.post('/send-otp', async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required.' });
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ message: 'Please enter a valid email address.' });
 
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) return res.status(409).json({ message: 'An account with this email already exists.' });
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    otpStore.set(email.toLowerCase(), { otp, expiresAt: Date.now() + 10 * 60 * 1000, verified: false });
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    const otpHash = crypto.createHash('sha256').update(`${email}:${otp}`).digest('hex');
+    await EmailVerification.findOneAndUpdate(
+      { email },
+      { otpHash, expiresAt: new Date(Date.now() + 10 * 60 * 1000), verified: false, attempts: 0, lastSentAt: new Date() },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
 
     // The OTP is never returned in the response — it only ever reaches the
     // user via the email itself. If sending isn't configured or fails, that's
     // a genuine error, not a reason to hand the code to the client instead.
-    const emailConfigured = !!(process.env.GMAIL_USER || '').trim() && !!(process.env.GMAIL_APP_PASSWORD || '').trim();
-    if (!emailConfigured) {
+    if (!isEmailConfigured()) {
       console.error(`  [OTP] GMAIL_USER / GMAIL_APP_PASSWORD not configured — could not send OTP to ${email}`);
-      otpStore.delete(email.toLowerCase());
+      await EmailVerification.deleteOne({ email });
       return res.status(500).json({ message: 'Email verification is not available right now. Please try again later.' });
     }
 
@@ -64,8 +69,8 @@ router.post('/send-otp', async (req, res) => {
     return res.json({ message: 'Verification code sent to your email.' });
   } catch (err) {
     console.error('send-otp error:', err);
-    const emailAddr = req.body?.email;
-    if (emailAddr) otpStore.delete(emailAddr.toLowerCase());
+    const emailAddr = String(req.body?.email || '').trim().toLowerCase();
+    if (emailAddr) await EmailVerification.deleteOne({ email: emailAddr });
     res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
   }
 });
@@ -73,16 +78,23 @@ router.post('/send-otp', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────
 // POST /api/auth/verify-otp  — confirm the code the user entered
 // ─────────────────────────────────────────────────────────────────
-router.post('/verify-otp', (req, res) => {
-  const { email, otp } = req.body;
+router.post('/verify-otp', async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const otp = String(req.body?.otp || '').trim();
   if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required.' });
 
-  const record = otpStore.get(email.toLowerCase());
+  const record = await EmailVerification.findOne({ email });
   if (!record)                       return res.status(400).json({ message: 'No OTP found for this email. Please request a new code.' });
-  if (Date.now() > record.expiresAt) { otpStore.delete(email.toLowerCase()); return res.status(400).json({ message: 'Code has expired. Please request a new one.' }); }
-  if (record.otp !== String(otp).trim()) return res.status(400).json({ message: 'Incorrect code. Please try again.' });
+  if (Date.now() > record.expiresAt) { await EmailVerification.deleteOne({ email }); return res.status(400).json({ message: 'Code has expired. Please request a new one.' }); }
+  if (record.attempts >= 5) { await EmailVerification.deleteOne({ email }); return res.status(429).json({ message: 'Too many incorrect attempts. Please request a new code.' }); }
+  const otpHash = crypto.createHash('sha256').update(`${email}:${otp}`).digest('hex');
+  if (record.otpHash !== otpHash) {
+    await EmailVerification.updateOne({ email }, { $inc: { attempts: 1 } });
+    return res.status(400).json({ message: 'Incorrect code. Please try again.' });
+  }
 
-  otpStore.set(email.toLowerCase(), { ...record, verified: true });
+  record.verified = true;
+  await record.save();
   res.json({ verified: true, message: 'Email verified successfully.' });
 });
 
@@ -110,8 +122,8 @@ router.post('/register/mentor', async (req, res) => {
     }
 
     // OTP verification check
-    const otpRecord = otpStore.get(email.toLowerCase());
-    if (!otpRecord?.verified) {
+    const otpRecord = await EmailVerification.findOne({ email: email.toLowerCase(), verified: true, expiresAt: { $gt: new Date() } });
+    if (!otpRecord) {
       return res.status(400).json({ message: 'Email not verified. Please complete OTP verification first.' });
     }
 
@@ -149,7 +161,7 @@ router.post('/register/mentor', async (req, res) => {
       languages:            languages            || [],
     });
 
-    otpStore.delete(email.toLowerCase()); // clean up
+    await EmailVerification.deleteOne({ email: email.toLowerCase() });
     sendAuth(res, 201, user);
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ message: 'An account with this email already exists.' });
@@ -181,8 +193,8 @@ router.post('/register/mentee', async (req, res) => {
     }
 
     // OTP verification check
-    const otpRecord = otpStore.get(email.toLowerCase());
-    if (!otpRecord?.verified) {
+    const otpRecord = await EmailVerification.findOne({ email: email.toLowerCase(), verified: true, expiresAt: { $gt: new Date() } });
+    if (!otpRecord) {
       return res.status(400).json({ message: 'Email not verified. Please complete OTP verification first.' });
     }
 
@@ -217,7 +229,7 @@ router.post('/register/mentee', async (req, res) => {
       languages:           languages           || [],
     });
 
-    otpStore.delete(email.toLowerCase()); // clean up
+    await EmailVerification.deleteOne({ email: email.toLowerCase() });
     sendAuth(res, 201, user);
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ message: 'An account with this email already exists.' });

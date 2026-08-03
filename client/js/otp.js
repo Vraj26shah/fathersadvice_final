@@ -3,6 +3,24 @@
    emailVerified — all classic <script> globals, resolved at call time (after a user
    interaction), so load order relative to the page's own inline script doesn't matter. */
 
+let otpResendUntil = 0;
+let otpResendTimer = null;
+
+function startResendCooldown(seconds = 60) {
+  otpResendUntil = Date.now() + seconds * 1000;
+  const resendBtn = document.getElementById('otp-resend-btn');
+  const resendText = document.getElementById('otp-resend-text');
+  clearInterval(otpResendTimer);
+  const update = () => {
+    const remaining = Math.max(0, Math.ceil((otpResendUntil - Date.now()) / 1000));
+    if (resendBtn) resendBtn.disabled = remaining > 0;
+    if (resendText) resendText.textContent = remaining ? `Didn't receive it? Resend in ${remaining}s` : "Didn't receive it?";
+    if (!remaining) clearInterval(otpResendTimer);
+  };
+  update();
+  otpResendTimer = setInterval(update, 250);
+}
+
 async function sendOtp() {
   const email     = val('email');
   const overlay   = document.getElementById('otp-overlay');
@@ -38,6 +56,7 @@ async function sendOtp() {
     }
     subEl.innerHTML    = `We sent a 6-digit code to <strong>${email}</strong>`;
     verifyBtn.disabled = false;
+    startResendCooldown();
     boxes[0] && boxes[0].focus();
   } catch {
     errEl.textContent  = 'Network error — is the server running?';
@@ -129,6 +148,7 @@ document.addEventListener('click', async e => {
   }
 
   if (id === 'otp-resend-btn') {
+    if (Date.now() < otpResendUntil) return;
     document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('error'); });
     const errEl = document.getElementById('otp-err');
     errEl.textContent = '';

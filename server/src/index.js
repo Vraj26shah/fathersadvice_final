@@ -14,6 +14,7 @@ import connectRoutes from './routes/connect.js';
 import sessionsRoutes from './routes/sessions.js';
 import chatRoutes    from './routes/chat.js';
 import adminRoutes   from './routes/admin.js';
+import { verifyEmailTransport } from './utils/email.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -76,4 +77,5 @@ server.listen(PORT, () => {
   console.log(`  ✓ API available at http://localhost:${PORT}/api`);
   console.log(`  ✓ Socket.io ready`);
   startReminderJobs();
+  verifyEmailTransport();
 });
