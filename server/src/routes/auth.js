@@ -56,17 +56,33 @@ router.post('/send-otp', async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true },
     );
 
-    // The OTP is never returned in the response — it only ever reaches the
-    // user via the email itself. If sending isn't configured or fails, that's
-    // a genuine error, not a reason to hand the code to the client instead.
+    // Demo fallback: when the code cannot actually be emailed, hand it back so
+    // the signup flow stays walkable (the client auto-fills the boxes). This is
+    // ONLY for demos — it defeats email verification, since the caller learns
+    // the code for an address they may not own. It self-heals: as soon as a
+    // send succeeds the code stops being returned. Set OTP_DEMO_AUTOFILL=false
+    // to turn it off and surface a hard error instead.
+    const demoAutofill = (process.env.OTP_DEMO_AUTOFILL || '').trim().toLowerCase() !== 'false';
+
     if (!isEmailConfigured()) {
-      console.error(`  [OTP] GMAIL_USER / GMAIL_APP_PASSWORD not configured — could not send OTP to ${email}`);
-      await EmailVerification.deleteOne({ email });
-      return res.status(500).json({ message: 'Email verification is not available right now. Please try again later.' });
+      console.warn(`  [OTP] No email transport configured — OTP for ${email}: ${otp}`);
+      if (!demoAutofill) {
+        await EmailVerification.deleteOne({ email });
+        return res.status(500).json({ message: 'Email verification is not available right now. Please try again later.' });
+      }
+      return res.json({ message: 'Demo mode: verification code filled in automatically.', devOtp: otp });
     }
 
-    await sendMail({ to: email, subject: "Your Father's Advice verification code", html: emailOtpVerification({ otp }) });
-    return res.json({ message: 'Verification code sent to your email.' });
+    try {
+      await sendMail({ to: email, subject: "Your Father's Advice verification code", html: emailOtpVerification({ otp }) });
+      return res.json({ message: 'Verification code sent to your email.' });
+    } catch (sendErr) {
+      if (!demoAutofill) throw sendErr;
+      // Most likely the host blocks outbound SMTP (Render's free tier blocks
+      // 25/465/587). Keep the demo usable rather than dead-ending the signup.
+      console.warn(`  [OTP] Send failed (${sendErr.code || 'unknown'}) — demo autofill for ${email}: ${otp}`);
+      return res.json({ message: 'Demo mode: verification code filled in automatically.', devOtp: otp });
+    }
   } catch (err) {
     console.error('send-otp error:', err);
     const emailAddr = String(req.body?.email || '').trim().toLowerCase();

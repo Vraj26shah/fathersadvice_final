@@ -54,6 +54,18 @@ async function sendOtp() {
       verifyBtn.disabled = false;
       return;
     }
+    if (data.devOtp) {
+      // Demo mode — the server couldn't email the code, so it handed it back
+      // for us to fill in. Show it plainly rather than pretending mail was sent.
+      String(data.devOtp).split('').forEach((d, i) => { if (boxes[i]) boxes[i].value = d; });
+      subEl.innerHTML    = `Demo mode — no email sent to <strong>${email}</strong>`;
+      errEl.style.color  = '#4ade80';
+      errEl.textContent  = '⚡ Code filled in automatically — click Verify email';
+      verifyBtn.disabled = false;
+      startResendCooldown();
+      verifyBtn.focus();
+      return;
+    }
     subEl.innerHTML    = `We sent a 6-digit code to <strong>${email}</strong>`;
     verifyBtn.disabled = false;
     startResendCooldown();

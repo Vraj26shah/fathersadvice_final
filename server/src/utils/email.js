@@ -1,12 +1,80 @@
 import nodemailer from 'nodemailer';
+import { google } from 'googleapis';
 
-// Sends via Gmail SMTP using an App Password. Note: some PaaS hosts (Render
-// included, per prior notes in this file) have been known to block outbound
-// SMTP ports, which raw SMTP depends on regardless of auth method — HTTPS-based
-// providers (Resend, SendGrid, etc.) don't have that exposure. This project
-// deliberately uses Gmail SMTP per product decision; if OTP emails stop
-// arriving specifically in the production deploy (but work locally), that's
-// the first thing to check.
+// Mail always leaves from the real GMAIL_USER mailbox, so there's no domain to
+// verify and any recipient can be emailed. Two ways to reach Gmail, picked
+// automatically:
+//
+//   Gmail API (preferred) — gmail.googleapis.com over HTTPS on port 443.
+//     Required on hosts that block outbound SMTP: Render's free tier blocks
+//     ports 25/465/587, which is why raw SMTP times out in that deploy while
+//     working perfectly on a local machine.
+//     Needs GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET + GMAIL_REFRESH_TOKEN.
+//
+//   SMTP (fallback) — Gmail address + App Password. Simplest to configure, and
+//     fine locally or on any host that permits outbound SMTP.
+const gmailUser         = () => (process.env.GMAIL_USER || '').trim();
+const oauthClientId     = () => (process.env.GMAIL_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '').trim();
+const oauthClientSecret = () => (process.env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_SECRET_ID || '').trim();
+const oauthRefreshToken = () => (process.env.GMAIL_REFRESH_TOKEN || '').trim();
+const gmailAppPassword  = () => (process.env.GMAIL_APP_PASSWORD || '').replace(/\s/g, '');
+
+export function isOAuthConfigured() {
+  return Boolean(gmailUser() && oauthClientId() && oauthClientSecret() && oauthRefreshToken());
+}
+
+export function isSmtpConfigured() {
+  return Boolean(gmailUser() && gmailAppPassword());
+}
+
+export function isEmailConfigured() {
+  return isOAuthConfigured() || isSmtpConfigured();
+}
+
+function fromHeader() {
+  return (process.env.EMAIL_FROM || `Father's Advice <${gmailUser()}>`).trim();
+}
+
+// ── Gmail API transport (HTTPS) ──────────────────────────────────
+let gmailClient = null;
+function getGmailClient() {
+  if (!gmailClient) {
+    // No redirect URI needed: the refresh token was already granted offline, and
+    // the client exchanges it for short-lived access tokens on demand.
+    const auth = new google.auth.OAuth2(oauthClientId(), oauthClientSecret());
+    auth.setCredentials({ refresh_token: oauthRefreshToken() });
+    gmailClient = google.gmail({ version: 'v1', auth });
+  }
+  return gmailClient;
+}
+
+// An RFC 2822 message, base64url-encoded the way the Gmail API expects. Subject
+// and body are explicitly UTF-8 encoded so accents and emoji survive intact.
+function buildRawMessage({ to, subject, html }) {
+  const headers = [
+    `From: ${fromHeader()}`,
+    `To: ${to}`,
+    `Subject: =?UTF-8?B?${Buffer.from(subject, 'utf8').toString('base64')}?=`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64',
+  ].join('\r\n');
+  const body = Buffer.from(html, 'utf8').toString('base64').replace(/(.{76})/g, '$1\r\n');
+  return Buffer.from(`${headers}\r\n\r\n${body}`, 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function describeGoogleError(error) {
+  return error?.response?.data?.error_description
+      || error?.response?.data?.error?.message
+      || error?.errors?.[0]?.message
+      || error.message;
+}
+
+// ── SMTP transport ───────────────────────────────────────────────
 const transporters = new Map();
 function getTransporter(port = 465) {
   if (!transporters.has(port)) {
@@ -16,8 +84,8 @@ function getTransporter(port = 465) {
       secure: port === 465,
       requireTLS: port === 587,
       auth: {
-        user: (process.env.GMAIL_USER || '').trim(),
-        pass: (process.env.GMAIL_APP_PASSWORD || '').replace(/\s/g, ''),
+        user: gmailUser(),
+        pass: gmailAppPassword(),
       },
       connectionTimeout: 15000,
       greetingTimeout: 15000,
@@ -27,15 +95,26 @@ function getTransporter(port = 465) {
   return transporters.get(port);
 }
 
-export function isEmailConfigured() {
-  return Boolean((process.env.GMAIL_USER || '').trim() && (process.env.GMAIL_APP_PASSWORD || '').replace(/\s/g, ''));
-}
-
 export async function verifyEmailTransport() {
   if (!isEmailConfigured()) {
-    console.error('  [Email] GMAIL_USER or GMAIL_APP_PASSWORD is missing. OTP email is disabled.');
+    console.error('  [Email] No Gmail credentials found. Set GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET');
+    console.error('          + GMAIL_REFRESH_TOKEN (Gmail API), or GMAIL_APP_PASSWORD (SMTP).');
+    console.error('          OTP email is disabled until one of those is configured.');
     return false;
   }
+
+  if (isOAuthConfigured()) {
+    try {
+      const profile = await getGmailClient().users.getProfile({ userId: 'me' });
+      console.log(`  [Email] Gmail API ready (HTTPS) as ${profile.data.emailAddress}.`);
+      return true;
+    } catch (error) {
+      console.error(`  [Email] Gmail API verification failed: ${describeGoogleError(error)}`);
+      if (!isSmtpConfigured()) return false;
+      console.warn('  [Email] Falling back to SMTP for verification.');
+    }
+  }
+
   try {
     const primaryPort = process.env.NODE_ENV === 'production' ? 587 : 465;
     const fallbackPort = primaryPort === 465 ? 587 : 465;
@@ -50,22 +129,47 @@ export async function verifyEmailTransport() {
     return true;
   } catch (error) {
     console.error(`  [Email] Gmail SMTP verification failed: ${error.message}`);
+    if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKET') {
+      console.error('          ↳ Outbound SMTP looks blocked by the host (Render free tier');
+      console.error('            blocks 25/465/587). Configure the Gmail API vars instead.');
+    }
     return false;
   }
 }
 
 /**
- * Send an email via Gmail SMTP. Throws if GMAIL_USER/GMAIL_APP_PASSWORD are not configured.
+ * Send an email from the GMAIL_USER mailbox — via the Gmail API when OAuth is
+ * configured, otherwise over SMTP. Throws if no transport is configured, or if
+ * every configured transport fails.
  */
 export async function sendMail({ to, subject, html }) {
-  const user = (process.env.GMAIL_USER || '').trim();
-  const pass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s/g, '');
-  if (!user || !pass) {
-    const err = new Error('GMAIL_USER / GMAIL_APP_PASSWORD are not configured in environment variables.');
+  if (!isEmailConfigured()) {
+    const err = new Error('No Gmail transport configured: set GMAIL_CLIENT_ID/GMAIL_CLIENT_SECRET/GMAIL_REFRESH_TOKEN, or GMAIL_APP_PASSWORD.');
     console.error('  ✉  ' + err.message);
     throw err;
   }
-  const from = (process.env.EMAIL_FROM || `Father's Advice <${user}>`).trim();
+
+  if (isOAuthConfigured()) {
+    try {
+      const res = await getGmailClient().users.messages.send({
+        userId: 'me',
+        requestBody: { raw: buildRawMessage({ to, subject, html }) },
+      });
+      console.log(`  ✉  Email sent to ${to} via Gmail API: ${res.data.id}`);
+      return res.data;
+    } catch (error) {
+      const detail = describeGoogleError(error);
+      console.error(`  ✉  Gmail API send failed to ${to}: ${detail}`);
+      if (!isSmtpConfigured()) {
+        const err = new Error(detail || 'Failed to send email.');
+        err.code = error.code;
+        throw err;
+      }
+      console.warn('     ↳ Falling back to SMTP.');
+    }
+  }
+
+  const from = fromHeader();
   try {
     const primaryPort = process.env.NODE_ENV === 'production' ? 587 : 465;
     const fallbackPort = primaryPort === 465 ? 587 : 465;
