@@ -87,9 +87,12 @@ function getTransporter(port = 465) {
         user: gmailUser(),
         pass: gmailAppPassword(),
       },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000,
+      // Deliberately short. On a host that blackholes SMTP (Render's free tier)
+      // these never connect, and a long timeout would stall the OTP request past
+      // the platform's own proxy timeout — surfacing as a 502 to the browser.
+      connectionTimeout: 6000,
+      greetingTimeout: 6000,
+      socketTimeout: 10000,
     }));
   }
   return transporters.get(port);
@@ -178,7 +181,10 @@ export async function sendMail({ to, subject, html }) {
       info = await getTransporter(primaryPort).sendMail({ from, to, subject, html });
     } catch (primaryError) {
       // Some hosting networks permit submission on 587 but not implicit TLS on
-      // 465. Gmail supports both, so retry once before reporting a failure.
+      // 465. Gmail supports both, so retry once before reporting a failure —
+      // except on EAUTH, where the credentials are wrong and the other port
+      // would fail identically after another needless timeout.
+      if (primaryError.code === 'EAUTH') throw primaryError;
       console.warn(`  [Email] Gmail SMTP port ${primaryPort} failed: ${primaryError.message}. Retrying port ${fallbackPort}.`);
       info = await getTransporter(fallbackPort).sendMail({ from, to, subject, html });
     }
